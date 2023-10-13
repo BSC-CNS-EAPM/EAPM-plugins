@@ -20,4 +20,6 @@ We welcome contributions to this repository! If you have developed a plugin that
 All plugins in this repository are licensed under the GNU License. See the LICENSE file for more information.
 
 
+---
+
 [More information](https://nbdsoftware.github.io/horus/)
