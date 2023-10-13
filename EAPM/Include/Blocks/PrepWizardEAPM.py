@@ -5,7 +5,6 @@ Module containing the AlphaFold block for the NBDSuite plugin
 import datetime
 import os
 import subprocess
-import tarfile
 from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 
 # ==========================#
@@ -75,7 +74,7 @@ folder = f"AF_{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
 
 # Alphafold action block
-def initialAlphafold(block: SlurmBlock):
+def initialPrepWizard(block: SlurmBlock):
     """
     Initial action of the block. It prepares the simulation and sends it to the remote.
 
@@ -188,50 +187,37 @@ def initialAlphafold(block: SlurmBlock):
 
 
 # Block's final action
-def finalAlphafold(block: SlurmBlock):
+def finalPrepWizard(block: SlurmBlock):
     """
     Final action of the block. It downloads the results from the remote.
 
     Args:
         block (SlurmBlock): The block to run the action on.
     """
-    folder = "AF_22"
-    simRemoteDir = os.path.join(block.remote.workDir, folder)  # AF_********-*******/
-    folderName = block.variables.get("folder_name", "alphafold")
+
+    simRemoteDir = os.path.join(block.remote.workDir, folder)
 
     print("Alphafold calculation finished, downloading results...")
 
     destPath = os.path.join(os.getcwd(), folder)
 
     # Transfer the results from the remote
-    block.remote.remoteCommand(
-        f"cd {block.remote.workDir} && tar czvf {simRemoteDir}.tar.gz {folder}/{folderName}/output_models/*/ranked_0.pdb"
-    )
+    block.remote.getData(simRemoteDir, destPath)
 
-    block.remote.getData(f"{simRemoteDir}.tar.gz", f"{destPath}.tar.gz")
-
-    print(f"Results transferred to the local machine at: {destPath}.tar.gz")
-
-    # Unzip the local file
-    with tarfile.open(f"{destPath}.tar.gz", "r:gz") as tar:
-        tar.extractall()
+    print(f"Results transferred to the local machine at: {destPath}")
 
     print("Setting output of block to the results directory...")
     # Set the output
-
+    folderName = block.variables.get("folder_name", "alphafold")
     block.setOutput("path", os.path.join(destPath, folderName))
 
 
-def finalB(block: SlurmBlock):
-    pass
-
-
-alphafoldBlock = SlurmBlock(
-    name="Alphafold",
-    description="Run Alphafold.",
-    initialAction=initialAlphafold,
-    finalAction=finalAlphafold,
-    variables=[partitionAF, folderNameAF, cpusAF, scriptNameAF],
+prepWizardBlock = SlurmBlock(
+    name="PrepWizard",
+    description="Run Preparation Wizard.",
+    initialAction=initialPrepWizard,
+    finalAction=finalPrepWizard,
+    variables=[partitionPW, folderNamePW, cpusPW, scriptNamePW],
     inputs=[fasta_fileAF],
     outputs=[outputAF],
 )
