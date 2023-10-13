@@ -1,0 +1,18 @@
+{
+  "name": "EAPM",
+  "description": "The EAPM utilities plugin for Horus",
+  "author": "BSC",
+  "version": "0.0.1",
+  "pluginFile": "EAPM.py",
+  "dependencies": [
+    "pandas",
+    "biopython",
+    "scipy",
+    "pyyaml",
+    "numpy",
+    "matplotlib",
+    "seaborn",
+    "bsc_calculations",
+    "prepare_proteins"
+  ]
+}
