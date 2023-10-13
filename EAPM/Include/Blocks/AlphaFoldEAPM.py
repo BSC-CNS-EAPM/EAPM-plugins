@@ -21,6 +21,16 @@ fasta_fileAF = PluginVariable(
 )
 
 # ==========================#
+# Variable outputs
+# ==========================#
+outputAF = PluginVariable(
+    name="Alphafold output",
+    id="path",
+    description="The folder containing the results.",
+    type=VariableTypes.FOLDER,
+)
+
+# ==========================#
 # Other variables
 # ==========================#
 partitionAF = PluginVariable(
@@ -39,12 +49,6 @@ partitionAF = PluginVariable(
 #     defaultValue="minotauro",
 #     allowedValues=["cte_power", "marenostrum", "minotauro"],
 # )
-outputAF = PluginVariable(
-    name="Alphafold output",
-    id="path",
-    description="The folder containing the results.",
-    type=VariableTypes.FOLDER,
-)
 cpusAF = PluginVariable(
     name="CPUs",
     id="cpus",
@@ -94,7 +98,6 @@ def initialAlphafold(block: SlurmBlock):
     import prepare_proteins
 
     print("Loading fasta files...")
-    print(fastaFile)
 
     sequences = prepare_proteins.sequenceModels(fastaFile)
 

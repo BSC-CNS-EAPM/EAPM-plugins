@@ -10,19 +10,28 @@ from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 # ==========================#
 # Variable inputs
 # ==========================#
-fasta_fileAF = PluginVariable(
-    name="Fasta file",
-    id="fasta_file",
-    description="The input fasta file.",
-    type=VariableTypes.FILE,
+inputFolderPW = PluginVariable(
+    name="Input Folder",
+    id="input_folder",
+    description="Folder with the pdbs input files.",
+    type=VariableTypes.FOLDER,
     defaultValue=None,
-    allowedValues=["fasta"],
+)
+
+# ==========================#
+# Variable outputs
+# ==========================#
+outputPW = PluginVariable(
+    name="Alphafold output",
+    id="path",
+    description="The folder containing the results.",
+    type=VariableTypes.FOLDER,
 )
 
 # ==========================#
 # Other variables
 # ==========================#
-partitionAF = PluginVariable(
+partitionPW = PluginVariable(
     name="Partition",
     id="partition",
     description="Partition where to lunch.",
@@ -30,21 +39,7 @@ partitionAF = PluginVariable(
     defaultValue="bsc_ls",
     allowedValues=["bsc_ls", "debug"],
 )
-# clusterAF = PluginVariable(
-#     name="Cluster",
-#     id="cluster",
-#     description="Cluster where to lunch.",
-#     type=VariableTypes.STRING_LIST,
-#     defaultValue="minotauro",
-#     allowedValues=["cte_power", "marenostrum", "minotauro"],
-# )
-outputAF = PluginVariable(
-    name="Alphafold output",
-    id="path",
-    description="The folder containing the results.",
-    type=VariableTypes.FOLDER,
-)
-cpusAF = PluginVariable(
+cpusPW = PluginVariable(
     name="CPUs",
     id="cpus",
     description="Number of CPUs to use.",
@@ -55,22 +50,85 @@ cpusAF = PluginVariable(
 ##############################
 # Block's advanced variables #
 ##############################
-folderNameAF = PluginVariable(
+folderNamePW = PluginVariable(
     name="Simulation name",
     id="folder_name",
     description="Name of the simulation folder.",
     type=VariableTypes.STRING,
-    defaultValue="alphafold",
+    defaultValue="prepwizard",
 )
-scriptNameAF = PluginVariable(
+scriptNamePW = PluginVariable(
     name="Simulation name",
     id="script_name",
     description="Name of the script.",
     type=VariableTypes.STRING,
     defaultValue="slurm_array.sh",
 )
+phPW = PluginVariable(
+    name="PH",
+    id="ph",
+    description="PH to use.",
+    type=VariableTypes.FLOAT,
+    defaultValue=7.0,
+)
+epikPHPW = PluginVariable(
+    name="Epik PH",
+    id="epik_ph",
+    description="If use epik_ph.",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
+)
+sampleWaterPW = PluginVariable(
+    name="Sample Water",
+    id="sample_water",
+    description="If sample water.",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
+)
+removeHydrogensPW = PluginVariable(
+    name="Remove Hydrogens",
+    id="remove_hydrogens",
+    description="If remove hydrogens.",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
+)
+delWaterHbondCutOffPW = PluginVariable(
+    name="Delete Water Hbond Cut Off",
+    id="del_water_hbond_cut_off",
+    description="Delete water hbond cut off.",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
+)
+fillLoopsPW = PluginVariable(
+    name="Fill Loops",
+    id="fill_loops",
+    description="If fill loops.",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
+)
+protonationStatesPW = PluginVariable(
+    name="Protonation States",
+    id="protonation_states",
+    description="If protonation states.",
+    type=VariableTypes.LIST,
+    defaultValue=None,
+)
+noepikPW = PluginVariable(
+    name="No Epik",
+    id="no_epik",
+    description="If no epik.",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
+)
+noProtAssignPW = PluginVariable(
+    name="No Prot Assign",
+    id="no_prot_assign",
+    description="If no prot assign.",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
+)
 
-folder = f"AF_{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}"
+folder = f"PW_{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
 
 # Alphafold action block
@@ -82,9 +140,9 @@ def initialPrepWizard(block: SlurmBlock):
         block (SlurmBlock): The block to run the action on.
     """
     # Loading plugin variables
-    fastaFile = block.inputs.get("fasta_file", "None")
-    if fastaFile == "None":
-        raise Exception("No fasta file provided.")
+    inputFolder = block.inputs.get("input_folder", "None")
+    if inputFolder == "None":
+        raise Exception("No folder provided.")
     partition = block.variables.get("partition", None)
     folderName = block.variables.get("folder_name", None)
     scriptName = block.variables.get("script_name", None)
@@ -92,14 +150,13 @@ def initialPrepWizard(block: SlurmBlock):
 
     import prepare_proteins
 
-    print("Loading fasta files...")
-    print(fastaFile)
+    print("Loading pdbs files...")
 
-    sequences = prepare_proteins.sequenceModels(fastaFile)
+    models = prepare_proteins.proteinModels(inputFolder)
 
-    print("Setting up AlphaFold...")
+    print("Setting up PrepWizard Optimitzations...")
 
-    jobs = sequences.setUpAlphaFold(folderName)
+    jobs = models.setUpPrepwizardOptimization("prepwizard")
 
     print("Preparing launch files...")
 
@@ -112,35 +169,15 @@ def initialPrepWizard(block: SlurmBlock):
         scriptName = "commands"
     print(f"Cluster: {cluster}")
     ## Define cluster
-    # cte_power
+    # amd
     if cluster == "plogin1.bsc.es":
-        bsc_calculations.cte_power.jobArrays(
+        bsc_calculations.amd.jobArrays(
             jobs,
-            job_name="AF_sequences",
+            job_name="PrepWizard",
             partition=partition,
-            program="alphafold",
+            program="schrodinger",
             script_name=scriptName,
             cpus=cpus,
-        )
-    # marenostrum
-    elif cluster == "mn1.bsc.es":
-        bsc_calculations.marenostrum.jobArrays(
-            jobs,
-            job_name="AF_sequences",
-            partition=partition,
-            program="alphafold",
-            script_name=scriptName,
-            cpus=cpus,
-        )
-    # minotauro
-    elif cluster == "mt1.bsc.es":
-        bsc_calculations.minotauro.jobArrays(
-            jobs,
-            job_name="AF_sequences",
-            partition=partition,
-            program="alphafold",
-            script_name=scriptName,
-            gpus=cpus,
         )
     # local
     elif cluster == "local":
@@ -217,7 +254,21 @@ prepWizardBlock = SlurmBlock(
     description="Run Preparation Wizard.",
     initialAction=initialPrepWizard,
     finalAction=finalPrepWizard,
-    variables=[partitionPW, folderNamePW, cpusPW, scriptNamePW],
-    inputs=[fasta_fileAF],
-    outputs=[outputAF],
+    variables=[
+        partitionPW,
+        cpusPW,
+        folderNamePW,
+        scriptNamePW,
+        phPW,
+        epikPHPW,
+        sampleWaterPW,
+        removeHydrogensPW,
+        delWaterHbondCutOffPW,
+        fillLoopsPW,
+        protonationStatesPW,
+        noepikPW,
+        noProtAssignPW,
+    ],
+    inputs=[inputFolderPW],
+    outputs=[outputPW],
 )
