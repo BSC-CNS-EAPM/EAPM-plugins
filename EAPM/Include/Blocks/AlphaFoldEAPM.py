@@ -4,6 +4,7 @@ Module containing the AlphaFold block for the NBDSuite plugin
 
 import datetime
 import os
+import shutil
 import subprocess
 import tarfile
 from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
@@ -30,9 +31,9 @@ outputAF = PluginVariable(
     type=VariableTypes.FOLDER,
 )
 
-# ==========================#
-# Other variables
-# ==========================#
+##############################
+#       Other variables      #
+##############################
 partitionAF = PluginVariable(
     name="Partition",
     id="partition",
@@ -73,6 +74,13 @@ scriptNameAF = PluginVariable(
     description="Name of the script.",
     type=VariableTypes.STRING,
     defaultValue="slurm_array.sh",
+)
+confidenceThresholdAF = PluginVariable(
+    name="Confidence threshold",
+    id="confidence_threshold",
+    description="Threshold confidence indicates the maximum confidence score at which to stop the trimming of terminal regions.",
+    type=VariableTypes.FLOAT,
+    defaultValue=90.0,
 )
 
 folder = f"AF_{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}"
@@ -198,7 +206,6 @@ def finalAlphafold(block: SlurmBlock):
     Args:
         block (SlurmBlock): The block to run the action on.
     """
-    folder = "AF_22"
     simRemoteDir = os.path.join(block.remote.workDir, folder)  # AF_********-*******/
     folderName = block.variables.get("folder_name", "alphafold")
 
@@ -219,22 +226,49 @@ def finalAlphafold(block: SlurmBlock):
     with tarfile.open(f"{destPath}.tar.gz", "r:gz") as tar:
         tar.extractall()
 
+    # Delete the tar file
+    os.remove(f"{destPath}.tar.gz")
+
+    # Final tweaks to the AF results for a better output
+    # Create a structures folder if it does not exists
+    if not os.path.exists(f"{os.getcwd()}/models"):
+        os.mkdir(f"{os.getcwd()}/models")
+
+    print("Setting up folder...")
+    # Copy each alphafold output model (from a specific rank) into the models folder
+    rank = 0
+    for model in os.listdir(f"{destPath}/alphafold/output_models/"):
+        if os.path.exists(
+            f"{destPath}/alphafold/output_models/" + model + "/ranked_" + str(rank) + ".pdb"
+        ):
+            shutil.copyfile(
+                f"{destPath}/alphafold/output_models/" + model + "/ranked_" + str(rank) + ".pdb",
+                f"{os.getcwd()}/models/" + model + ".pdb",
+            )
+
+    print("Loading prepare_proteins")
+    import prepare_proteins
+
+    print("Loading models")
+    models = prepare_proteins.proteinModels(os.path.join(os.getcwd(), "models"))
+    print("Trimming the models...")
+    confidenceThreshold = block.variables.get("confidence_threshold", None)
+    models.removeTerminiByConfidenceScore(confidenceThreshold)
+    print("Saving trimmed models")
+    models.saveModels("trimmed_models")
+
     print("Setting output of block to the results directory...")
+
     # Set the output
-
-    block.setOutput("path", os.path.join(destPath, folderName))
-
-
-def finalB(block: SlurmBlock):
-    pass
+    block.setOutput("path", os.path.join(os.getcwd(), "trimmed_models"))
 
 
 alphafoldBlock = SlurmBlock(
     name="Alphafold",
-    description="Run Alphafold.",
+    description="Run Alphafold. (For cte_power, marenostrum and minotauro clusters or local)",
     initialAction=initialAlphafold,
     finalAction=finalAlphafold,
-    variables=[partitionAF, folderNameAF, cpusAF, scriptNameAF],
+    variables=[partitionAF, folderNameAF, cpusAF, scriptNameAF, confidenceThresholdAF],
     inputs=[fasta_fileAF],
     outputs=[outputAF],
 )

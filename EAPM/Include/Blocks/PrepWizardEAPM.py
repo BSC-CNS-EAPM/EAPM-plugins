@@ -28,9 +28,9 @@ outputPW = PluginVariable(
     type=VariableTypes.FOLDER,
 )
 
-# ==========================#
-# Other variables
-# ==========================#
+##############################
+#       Other variables      #
+##############################
 partitionPW = PluginVariable(
     name="Partition",
     id="partition",
@@ -251,7 +251,7 @@ def finalPrepWizard(block: SlurmBlock):
 
 prepWizardBlock = SlurmBlock(
     name="PrepWizard",
-    description="Run Preparation Wizard.",
+    description="Run Preparation Wizard  optimization. (For AMD cluster or local)",
     initialAction=initialPrepWizard,
     finalAction=finalPrepWizard,
     variables=[

@@ -20,6 +20,10 @@ def createPlugin():
     # Add the block to the plugin
     eapmPlugin.addBlock(alphafoldBlock)
 
+    from Blocks.PrepWizardEAPM import prepWizardBlock  # type: ignore
+
+    eapmPlugin.addBlock(prepWizardBlock)
+
     # Return the plugin
     return eapmPlugin
 
