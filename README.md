@@ -5,7 +5,7 @@ Welcome to the EAPM Group Plugin Repository! This repository contains a collecti
 ## Installation
 
 To install a plugin, simply download the plugin file and place it in the appropriate directory.
-[More information](https://nbdsoftware.github.io/horus/)
+
 
 ## Usage
 
@@ -18,3 +18,8 @@ We welcome contributions to this repository! If you have developed a plugin that
 ## License
 
 All plugins in this repository are licensed under the GNU License. See the LICENSE file for more information.
+
+
+---
+
+[More information](https://nbdsoftware.github.io/horus/)
