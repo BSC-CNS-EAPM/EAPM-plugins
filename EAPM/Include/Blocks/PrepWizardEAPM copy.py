@@ -1,11 +1,11 @@
 """
-Module containing the AlphaFold block for the NBDSuite plugin
+Module containing the AlphaFold block for the EAPM plugin
 """
 
 import datetime
 import os
 import subprocess
-from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
+from HorusAPI import PluginVariable, PluginBlock, VariableTypes
 
 # ==========================#
 # Variable inputs
@@ -22,7 +22,7 @@ inputFolderPW = PluginVariable(
 # Variable outputs
 # ==========================#
 outputPW = PluginVariable(
-    name="Alphafold output",
+    name="Prepwizard output",
     id="path",
     description="The folder containing the results.",
     type=VariableTypes.FOLDER,
@@ -45,6 +45,13 @@ cpusPW = PluginVariable(
     description="Number of CPUs to use.",
     type=VariableTypes.INTEGER,
     defaultValue=1,
+)
+workstationPW = PluginVariable(
+    name="Workstation",
+    id="workstation",
+    description="Workstation where to launch the calculation.",
+    type=VariableTypes.STRING_LIST,
+    defaultValue=["bubbles", "blossom", "cactus"],
 )
 
 ##############################
@@ -132,21 +139,37 @@ folder = f"PW_{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
 
 # Alphafold action block
-def initialPrepWizard(block: SlurmBlock):
+def initialPrepWizard(block: PluginBlock):
     """
     Initial action of the block. It prepares the simulation and sends it to the remote.
 
     Args:
         block (SlurmBlock): The block to run the action on.
     """
+
+    # Dictionary with the workstations IPs
+    ips = {"bubbles": "84.88.51.219", "cactus": "84.88.51.217", "blossom": "84.88.51.250"}
+
     # Loading plugin variables
     inputFolder = block.inputs.get("input_folder", "None")
     if inputFolder == "None":
         raise Exception("No folder provided.")
-    partition = block.variables.get("partition", None)
-    folderName = block.variables.get("folder_name", None)
-    scriptName = block.variables.get("script_name", None)
-    cpus = block.variables.get("cpus", None)
+    partition = block.variables.get("partition", "bsc_ls")
+    cpus = block.variables.get("cpus", 1)
+    workstationPW = block.variables.get("workstation", "bubbles")
+
+    # Get prepWizard variables
+    folderName = block.variables.get("folder_name", "prepwizard")
+    scriptName = block.variables.get("script_name", "commands")
+    ph = block.variables.get("ph", 7.0)
+    epikPH = block.variables.get("epik_ph", False)
+    sampleWater = block.variables.get("sample_water", False)
+    removeHydrogens = block.variables.get("remove_hydrogens", False)
+    delWaterHbondCutOff = block.variables.get("del_water_hbond_cut_off", False)
+    fillLoops = block.variables.get("fill_loops", False)
+    protonationStates = block.variables.get("protonation_states", None)
+    noepik = block.variables.get("no_epik", False)
+    noProtAssign = block.variables.get("no_prot_assign", False)
 
     import prepare_proteins
 
@@ -156,39 +179,22 @@ def initialPrepWizard(block: SlurmBlock):
 
     print("Setting up PrepWizard Optimitzations...")
 
-    jobs = models.setUpPrepwizardOptimization("prepwizard")
+    jobs = models.setUpPrepwizardOptimization(
+        prepare_folder=folder,
+        pH=ph,
+        epik_pH=epikPH,
+        samplewater=sampleWater,
+        remove_hydrogens=removeHydrogens,
+        delwater_hbond_cutoff=delWaterHbondCutOff,
+        fill_loops=fillLoops,
+        protonation_states=protonationStates,
+        noepik=noepik,
+        noprotassign=noProtAssign,
+    )
 
     print("Preparing launch files...")
 
     import bsc_calculations
-
-    if block.remote.name != "local":
-        cluster = block.remote.host
-    else:
-        cluster = "local"
-        scriptName = "commands"
-    print(f"Cluster: {cluster}")
-    ## Define cluster
-    # amd
-    if cluster == "plogin1.bsc.es":
-        bsc_calculations.amd.jobArrays(
-            jobs,
-            job_name="PrepWizard",
-            partition=partition,
-            program="schrodinger",
-            script_name=scriptName,
-            cpus=cpus,
-        )
-    # local
-    elif cluster == "local":
-        bsc_calculations.local.parallel(
-            jobs,
-            cpus=min(40, len(jobs)),
-        )
-    else:
-        raise Exception("Cluster not supported.")
-
-    folderName = block.variables.get("folder_name", "alphafold")
 
     # Create the simulation folder in the remote
 
@@ -222,17 +228,7 @@ def initialPrepWizard(block: SlurmBlock):
         if result.returncode != 0:
             raise Exception("Error running the local simulation.")
 
-
-# Block's final action
-def finalPrepWizard(block: SlurmBlock):
-    """
-    Final action of the block. It downloads the results from the remote.
-
-    Args:
-        block (SlurmBlock): The block to run the action on.
-    """
-
-    simRemoteDir = os.path.join(block.remote.workDir, folder)
+        simRemoteDir = os.path.join(block.remote.workDir, folder)
 
     print("Alphafold calculation finished, downloading results...")
 
@@ -249,11 +245,10 @@ def finalPrepWizard(block: SlurmBlock):
     block.setOutput("path", os.path.join(destPath, folderName))
 
 
-prepWizardBlock = SlurmBlock(
-    name="PrepWizard",
-    description="Run Preparation Wizard  optimization. (For AMD cluster or local)",
-    initialAction=initialPrepWizard,
-    finalAction=finalPrepWizard,
+prepWizardBlock = PluginBlock(
+    name="PrepWizard AMD cluster",
+    description="Run Preparation Wizard optimization. (For AMD cluster)",
+    action=initialPrepWizard,
     variables=[
         partitionPW,
         cpusPW,

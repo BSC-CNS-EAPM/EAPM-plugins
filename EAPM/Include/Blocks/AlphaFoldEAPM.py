@@ -1,5 +1,5 @@
 """
-Module containing the AlphaFold block for the NBDSuite plugin
+Module containing the AlphaFold block for the EAPM plugin
 """
 
 import datetime

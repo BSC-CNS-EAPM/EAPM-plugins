@@ -1,5 +1,5 @@
 """
-Module containing the AlphaFold block for the NBDSuite plugin
+Module containing the Align block for the EAPM plugin (mafft needed)
 """
 
 import datetime
@@ -7,7 +7,7 @@ import os
 import shutil
 import subprocess
 import tarfile
-from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
+from HorusAPI import PluginVariable, VariableTypes, PluginBlock
 
 # ==========================#
 # Variable inputs
@@ -32,7 +32,7 @@ pdbReferenceAlign = PluginVariable(
 # Variable outputs
 # ==========================#
 outputAlign = PluginVariable(
-    name="Alphafold output",
+    name="Align output",
     id="path",
     description="The folder containing the results.",
     type=VariableTypes.FOLDER,
@@ -45,9 +45,9 @@ outputAlign = PluginVariable(
 chainIndexesAlign = PluginVariable(
     name="Chain indexes",
     id="chain_indexes",
-    description=" Chain indexes to use for the alignment. Use this option when the trajectories have corresponding chains in their topologies.",
-    type=VariableTypes.ANY,
-    defaultValue=None,
+    description="Chain indexes to use for the alignment. Use this option when the trajectories have corresponding chains in their topologies.",
+    type=VariableTypes.INTEGER_LIST,
+    defaultValue=0,
 )
 
 ##############################
@@ -65,8 +65,8 @@ alignmentModeAlign = PluginVariable(
     id="alignment_mode",
     description="The mode defines how sequences are aligned. 'exact' for structurally aligning positions with exactly the same aminoacids after the sequence alignment or 'aligned' for structurally aligning sequences using all positions aligned in the sequence alignment.",
     type=VariableTypes.STRING_LIST,
-    defaultValue="align",
-    allowedValues=["align", "exact"],
+    defaultValue="aligned",
+    allowedValues=["aligned", "exact"],
 )
 referenceResiduesAlign = PluginVariable(
     name="Reference residues",
@@ -78,7 +78,7 @@ referenceResiduesAlign = PluginVariable(
 
 
 # Align action block
-def initialAlign(block: SlurmBlock):
+def initialAlign(block: PluginBlock):
     """
     Initial action of the block. It prepares the simulation and sends it to the remote.
 
@@ -88,10 +88,10 @@ def initialAlign(block: SlurmBlock):
     # Loading plugin variables
     inputFolder = block.inputs.get("input_folder", "None")
     pdbReference = block.inputs.get("pdb_reference", "None")
-    outputFolder = block.inputs.get("path", "None")
-    chainIndexes = block.inputs.get("chain_indexes", "None")
+    outputFolder = block.inputs.get("path", "aligned_models")
+    chainIndexes = block.inputs.get("chain_indexes", 0)
     trajectoryChainIndexes = block.variables.get("trajectory_chain_indexes", "None")
-    alignmentMode = block.variables.get("alignment_mode", "None")
+    alignmentMode = block.variables.get("alignment_mode", "aligned")
     referenceResidues = block.variables.get("reference_residues", "None")
 
     import prepare_proteins
@@ -107,32 +107,21 @@ def initialAlign(block: SlurmBlock):
         outputFolder,
         chain_indexes=chainIndexes,
         trajectory_chain_indexes=trajectoryChainIndexes,
-        alignment_mode=alignmentMode,
+        aligment_mode=alignmentMode,
         reference_residues=referenceResidues,
+        verbose=True,
     )
 
-
-# Block's final action
-def finalAlign(block: SlurmBlock):
-    """
-    Final action of the block. It downloads the results from the remote.
-
-    Args:
-        block (SlurmBlock): The block to run the action on.
-    """
-
-    outputFolder = block.inputs.get("path", "None")
     print("Setting output of block to the results directory...")
 
     # Set the output
     block.setOutput("path", outputFolder)
 
 
-alignBlock = SlurmBlock(
+alignBlock = PluginBlock(
     name="Align PDBs",
     description="Align all models to a reference PDB based on a sequence alignment. (For local)",
-    initialAction=initialAlign,
-    finalAction=finalAlign,
+    action=initialAlign,
     variables=[
         chainIndexesAlign,
         trajectoryChainIndexesAlign,
