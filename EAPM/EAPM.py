@@ -20,10 +20,6 @@ def createPlugin():
     # Add the block to the plugin
     eapmPlugin.addBlock(alphafoldBlock)
 
-    from Blocks.PrepWizardAMDEAPM import prepWizardAMDBlock  # type: ignore
-
-    eapmPlugin.addBlock(prepWizardAMDBlock)
-
     from Blocks.PrepWizardEAPM import prepWizardBlock  # type: ignore
 
     eapmPlugin.addBlock(prepWizardBlock)

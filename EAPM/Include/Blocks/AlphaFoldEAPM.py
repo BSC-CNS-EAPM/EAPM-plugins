@@ -175,10 +175,8 @@ def initialAlphafold(block: SlurmBlock):
         print(f"Created simulation folder in the remote at {simRemoteDir}")
         print("Sending data to the remote...")
         # Send the system data to the remote
-        print(f"{os.path.join(os.getcwd(), folderName)} : {os.path.join(simRemoteDir)}")
         block.remote.sendData(os.path.join(os.getcwd(), folderName), os.path.join(simRemoteDir))
         scriptPath = os.path.join(simRemoteDir, scriptName)
-        print(f"{os.path.join(os.getcwd(), scriptName)} : {scriptPath}")
         block.remote.sendData(os.path.join(os.getcwd(), scriptName), scriptPath)
 
         print("Data sent to the remote.")
@@ -206,61 +204,108 @@ def finalAlphafold(block: SlurmBlock):
     Args:
         block (SlurmBlock): The block to run the action on.
     """
-    simRemoteDir = os.path.join(block.remote.workDir, folder)  # AF_********-*******/
     folderName = block.variables.get("folder_name", "alphafold")
 
-    print("Alphafold calculation finished, downloading results...")
+    if block.remote.name != "local":
+        cluster = block.remote.host
+    else:
+        cluster = "local"
 
-    destPath = os.path.join(os.getcwd(), folder)
+    if cluster != "local":
+        block.setOutput("path", folderName)
 
-    # Transfer the results from the remote
-    block.remote.remoteCommand(
-        f"cd {block.remote.workDir} && tar czvf {simRemoteDir}.tar.gz {folder}/{folderName}/output_models/*/ranked_0.pdb"
-    )
+        simRemoteDir = os.path.join(block.remote.workDir, folder)  # AF_********-*******/
 
-    block.remote.getData(f"{simRemoteDir}.tar.gz", f"{destPath}.tar.gz")
+        print("Alphafold calculation finished, downloading results...")
 
-    print(f"Results transferred to the local machine at: {destPath}.tar.gz")
+        destPath = os.path.join(os.getcwd(), folder)
 
-    # Unzip the local file
-    with tarfile.open(f"{destPath}.tar.gz", "r:gz") as tar:
-        tar.extractall()
+        # Transfer the results from the remote
+        block.remote.remoteCommand(
+            f"cd {block.remote.workDir} && tar czvf {simRemoteDir}.tar.gz {folder}/{folderName}/output_models/*/ranked_0.pdb"
+        )
 
-    # Delete the tar file
-    os.remove(f"{destPath}.tar.gz")
+        block.remote.getData(f"{simRemoteDir}.tar.gz", f"{destPath}.tar.gz")
 
-    # Final tweaks to the AF results for a better output
-    # Create a structures folder if it does not exists
-    if not os.path.exists(f"{os.getcwd()}/models"):
-        os.mkdir(f"{os.getcwd()}/models")
+        print(f"Results transferred to the local machine at: {destPath}.tar.gz")
 
-    print("Setting up folder...")
-    # Copy each alphafold output model (from a specific rank) into the models folder
-    rank = 0
-    for model in os.listdir(f"{destPath}/alphafold/output_models/"):
-        if os.path.exists(
-            f"{destPath}/alphafold/output_models/" + model + "/ranked_" + str(rank) + ".pdb"
-        ):
-            shutil.copyfile(
-                f"{destPath}/alphafold/output_models/" + model + "/ranked_" + str(rank) + ".pdb",
-                f"{os.getcwd()}/models/" + model + ".pdb",
-            )
+        # Unzip the local file
+        with tarfile.open(f"{destPath}.tar.gz", "r:gz") as tar:
+            tar.extractall()
 
-    print("Loading prepare_proteins")
-    import prepare_proteins
+        # Delete the tar file
+        os.remove(f"{destPath}.tar.gz")
 
-    print("Loading models")
-    models = prepare_proteins.proteinModels(os.path.join(os.getcwd(), "models"))
-    print("Trimming the models...")
-    confidenceThreshold = block.variables.get("confidence_threshold", None)
-    models.removeTerminiByConfidenceScore(confidenceThreshold)
-    print("Saving trimmed models")
-    models.saveModels("trimmed_models")
+        # Final tweaks to the AF results for a better output
+        # Create a structures folder if it does not exists
+        if not os.path.exists(f"{os.getcwd()}/models"):
+            os.mkdir(f"{os.getcwd()}/models")
 
-    print("Setting output of block to the results directory...")
+        print("Setting up folder...")
+        # Copy each alphafold output model (from a specific rank) into the models folder
+        rank = 0
+        for model in os.listdir(f"{destPath}/alphafold/output_models/"):
+            if os.path.exists(
+                f"{destPath}/alphafold/output_models/" + model + "/ranked_" + str(rank) + ".pdb"
+            ):
+                shutil.copyfile(
+                    f"{destPath}/alphafold/output_models/"
+                    + model
+                    + "/ranked_"
+                    + str(rank)
+                    + ".pdb",
+                    f"{os.getcwd()}/models/" + model + ".pdb",
+                )
 
-    # Set the output
-    block.setOutput("path", os.path.join(os.getcwd(), "trimmed_models"))
+        print("Loading prepare_proteins")
+        import prepare_proteins
+
+        print("Loading models")
+        models = prepare_proteins.proteinModels(os.path.join(os.getcwd(), "models"))
+        print("Trimming the models...")
+        confidenceThreshold = block.variables.get("confidence_threshold", None)
+        models.removeTerminiByConfidenceScore(confidenceThreshold)
+        print("Saving trimmed models")
+        models.saveModels("trimmed_models")
+
+        print("Setting output of block to the results directory...")
+
+        # Set the output
+        block.setOutput("path", os.path.join(os.getcwd(), "trimmed_models"))
+    # * Local
+    else:
+        # Final tweaks to the AF results for a better output
+        # Create a structures folder if it does not exists
+        if not os.path.exists(f"{os.getcwd()}/models"):
+            os.mkdir(f"{os.getcwd()}/models")
+
+        print("Setting up folder...")
+        # Copy each alphafold output model (from a specific rank) into the models folder
+        rank = 0
+        for model in os.listdir("/alphafold/output_models/"):
+            if os.path.exists(
+                "/alphafold/output_models/" + model + "/ranked_" + str(rank) + ".pdb"
+            ):
+                shutil.copyfile(
+                    "/alphafold/output_models/" + model + "/ranked_" + str(rank) + ".pdb",
+                    f"{os.getcwd()}/models/" + model + ".pdb",
+                )
+
+        print("Loading prepare_proteins")
+        import prepare_proteins
+
+        print("Loading models")
+        models = prepare_proteins.proteinModels(os.path.join(os.getcwd(), "models"))
+        print("Trimming the models...")
+        confidenceThreshold = block.variables.get("confidence_threshold", None)
+        models.removeTerminiByConfidenceScore(confidenceThreshold)
+        print("Saving trimmed models")
+        models.saveModels("trimmed_models")
+
+        print("Setting output of block to the results directory...")
+
+        # Set the output
+        block.setOutput("path", os.path.join(os.getcwd(), "trimmed_models"))
 
 
 alphafoldBlock = SlurmBlock(
