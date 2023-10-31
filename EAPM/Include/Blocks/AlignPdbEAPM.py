@@ -2,11 +2,6 @@
 Module containing the Align block for the EAPM plugin (mafft needed)
 """
 
-import datetime
-import os
-import shutil
-import subprocess
-import tarfile
 from HorusAPI import PluginVariable, VariableTypes, PluginBlock
 
 # ==========================#
@@ -88,11 +83,11 @@ def initialAlign(block: PluginBlock):
     # Loading plugin variables
     inputFolder = block.inputs.get("input_folder", "None")
     pdbReference = block.inputs.get("pdb_reference", "None")
-    outputFolder = block.inputs.get("path", "aligned_models")
-    chainIndexes = block.inputs.get("chain_indexes", 0)
-    trajectoryChainIndexes = block.variables.get("trajectory_chain_indexes", "None")
-    alignmentMode = block.variables.get("alignment_mode", "aligned")
-    referenceResidues = block.variables.get("reference_residues", "None")
+    outputFolder = block.variables.get("path", None)
+    chainIndexes = block.variables.get("chain_indexes", None)
+    trajectoryChainIndexes = block.variables.get("trajectory_chain_indexes", None)
+    alignmentMode = block.variables.get("alignment_mode", None)
+    referenceResidues = block.variables.get("reference_residues", None)
 
     import prepare_proteins
 

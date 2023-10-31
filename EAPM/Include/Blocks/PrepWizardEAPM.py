@@ -1,5 +1,5 @@
 """
-Module containing the AlphaFold block for the EAPM plugin
+Module containing the PrepWizard block for the EAPM plugin
 """
 
 import datetime
@@ -134,7 +134,7 @@ noProtAssignPW = PluginVariable(
 folder = f"PW_{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
 
-# Alphafold action block
+# PrepWizard action block
 def initialPrepWizard(block: SlurmBlock):
     """
     Initial action of the block. It prepares the simulation and sends it to the remote.
@@ -229,7 +229,10 @@ def initialPrepWizard(block: SlurmBlock):
         block.remote.sendData(os.path.join(os.getcwd(), folderName), os.path.join(simRemoteDir))
         # Send commands scripts to the remote
         with tarfile.open("commands.tar.gz", "w:gz") as tar:
-            tar.add("commands*")
+            for file in os.listdir("."):
+                if file.startswith("commands"):
+                    if not file.endswith(".tar.gz"):
+                        tar.add(file)
         block.remote.sendData(
             os.path.join(os.getcwd(), "commands.tar.gz"), os.path.join(simRemoteDir)
         )
@@ -240,6 +243,7 @@ def initialPrepWizard(block: SlurmBlock):
 
         # Launch the simulation
         block.remote.remoteCommand(f"cd {simRemoteDir} && bash commands")
+        jobID = block.remote.submitJob("", noSlurm=True)
     # Marenostrum clusters
     elif cluster != "local":
         simRemoteDir = os.path.join(block.remote.workDir, folder)
@@ -264,6 +268,7 @@ def initialPrepWizard(block: SlurmBlock):
         print("Running the simulation locally...")
 
         # Run the simulation
+        #! change to use remotes
         result = subprocess.run(["bash", scriptName], check=False)
         if result.returncode != 0:
             raise Exception("Error running the local simulation.")
@@ -286,11 +291,18 @@ def finalPrepWizard(block: SlurmBlock):
         cluster = "local"
 
     if cluster != "local":
-        if cluster in IPs.values():
-            #! See if the process has finished
-            pass
-
+        # Get the remote dir
         simRemoteDir = os.path.join(block.remote.workDir, folder)
+
+        # Wait for the simulation to finish if it is running in the workstations
+        if cluster in IPs.values():
+            notFinished = True
+            while notFinished:
+                res = block.remote.remoteCommand(
+                    f"cd {simRemoteDir} && tail -n 1 commands_00.nohup | tail -n 1 commands_00.nohup | grep -q 'finished' && echo '0' || echo '1'"
+                )
+                if res == "0":
+                    notFinished = False
 
         print("PrepWizard calculation finished, downloading results...")
 
@@ -308,7 +320,7 @@ def finalPrepWizard(block: SlurmBlock):
         block.setOutput("path", folderName)
 
 
-prepWizardAMDBlock = SlurmBlock(
+prepWizardBlock = SlurmBlock(
     name="PrepWizard",
     description="Run Preparation Wizard optimization. (For AMD cluster, workstations and local)",
     initialAction=initialPrepWizard,
