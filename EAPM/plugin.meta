@@ -12,7 +12,8 @@
     "numpy",
     "matplotlib",
     "seaborn",
-    "bsc_calculations",
-    "prepare_proteins"
+    "mdtraj",
+    "git+https://github.com/Martin-Floor/bsc_calculations.git",
+    "git+https://github.com/Martin-Floor/prepare_proteins.git"
   ]
 }
