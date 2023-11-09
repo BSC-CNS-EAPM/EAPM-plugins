@@ -161,3 +161,6 @@ cython_debug/
 
 # Plugin dependencies
 deps/
+
+# Built plugins
+*.hp
