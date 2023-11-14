@@ -242,8 +242,20 @@ def initialPrepWizard(block: SlurmBlock):
         )
 
         # Launch the simulation
+        commands = '#!/bin/bash\n'
+        commands += 'initial=$(find prepwizard/input* -name "*.pdb" | wc -l)\n'
+        commands += 'final=$(find prepwizard/output* -name "*.pdb" | wc -l)\n'
+        commands += 'if [ "$initial" -eq "$final" ]; then\n'
+        commands += '    echo "0"\n'
+        commands += 'else\n'
+        commands += '    echo "1"\n'
+        commands += 'fi\n'
+        with open("countPdbs.sh", "w") as f:
+            f.write(commands)
+        
+        block.remote.sendData(os.path.join(os.getcwd(), "countPdbs.sh"), os.path.join(simRemoteDir))
         block.remote.remoteCommand(f"cd {simRemoteDir} && bash commands")
-        jobID = block.remote.submitJob("", noSlurm=True)
+        
     # Marenostrum clusters
     elif cluster != "local":
         simRemoteDir = os.path.join(block.remote.workDir, folder)
@@ -298,9 +310,7 @@ def finalPrepWizard(block: SlurmBlock):
         if cluster in IPs.values():
             notFinished = True
             while notFinished:
-                res = block.remote.remoteCommand(
-                    f"cd {simRemoteDir} && tail -n 1 commands_00.nohup | tail -n 1 commands_00.nohup | grep -q 'finished' && echo '0' || echo '1'"
-                )
+                res = block.remote.remoteCommand(f"cd {simRemoteDir} && bash countPdbs.sh")
                 if res == "0":
                     notFinished = False
 

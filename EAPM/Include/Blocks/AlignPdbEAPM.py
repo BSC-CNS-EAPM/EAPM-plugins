@@ -83,7 +83,7 @@ def initialAlign(block: PluginBlock):
     # Loading plugin variables
     inputFolder = block.inputs.get("input_folder", "None")
     pdbReference = block.inputs.get("pdb_reference", "None")
-    outputFolder = block.variables.get("path", None)
+    outputFolder = block.outputs.get("path", "aligned_models")
     chainIndexes = block.variables.get("chain_indexes", None)
     trajectoryChainIndexes = block.variables.get("trajectory_chain_indexes", None)
     alignmentMode = block.variables.get("alignment_mode", None)

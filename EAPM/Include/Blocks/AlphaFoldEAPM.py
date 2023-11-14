@@ -25,10 +25,18 @@ fasta_fileAF = PluginVariable(
 # Variable outputs
 # ==========================#
 outputAF = PluginVariable(
-    name="Alphafold output",
+    name="Alphafold folder output",
     id="path",
     description="The folder containing the results.",
     type=VariableTypes.FOLDER,
+)
+outputPDBAF = PluginVariable(
+    name="Alphafold pdb output",
+    id="out_pdb",
+    description="First PDB of the Alphafold.",
+    type=VariableTypes.FILE,
+    defaultValue=None,
+    allowedValues=["pdb"]
 )
 
 ##############################
@@ -269,9 +277,16 @@ def finalAlphafold(block: SlurmBlock):
         models.saveModels("trimmed_models")
 
         print("Setting output of block to the results directory...")
+        
+        outPdb = None
+        for file in os.listdir(os.path.join(os.getcwd(), "trimmed_models")):
+            if file.endswith(".pdb"):
+                outPdb = os.path.join(os.getcwd(), "trimmed_models", file)
+                break
 
         # Set the output
         block.setOutput("path", os.path.join(os.getcwd(), "trimmed_models"))
+        block.setOutput("out_pdb", outPdb)
     # * Local
     else:
         # Final tweaks to the AF results for a better output
@@ -315,5 +330,5 @@ alphafoldBlock = SlurmBlock(
     finalAction=finalAlphafold,
     variables=[partitionAF, folderNameAF, cpusAF, scriptNameAF, confidenceThresholdAF],
     inputs=[fasta_fileAF],
-    outputs=[outputAF],
+    outputs=[outputAF, outputPDBAF],
 )
