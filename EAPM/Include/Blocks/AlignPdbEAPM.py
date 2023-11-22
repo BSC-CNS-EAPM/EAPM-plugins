@@ -41,7 +41,7 @@ chainIndexesAlign = PluginVariable(
     name="Chain indexes",
     id="chain_indexes",
     description="Chain indexes to use for the alignment. Use this option when the trajectories have corresponding chains in their topologies.",
-    type=VariableTypes.INTEGER_LIST,
+    type=VariableTypes.NUMBER_LIST,
     defaultValue=0,
 )
 
@@ -52,7 +52,7 @@ trajectoryChainIndexesAlign = PluginVariable(
     name="Trajectory chain indexes",
     id="trajectory_chain_indexes",
     description="Chain indexes of the target trajectory to use in the alignment.",
-    type=VariableTypes.INTEGER_LIST,
+    type=VariableTypes.NUMBER_LIST,
     defaultValue=None,
 )
 alignmentModeAlign = PluginVariable(

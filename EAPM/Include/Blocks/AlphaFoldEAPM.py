@@ -62,7 +62,7 @@ cpusAF = PluginVariable(
     name="CPUs",
     id="cpus",
     description="Number of CPUs to use.",
-    type=VariableTypes.INTEGER,
+    type=VariableTypes.NUMBER,
     defaultValue=1,
 )
 
@@ -87,7 +87,7 @@ confidenceThresholdAF = PluginVariable(
     name="Confidence threshold",
     id="confidence_threshold",
     description="Threshold confidence indicates the maximum confidence score at which to stop the trimming of terminal regions.",
-    type=VariableTypes.FLOAT,
+    type=VariableTypes.NUMBER,
     defaultValue=90.0,
 )
 

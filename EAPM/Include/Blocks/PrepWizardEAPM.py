@@ -46,7 +46,7 @@ cpusPW = PluginVariable(
     name="CPUs",
     id="cpus",
     description="Number of CPUs to use.",
-    type=VariableTypes.INTEGER,
+    type=VariableTypes.NUMBER,
     defaultValue=1,
 )
 
@@ -71,7 +71,7 @@ phPW = PluginVariable(
     name="PH",
     id="ph",
     description="PH to use.",
-    type=VariableTypes.FLOAT,
+    type=VariableTypes.NUMBER,
     defaultValue=7.0,
 )
 epikPHPW = PluginVariable(
