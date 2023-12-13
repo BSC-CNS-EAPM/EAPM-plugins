@@ -13,6 +13,8 @@
     "matplotlib",
     "seaborn",
     "mdtraj",
+    "ipywidgets",
+    "networkx",
     "git+https://github.com/Martin-Floor/bsc_calculations.git",
     "git+https://github.com/Martin-Floor/prepare_proteins.git"
   ]
