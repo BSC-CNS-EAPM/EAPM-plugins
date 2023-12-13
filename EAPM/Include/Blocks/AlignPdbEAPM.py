@@ -2,7 +2,7 @@
 Module containing the Align block for the EAPM plugin (mafft needed)
 """
 
-from HorusAPI import PluginVariable, VariableTypes, PluginBlock
+from HorusAPI import PluginVariable, VariableTypes, PluginBlock, VariableList
 
 # ==========================#
 # Variable inputs
@@ -34,27 +34,44 @@ outputAlign = PluginVariable(
     defaultValue="aligned_models",
 )
 
+
 ##############################
 #       Other variables      #
 ##############################
-chainIndexesAlign = PluginVariable(
+integerChainIndexVariable = PluginVariable(
+    name="Chain index",
+    id="chain_index",
+    description="Chain index.",
+    type=VariableTypes.INTEGER,
+    defaultValue=0,
+)
+
+chainIndexesAlign = VariableList(
     name="Chain indexes",
     id="chain_indexes",
     description="Chain indexes to use for the alignment. Use this option when the trajectories have corresponding chains in their topologies.",
-    type=VariableTypes.INTEGER_LIST,
-    defaultValue=0,
+    prototypes=[integerChainIndexVariable],
 )
 
 ##############################
 # Block's advanced variables #
 ##############################
-trajectoryChainIndexesAlign = PluginVariable(
+trajectoryChainIndexeVariable = PluginVariable(
+    name="Trajectory chain index",
+    id="trajectory_chain_index",
+    description="Chain index number.",
+    type=VariableTypes.INTEGER,
+    defaultValue=0,
+)
+
+trajectoryChainIndexesAlign = VariableList(
     name="Trajectory chain indexes",
     id="trajectory_chain_indexes",
-    description="Chain indexes of the target trajectory to use in the alignment.",
-    type=VariableTypes.INTEGER_LIST,
-    defaultValue=None,
+    description="Chain indexes of the target trajectories to use in the alignment.",
+    prototypes=[trajectoryChainIndexeVariable],
 )
+
+
 alignmentModeAlign = PluginVariable(
     name="Alignment mode",
     id="alignment_mode",
@@ -63,12 +80,19 @@ alignmentModeAlign = PluginVariable(
     defaultValue="aligned",
     allowedValues=["aligned", "exact"],
 )
+
 referenceResiduesAlign = PluginVariable(
+    name="Reference residue index",
+    id="reference_residues",
+    description="Reference residues.",
+    type=VariableTypes.INTEGER,
+    defaultValue=None,
+)
+referenceResiduesAlign = VariableList(
     name="Reference residues",
     id="reference_residues",
     description="Reference residues.",
-    type=VariableTypes.STRING_LIST,
-    defaultValue=None,
+    prototypes=[referenceResiduesAlign],
 )
 
 
@@ -89,13 +113,23 @@ def initialAlign(block: PluginBlock):
     alignmentMode = block.variables.get("alignment_mode", None)
     referenceResidues = block.variables.get("reference_residues", None)
 
+    # Parse the chain indexes
+    chainIndexes = [x["chain_index"] for x in chainIndexes]
+
+    # Parse the trajectory chain indexes
+    trajectoryChainIndexes = [x["trajectory_chain_index"] for x in trajectoryChainIndexes]
+
+    # Parse the reference residues
+    referenceResidues = [x["reference_residues"] for x in referenceResidues]
+
     import prepare_proteins
 
-    print("Loading Pdbs files...")
+    print("Loading PDB files...")
 
     models = prepare_proteins.proteinModels(inputFolder)
 
     print("Aligning models...")
+
 
     models.alignModelsToReferencePDB(
         pdbReference,
