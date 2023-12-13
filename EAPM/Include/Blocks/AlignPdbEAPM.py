@@ -56,7 +56,7 @@ chainIndexesAlign = VariableList(
 ##############################
 # Block's advanced variables #
 ##############################
-trajectoryChainIndexeVariable = PluginVariable(
+trajectoryChainIndexVariable = PluginVariable(
     name="Trajectory chain index",
     id="trajectory_chain_index",
     description="Chain index number.",
@@ -68,7 +68,7 @@ trajectoryChainIndexesAlign = VariableList(
     name="Trajectory chain indexes",
     id="trajectory_chain_indexes",
     description="Chain indexes of the target trajectories to use in the alignment.",
-    prototypes=[trajectoryChainIndexeVariable],
+    prototypes=[trajectoryChainIndexVariable],
 )
 
 
