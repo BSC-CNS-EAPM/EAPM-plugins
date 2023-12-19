@@ -28,6 +28,10 @@ def createPlugin():
 
     eapmPlugin.addBlock(alignBlock)
 
+    from Blocks.AnalyseAFConfidence import analyse_AF_confidence_block  # type: ignore
+
+    eapmPlugin.addBlock(analyse_AF_confidence_block)
+    
     # Return the plugin
     return eapmPlugin
 
