@@ -89,7 +89,7 @@ def analyse_af_confidence(block: PluginBlock):
     threshold = block.variables.get("confidence_threshold", 90.0)
     mean_plddt_file = block.variables.get("plddt_file", "mean_plddt.csv")
     plddt_json = block.variables.get("plddt_json", "plddt.json")
-    output_dir = join(os.getcwd(), "confidence_models/models")
+    output_dir = join(os.getcwd(), "confident_models/models")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
