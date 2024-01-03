@@ -2,13 +2,8 @@
 Module containing the PrepWizard block for the EAPM plugin
 """
 
-import datetime
 import os
-import subprocess
-import tarfile
-from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
-
-IPs = {"bubbles": "84.88.51.219", "cactus": "84.88.51.217", "blossom": "84.88.51.250"}
+from HorusAPI import PluginVariable, PluginBlock, VariableTypes
 
 # ==========================#
 # Variable inputs
@@ -25,29 +20,11 @@ inputFolderPW = PluginVariable(
 # Variable outputs
 # ==========================#
 outputPW = PluginVariable(
-    name="Prepwizard output",
-    id="path",
-    description="The folder containing the results.",
-    type=VariableTypes.FOLDER,
-)
-
-##############################
-#       Other variables      #
-##############################
-partitionPW = PluginVariable(
-    name="Partition",
-    id="partition",
-    description="Partition where to lunch.",
-    type=VariableTypes.STRING_LIST,
-    defaultValue="bsc_ls",
-    allowedValues=["bsc_ls", "debug"],
-)
-cpusPW = PluginVariable(
-    name="CPUs",
-    id="cpus",
-    description="Number of CPUs to use.",
-    type=VariableTypes.INTEGER,
-    defaultValue=1,
+    name="BSC job",
+    id="bsc_jobs",
+    description="Jobs to be run in the BSC Jobs block",
+    type=VariableTypes.CUSTOM,
+    allowedValues=["bsc_jobs"],
 )
 
 ##############################
@@ -131,11 +108,9 @@ noProtAssignPW = PluginVariable(
     defaultValue=False,
 )
 
-folder = f"PW_{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}"
-
 
 # PrepWizard action block
-def initialPrepWizard(block: SlurmBlock):
+def prepWizardAction(block: PluginBlock):
     """
     Initial action of the block. It prepares the simulation and sends it to the remote.
 
@@ -146,8 +121,6 @@ def initialPrepWizard(block: SlurmBlock):
     inputFolder = block.inputs.get("input_folder", "None")
     if inputFolder == "None":
         raise Exception("No folder provided.")
-    partition = block.variables.get("partition", None)
-    cpus = block.variables.get("cpus", None)
 
     # Get prepWizard variables
     folderName = block.variables.get("folder_name", None)
@@ -185,159 +158,25 @@ def initialPrepWizard(block: SlurmBlock):
 
     print("Preparing launch files...")
 
-    import bsc_calculations
+    prerpwizard_output_models_folder = os.path.join(os.getcwd(), folderName, "output_models")
 
-    if block.remote.name != "local":
-        cluster = block.remote.host
-    else:
-        cluster = "local"
-        scriptName = "commands"
-    print(f"Cluster: {cluster}")
-    ## Define cluster
-    # amd
-    if cluster == "plogin1.bsc.es":
-        bsc_calculations.amd.jobArrays(
-            jobs,
-            job_name="PrepWizard",
-            partition=partition,
-            program="schrodinger",
-            script_name=scriptName,
-            cpus=cpus,
-        )
-    elif cluster in IPs.values():
-        bsc_calculations.local.parallel(
-            jobs,
-            cpus=min(40, len(jobs)),
-        )
-    # local
-    elif cluster == "local":
-        bsc_calculations.local.parallel(
-            jobs,
-            cpus=min(40, len(jobs)),
-        )
-    else:
-        raise Exception("Cluster not supported.")
+    output_jobs = {
+        "program": "schrodinger",
+        "jobs": jobs,
+        "send_data": [folderName],
+        "results_data": prerpwizard_output_models_folder,
+    }
 
-    # * Remote cluster
-    if cluster in IPs.values():
-        simRemoteDir = os.path.join(block.remote.workDir, folder)
-        block.remote.remoteCommand(f"mkdir -p -v {simRemoteDir}")
-        print(f"Created simulation folder in the remote at {simRemoteDir}")
+    print("Jobs ready to be run.")
 
-        print("Sending data to the remote...")
-        # Send folder to the remote
-        block.remote.sendData(os.path.join(os.getcwd(), folderName), os.path.join(simRemoteDir))
-        # Send commands scripts to the remote
-        with tarfile.open("commands.tar.gz", "w:gz") as tar:
-            for file in os.listdir("."):
-                if file.startswith("commands"):
-                    if not file.endswith(".tar.gz"):
-                        tar.add(file)
-        block.remote.sendData(
-            os.path.join(os.getcwd(), "commands.tar.gz"), os.path.join(simRemoteDir)
-        )
-        # Extract commands scripts in the remote
-        block.remote.remoteCommand(
-            f"tar -xzf {os.path.join(simRemoteDir, 'commands.tar.gz')} -C {simRemoteDir}"
-        )
-
-        # Launch the simulation
-        commands = '#!/bin/bash\n'
-        commands += 'initial=$(find prepwizard/input* -name "*.pdb" | wc -l)\n'
-        commands += 'final=$(find prepwizard/output* -name "*.pdb" | wc -l)\n'
-        commands += 'if [ "$initial" -eq "$final" ]; then\n'
-        commands += '    echo "0"\n'
-        commands += 'else\n'
-        commands += '    echo "1"\n'
-        commands += 'fi\n'
-        with open("countPdbs.sh", "w") as f:
-            f.write(commands)
-        
-        block.remote.sendData(os.path.join(os.getcwd(), "countPdbs.sh"), os.path.join(simRemoteDir))
-        block.remote.remoteCommand(f"cd {simRemoteDir} && bash commands")
-        
-    # Marenostrum clusters
-    elif cluster != "local":
-        simRemoteDir = os.path.join(block.remote.workDir, folder)
-        block.remote.remoteCommand(f"mkdir -p -v {simRemoteDir}")
-        print(f"Created simulation folder in the remote at {simRemoteDir}")
-
-        print("Sending data to the remote...")
-        # Send the system data to the remote
-        block.remote.sendData(os.path.join(os.getcwd(), folderName), os.path.join(simRemoteDir))
-        scriptPath = os.path.join(simRemoteDir, scriptName)
-        block.remote.sendData(os.path.join(os.getcwd(), scriptName), scriptPath)
-
-        print("Data sent to the remote.")
-
-        print("Running the simulation...")
-
-        # Run the simulation
-        jobID = block.remote.submitJob(scriptPath)
-        print(f"Simulation running with job ID {jobID}. Waiting for it to finish...")
-    # * Local
-    else:
-        print("Running the simulation locally...")
-
-        # Run the simulation
-        #! change to use remotes
-        result = subprocess.run(["bash", scriptName], check=False)
-        if result.returncode != 0:
-            raise Exception("Error running the local simulation.")
+    block.setOutput("bsc_jobs", output_jobs)
 
 
-# Block's final action
-def finalPrepWizard(block: SlurmBlock):
-    """
-    Final action of the block. It downloads the results from the remote.
-
-    Args:
-        block (SlurmBlock): The block to run the action on.
-    """
-
-    folderName = block.variables.get("folder_name", None)
-
-    if block.remote.name != "local":
-        cluster = block.remote.host
-    else:
-        cluster = "local"
-
-    if cluster != "local":
-        # Get the remote dir
-        simRemoteDir = os.path.join(block.remote.workDir, folder)
-
-        # Wait for the simulation to finish if it is running in the workstations
-        if cluster in IPs.values():
-            notFinished = True
-            while notFinished:
-                res = block.remote.remoteCommand(f"cd {simRemoteDir} && bash countPdbs.sh")
-                if res == "0":
-                    notFinished = False
-
-        print("PrepWizard calculation finished, downloading results...")
-
-        destPath = os.path.join(os.getcwd(), folder)
-
-        # Transfer the results from the remote
-        block.remote.getData(simRemoteDir, destPath)
-
-        print(f"Results transferred to the local machine at: {destPath}")
-
-        print("Setting output of block to the results directory...")
-        # Set the output
-        block.setOutput("path", os.path.join(destPath, folderName))
-    else:
-        block.setOutput("path", folderName)
-
-
-prepWizardBlock = SlurmBlock(
+prepWizardBlock = PluginBlock(
     name="PrepWizard",
     description="Run Preparation Wizard optimization. (For AMD cluster, workstations and local)",
-    initialAction=initialPrepWizard,
-    finalAction=finalPrepWizard,
+    action=prepWizardAction,
     variables=[
-        partitionPW,
-        cpusPW,
         folderNamePW,
         scriptNamePW,
         phPW,

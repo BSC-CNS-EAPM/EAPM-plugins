@@ -1,0 +1,724 @@
+{
+  "name": "Glide docking",
+  "savedID": "6d06cc69-0120-4085-ad95-a9107aa815ca",
+  "path": "/Users/cdominguez/Developer/EAPM-plugins/EAPM/Flows/Glide docking.flow",
+  "remote": "Local",
+  "currentExecuting": null,
+  "status": "IDLE",
+  "date": "2024-01-03 14:36:40",
+  "blocks": [
+    {
+      "id": "horus.folder",
+      "isPlaced": true,
+      "position": {
+        "x": 0,
+        "y": 181.55999999999995
+      },
+      "isRunning": false,
+      "runError": false,
+      "runErrorMessage": "",
+      "placedID": 3,
+      "finishedExecution": false,
+      "storedOutputs": {},
+      "variables": [
+        {
+          "id": "folder",
+          "value": null,
+          "type": "folder"
+        }
+      ],
+      "variableConnections": [],
+      "variableConnectionsReference": [
+        {
+          "origin": {
+            "placedID": 3,
+            "blockID": "horus.folder",
+            "variableID": "folder"
+          },
+          "destination": {
+            "placedID": 5,
+            "blockID": "horus.visualize_pdb",
+            "variableID": "folder"
+          },
+          "isCyclic": false,
+          "cycles": 1,
+          "currentCycle": 0
+        },
+        {
+          "origin": {
+            "placedID": 3,
+            "blockID": "horus.folder",
+            "variableID": "folder"
+          },
+          "destination": {
+            "placedID": 25,
+            "blockID": "eapm.pdb_to_mae",
+            "variableID": "pdb_folder"
+          },
+          "isCyclic": false,
+          "cycles": 1,
+          "currentCycle": 0
+        }
+      ],
+      "connectedTo": [],
+      "connectedToReference": [],
+      "selectedInputGroup": "default",
+      "selectedRemote": "Local",
+      "extensionsToOpen": [],
+      "time": 0,
+      "extraData": {}
+    },
+    {
+      "id": "horus.sphere",
+      "isPlaced": true,
+      "position": {
+        "x": 374,
+        "y": 810.56
+      },
+      "isRunning": false,
+      "runError": false,
+      "runErrorMessage": "",
+      "placedID": 4,
+      "finishedExecution": false,
+      "storedOutputs": {},
+      "variables": [
+        {
+          "id": "sphere",
+          "value": {
+            "center": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "radius": 35,
+            "ref": null
+          },
+          "type": "sphere"
+        }
+      ],
+      "variableConnections": [],
+      "variableConnectionsReference": [
+        {
+          "origin": {
+            "placedID": 4,
+            "blockID": "horus.sphere",
+            "variableID": "sphere"
+          },
+          "destination": {
+            "placedID": 32,
+            "blockID": "eapm.setup_docking_grid",
+            "variableID": "outer_box"
+          },
+          "isCyclic": false,
+          "cycles": 1,
+          "currentCycle": 0
+        }
+      ],
+      "connectedTo": [],
+      "connectedToReference": [],
+      "selectedInputGroup": "default",
+      "selectedRemote": "Local",
+      "extensionsToOpen": [],
+      "time": 0,
+      "extraData": {}
+    },
+    {
+      "id": "horus.visualize_pdb",
+      "isPlaced": true,
+      "position": {
+        "x": 353,
+        "y": 161.55999999999995
+      },
+      "isRunning": false,
+      "runError": false,
+      "runErrorMessage": "",
+      "placedID": 5,
+      "finishedExecution": false,
+      "storedOutputs": {},
+      "variables": [],
+      "variableConnections": [
+        {
+          "origin": {
+            "placedID": 3,
+            "blockID": "horus.folder",
+            "variableID": "folder"
+          },
+          "destination": {
+            "placedID": 5,
+            "blockID": "horus.visualize_pdb",
+            "variableID": "folder"
+          },
+          "isCyclic": false,
+          "cycles": 1,
+          "currentCycle": 0
+        }
+      ],
+      "variableConnectionsReference": [],
+      "connectedTo": [],
+      "connectedToReference": [],
+      "selectedInputGroup": "folderInputGroup",
+      "selectedRemote": "Local",
+      "extensionsToOpen": [],
+      "time": 0,
+      "extraData": {}
+    },
+    {
+      "id": "horus.sphere",
+      "isPlaced": true,
+      "position": {
+        "x": 884,
+        "y": 919.56
+      },
+      "isRunning": false,
+      "runError": false,
+      "runErrorMessage": "",
+      "placedID": 7,
+      "finishedExecution": false,
+      "storedOutputs": {},
+      "variables": [
+        {
+          "id": "sphere",
+          "value": {
+            "center": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "radius": 15,
+            "ref": null
+          },
+          "type": "sphere"
+        }
+      ],
+      "variableConnections": [],
+      "variableConnectionsReference": [
+        {
+          "origin": {
+            "placedID": 7,
+            "blockID": "horus.sphere",
+            "variableID": "sphere"
+          },
+          "destination": {
+            "placedID": 32,
+            "blockID": "eapm.setup_docking_grid",
+            "variableID": "inner_box"
+          },
+          "isCyclic": false,
+          "cycles": 1,
+          "currentCycle": 0
+        }
+      ],
+      "connectedTo": [],
+      "connectedToReference": [],
+      "selectedInputGroup": "default",
+      "selectedRemote": "Local",
+      "extensionsToOpen": [],
+      "time": 0,
+      "extraData": {}
+    },
+    {
+      "id": "horus.folder",
+      "isPlaced": true,
+      "position": {
+        "x": 3,
+        "y": 491.55999999999995
+      },
+      "isRunning": false,
+      "runError": false,
+      "runErrorMessage": "",
+      "placedID": 16,
+      "finishedExecution": false,
+      "storedOutputs": {},
+      "variables": [
+        {
+          "id": "folder",
+          "value": null,
+          "type": "folder"
+        }
+      ],
+      "variableConnections": [],
+      "variableConnectionsReference": [
+        {
+          "origin": {
+            "placedID": 16,
+            "blockID": "horus.folder",
+            "variableID": "folder"
+          },
+          "destination": {
+            "placedID": 19,
+            "blockID": "eapm.pdb_to_mae",
+            "variableID": "pdb_folder"
+          },
+          "isCyclic": false,
+          "cycles": 1,
+          "currentCycle": 0
+        }
+      ],
+      "connectedTo": [],
+      "connectedToReference": [],
+      "selectedInputGroup": "default",
+      "selectedRemote": "Local",
+      "extensionsToOpen": [],
+      "time": 0,
+      "extraData": {}
+    },
+    {
+      "id": "eapm.pdb_to_mae",
+      "isPlaced": true,
+      "position": {
+        "x": 344,
+        "y": 594.56
+      },
+      "isRunning": false,
+      "runError": false,
+      "runErrorMessage": "",
+      "placedID": 19,
+      "finishedExecution": false,
+      "storedOutputs": {},
+      "variables": [],
+      "variableConnections": [
+        {
+          "origin": {
+            "placedID": 16,
+            "blockID": "horus.folder",
+            "variableID": "folder"
+          },
+          "destination": {
+            "placedID": 19,
+            "blockID": "eapm.pdb_to_mae",
+            "variableID": "pdb_folder"
+          },
+          "isCyclic": false,
+          "cycles": 1,
+          "currentCycle": 0
+        }
+      ],
+      "variableConnectionsReference": [
+        {
+          "origin": {
+            "placedID": 19,
+            "blockID": "eapm.pdb_to_mae",
+            "variableID": "output"
+          },
+          "destination": {
+            "placedID": 32,
+            "blockID": "eapm.setup_docking_grid",
+            "variableID": "ligand_folder"
+          },
+          "isCyclic": false,
+          "cycles": 1,
+          "currentCycle": 0
+        }
+      ],
+      "connectedTo": [],
+      "connectedToReference": [],
+      "selectedInputGroup": "pdb_folder",
+      "selectedRemote": "Local",
+      "extensionsToOpen": [],
+      "time": 0,
+      "extraData": {}
+    },
+    {
+      "id": "eapm.pdb_to_mae",
+      "isPlaced": true,
+      "position": {
+        "x": 350,
+        "y": 374.55999999999995
+      },
+      "isRunning": false,
+      "runError": false,
+      "runErrorMessage": "",
+      "placedID": 25,
+      "finishedExecution": false,
+      "storedOutputs": {},
+      "variables": [],
+      "variableConnections": [
+        {
+          "origin": {
+            "placedID": 3,
+            "blockID": "horus.folder",
+            "variableID": "folder"
+          },
+          "destination": {
+            "placedID": 25,
+            "blockID": "eapm.pdb_to_mae",
+            "variableID": "pdb_folder"
+          },
+          "isCyclic": false,
+          "cycles": 1,
+          "currentCycle": 0
+        }
+      ],
+      "variableConnectionsReference": [
+        {
+          "origin": {
+            "placedID": 25,
+            "blockID": "eapm.pdb_to_mae",
+            "variableID": "output"
+          },
+          "destination": {
+            "placedID": 32,
+            "blockID": "eapm.setup_docking_grid",
+            "variableID": "model_folder"
+          },
+          "isCyclic": false,
+          "cycles": 1,
+          "currentCycle": 0
+        }
+      ],
+      "connectedTo": [],
+      "connectedToReference": [],
+      "selectedInputGroup": "pdb_folder",
+      "selectedRemote": "Local",
+      "extensionsToOpen": [],
+      "time": 0,
+      "extraData": {}
+    },
+    {
+      "id": "eapm.setup_glide",
+      "isPlaced": true,
+      "position": {
+        "x": 1375,
+        "y": 201.55999999999995
+      },
+      "isRunning": false,
+      "runError": false,
+      "runErrorMessage": "",
+      "placedID": 31,
+      "finishedExecution": false,
+      "storedOutputs": {},
+      "variables": [
+        {
+          "id": "poses_per_ligand",
+          "value": 10000,
+          "type": "integer"
+        }
+      ],
+      "variableConnections": [
+        {
+          "origin": {
+            "placedID": 33,
+            "blockID": "eapm.bsc_calculations",
+            "variableID": "output_simulation_results"
+          },
+          "destination": {
+            "placedID": 31,
+            "blockID": "eapm.setup_glide",
+            "variableID": "grid_output"
+          },
+          "isCyclic": false,
+          "cycles": 1,
+          "currentCycle": 0
+        }
+      ],
+      "variableConnectionsReference": [
+        {
+          "origin": {
+            "placedID": 31,
+            "blockID": "eapm.setup_glide",
+            "variableID": "output_jobs"
+          },
+          "destination": {
+            "placedID": 34,
+            "blockID": "eapm.bsc_calculations",
+            "variableID": "input_jobs"
+          },
+          "isCyclic": false,
+          "cycles": 1,
+          "currentCycle": 0
+        }
+      ],
+      "connectedTo": [],
+      "connectedToReference": [],
+      "selectedInputGroup": "docking_grid_group",
+      "selectedRemote": "Local",
+      "extensionsToOpen": [],
+      "time": 0,
+      "extraData": {}
+    },
+    {
+      "id": "eapm.setup_docking_grid",
+      "isPlaced": true,
+      "position": {
+        "x": 941,
+        "y": 538.56
+      },
+      "isRunning": false,
+      "runError": false,
+      "runErrorMessage": "",
+      "placedID": 32,
+      "finishedExecution": false,
+      "storedOutputs": {},
+      "variables": [],
+      "variableConnections": [
+        {
+          "origin": {
+            "placedID": 25,
+            "blockID": "eapm.pdb_to_mae",
+            "variableID": "output"
+          },
+          "destination": {
+            "placedID": 32,
+            "blockID": "eapm.setup_docking_grid",
+            "variableID": "model_folder"
+          },
+          "isCyclic": false,
+          "cycles": 1,
+          "currentCycle": 0
+        },
+        {
+          "origin": {
+            "placedID": 19,
+            "blockID": "eapm.pdb_to_mae",
+            "variableID": "output"
+          },
+          "destination": {
+            "placedID": 32,
+            "blockID": "eapm.setup_docking_grid",
+            "variableID": "ligand_folder"
+          },
+          "isCyclic": false,
+          "cycles": 1,
+          "currentCycle": 0
+        },
+        {
+          "origin": {
+            "placedID": 4,
+            "blockID": "horus.sphere",
+            "variableID": "sphere"
+          },
+          "destination": {
+            "placedID": 32,
+            "blockID": "eapm.setup_docking_grid",
+            "variableID": "outer_box"
+          },
+          "isCyclic": false,
+          "cycles": 1,
+          "currentCycle": 0
+        },
+        {
+          "origin": {
+            "placedID": 7,
+            "blockID": "horus.sphere",
+            "variableID": "sphere"
+          },
+          "destination": {
+            "placedID": 32,
+            "blockID": "eapm.setup_docking_grid",
+            "variableID": "inner_box"
+          },
+          "isCyclic": false,
+          "cycles": 1,
+          "currentCycle": 0
+        }
+      ],
+      "variableConnectionsReference": [
+        {
+          "origin": {
+            "placedID": 32,
+            "blockID": "eapm.setup_docking_grid",
+            "variableID": "output_jobs"
+          },
+          "destination": {
+            "placedID": 33,
+            "blockID": "eapm.bsc_calculations",
+            "variableID": "input_jobs"
+          },
+          "isCyclic": false,
+          "cycles": 1,
+          "currentCycle": 0
+        }
+      ],
+      "connectedTo": [],
+      "connectedToReference": [],
+      "selectedInputGroup": "default",
+      "selectedRemote": "Local",
+      "extensionsToOpen": [],
+      "time": 0,
+      "extraData": {}
+    },
+    {
+      "id": "eapm.bsc_calculations",
+      "isPlaced": true,
+      "position": {
+        "x": 944,
+        "y": 169.55999999999995
+      },
+      "isRunning": false,
+      "runError": false,
+      "runErrorMessage": "",
+      "placedID": 33,
+      "finishedExecution": false,
+      "storedOutputs": {},
+      "variables": [
+        {
+          "id": "partition",
+          "value": "bsc_ls",
+          "type": "string[]"
+        },
+        {
+          "id": "cpus",
+          "value": 1,
+          "type": "integer"
+        },
+        {
+          "id": "folder_name",
+          "value": null,
+          "type": "string"
+        },
+        {
+          "id": "script_name",
+          "value": "calculation_script.sh",
+          "type": "string"
+        },
+        {
+          "id": "environment_list",
+          "variables": [
+            {
+              "id": "environment_key",
+              "value": null,
+              "type": "string"
+            },
+            {
+              "id": "environment_value",
+              "value": null,
+              "type": "string"
+            }
+          ],
+          "value": null,
+          "type": "_list"
+        }
+      ],
+      "variableConnections": [
+        {
+          "origin": {
+            "placedID": 32,
+            "blockID": "eapm.setup_docking_grid",
+            "variableID": "output_jobs"
+          },
+          "destination": {
+            "placedID": 33,
+            "blockID": "eapm.bsc_calculations",
+            "variableID": "input_jobs"
+          },
+          "isCyclic": false,
+          "cycles": 1,
+          "currentCycle": 0
+        }
+      ],
+      "variableConnectionsReference": [
+        {
+          "origin": {
+            "placedID": 33,
+            "blockID": "eapm.bsc_calculations",
+            "variableID": "output_simulation_results"
+          },
+          "destination": {
+            "placedID": 31,
+            "blockID": "eapm.setup_glide",
+            "variableID": "grid_output"
+          },
+          "isCyclic": false,
+          "cycles": 1,
+          "currentCycle": 0
+        }
+      ],
+      "connectedTo": [],
+      "connectedToReference": [],
+      "selectedInputGroup": "default",
+      "selectedRemote": "Local",
+      "extensionsToOpen": [],
+      "time": 0,
+      "extraData": {
+        "simulationName": "glide_testing",
+        "remoteContainer": "/home/bubbles/.horus/73dbca32-14eb-4cdd-8e37-8f840cdcc85f",
+        "remoteDir": "/home/bubbles/.horus/73dbca32-14eb-4cdd-8e37-8f840cdcc85f/Glide_testing"
+      }
+    },
+    {
+      "id": "eapm.bsc_calculations",
+      "isPlaced": true,
+      "position": {
+        "x": 1381,
+        "y": 545.56
+      },
+      "isRunning": false,
+      "runError": false,
+      "runErrorMessage": "",
+      "placedID": 34,
+      "finishedExecution": false,
+      "storedOutputs": {},
+      "variables": [
+        {
+          "id": "partition",
+          "value": "bsc_ls",
+          "type": "string[]"
+        },
+        {
+          "id": "cpus",
+          "value": 1,
+          "type": "integer"
+        },
+        {
+          "id": "folder_name",
+          "value": null,
+          "type": "string"
+        },
+        {
+          "id": "script_name",
+          "value": "calculation_script.sh",
+          "type": "string"
+        },
+        {
+          "id": "environment_list",
+          "variables": [
+            {
+              "id": "environment_key",
+              "value": null,
+              "type": "string"
+            },
+            {
+              "id": "environment_value",
+              "value": null,
+              "type": "string"
+            }
+          ],
+          "value": null,
+          "type": "_list"
+        }
+      ],
+      "variableConnections": [
+        {
+          "origin": {
+            "placedID": 31,
+            "blockID": "eapm.setup_glide",
+            "variableID": "output_jobs"
+          },
+          "destination": {
+            "placedID": 34,
+            "blockID": "eapm.bsc_calculations",
+            "variableID": "input_jobs"
+          },
+          "isCyclic": false,
+          "cycles": 1,
+          "currentCycle": 0
+        }
+      ],
+      "variableConnectionsReference": [],
+      "connectedTo": [],
+      "connectedToReference": [],
+      "selectedInputGroup": "default",
+      "selectedRemote": "Local",
+      "extensionsToOpen": [],
+      "time": 0,
+      "extraData": {
+        "simulationName": "glide_testing",
+        "remoteContainer": "/home/bubbles/.horus/73dbca32-14eb-4cdd-8e37-8f840cdcc85f",
+        "remoteDir": "/home/bubbles/.horus/73dbca32-14eb-4cdd-8e37-8f840cdcc85f/Glide_testing"
+      }
+    }
+  ],
+  "molstarState": "504b030414000000080000000000f9e195a90d0b00000b4c00000a00000073746174652e6a736f6eed5c5b6fdb38167e9f5f6118fbb08b5d07766cc7c902f39036cd6e31499389bbdbcba218d0126d73428b1a4a729c16fdef7b0e295917529293489e743a0612c0d2279ec3732775e82f3f743add90ad68109295dffd676730e98f0e8f4ffaf819fc03efaea90c98f0e05e7778301a1ef4bbeab2134949bd102fff8bdf1c8f5e45e7e3e96f3df2efab8bf76f3e9c5d2f34cce7e47e469c5bc0212db8c2826bb8c6bc055c9a131e50c4c1758f6ec2a947fc6029c2330a90d7de65801c8dfb7d407c55c30145c9285efe9f7a4a8f699dc3f1097e8ef4e88008e2b1b79c686edc9a19c438978424f724d2949416aea9abc40be642ae522ed34f1eabf03e49e4d8fb510a11fed8cbd03547a512a1b38871b7c7bc037cc286875189e2e08b125ce1aea4f33a8219b5b3c37717c337bf4cdebefdedf5781d0d4fde45e12fa7ddc2335f73df3f65bea57732bc7489c75624d424726205358616b9a6332a10ce9a22ca2544b9e8d1696f255ccae1824b3779860b6249d999c6e4810fe1fbd4cd3e967b2843d7c6ea7f098f94a51afc224f96ebe80364a5487321fc6aad1af7d04699a44e2cd12ed8ca1d9139ee6d7a320481e344d2a698028f73b601e13c9cc978f0d7de1420e37af62ab5b6b5952ccc6e6f0ef02d0d1f2ed561aca4ae0f7ee0a358d7b4305910f11a10fd83c9f17878723c381a0e4f26a3d1f1b000f345c0627116c341bf283ee3c24005bff4f3a930788401af765815c97388ca414322171465f2707eab0796c465119a46e1b9f8c625d960f82ede9c0bcc158371e1b2c3997f4e301c86328ab348aa3ee6bda1ea66f131b8a39fcab29a776c156c95cea6e13d576610c7939c096470675bab5639eb709c0e9eb7416f4d8221e69c9c15fa52f8a6c7d84d7647eb04d09272b86ff762b2b1c6a69c8783c99aee5de7e03836f797c875ff606c185e3233c1857c8f5a3d9a0c0647c7861d65711f00373c9c1c1d57813e2ab117949dc60987283df60f8605f7dc42b87092a8d79d893014ab1ea7735b72cdc1afe6f380863895b239e491389932a4906cc1bc97381d401d8f0ea1f6199560b5c74cb7f3ea4f4ae7be14775072794ae1a6aba46a458c22fe1e99ac269f01a3e477057fa80723bb17644639b29b29104db9220805df7d5faa2484e064ba1f2a21c855f7632544cfb596fb145b2fc3145b2f1585bdf289c3c27b749b2a586a1487667e3533ec2e254110524945754120e6f39a4ab4968ccea823c392bb2be24584df5070a0c42a2aeb021d39cf55e2308267457cab8a6d5de68514e3bd524051b2d5758ae6e725642c5faf7c0ca6e62599ac226be6d3dc0ef495fc92549524aa6245e5508fde288ae7c40955242a589bce7b7addf202d6760b29220f739ac55bbbae2f58f81acc471155340b8835a377be90660d9651954e9c55eaaa963fd46021245987064189fc85e3f0285ef15419b92d27d694bc012c4bb98abec3c2dc132d463c6489d79624d56a2fabf134fc58d68159dbb2668fee8c81d4319258736f77c623f913951ec41cf619d92b1669dbf5662078a40aaa7896d600a63379a134db39442d892bee5a0f51220a39f36ad66f0dd0215ec80807f1dbed35432c5811f270a3a4ee82be5d82629682a3eff60fec2a5991cd14228cb39c8654d5a883a3c72947fad4ab9d4b0382c3dda66d44b2905a13c940b8b5c56f899f557ad9c316af2b226f4ba211f5c88cc3f2ba24232cd962c9e12f7c055a4ceac5c1703038199f98c933a01c960859e878301918a1489944a97fe6694e61efcb5b844b2b32a557095b2c21281750509f1b38e67954222ecd4707d5d94ec7531575ab164f215d41de21dc4c2b3a625fd035e566c252f1cc8d1c7ace9973ab1658a8a44a8e60822e5450b6c558c660b79a3c9a4c26500d9ae90e0882c59ce2022befbc2616ab15c9843c032b4b3caf0aa7889f738238abd1e5806844b0457c682eca7410bf44aaa515cdd69632331e4e4e2c859fb6a504361cf5274723d3945cb6aa95dd96668db9698a352020984558ea559cfe358aaba460ef6e24b9d756cd39061b1b866ea07089a4dd21d5642c9b34b65d66a53ed830f192252e2c35acd18d7c66ab484d6a7868472439ba4cd046a9dc3fa8cf18858d2264643563505fd6aa35c6bdce111c553a2394afceed0cc46ead38c5d49142ddb317e302b71ca73e55d1d9e4e7b310abe4eec452af7ac94d53a12bb1de0e0cbb8ae6d8330111f31250db486862e6fcfe52c737ebda79bb91d5761ac69d59e600b33af25865e9de0341e69c41b405d47652b06eb52d74ce188ce939f17687457c6493810ce8df2d36de5dc05b22702895e6cad6377aac774b4a39bc8852ef7d80a0c9d30c5e2b00df25ab455792c58d3296b252035e652d16b08167f561fcd89702483982fd29b5982ad908d0598ecd991ebe6c20559931d8e4aadc698937f5764139025ed009749e3ae48a2ac19a4bf9f4635bc5d8af1ae143b3bc7d1912ebc18a7269e048e627d033505b071682dea2f3972f8986be5a5ea358fc2355396ee83c7f9d976f063e4ae535c3fd0e1aef105557753ef7c886059dbf6260ffdb5ecce09ad837121a3201eb3ec21fdbeded837ecb21f239f90bdaeb3efce2239447bb38461dbf3b31bb3b5be7c251bb60ad396cc9bbabdfdf089f559ed66ad8871d2a4abb1ae363955ef232e74fa59b4aef104cd3a88fb6b50f034115f0a7ea9f83ea95167651b85e933f4de5adc7f8c674de705dfeac548eef40f7abf2675872dc52d8a4816d9cb847af719b74e21dee9fe8fd3b93a3c7aa0e59ee247d85bb08e31a76a88387eb2e960ebe5a6e5534d38645a3fa9cdb97cb057625b52917a3b5f78972296da36a562e37f17e787b82396b5830c01370dcbe64fe834da2ed89e5a661b1404f6bfb323913772decd064a472deb054a0b961b725fae3e5720329b3f5e8f2737372417ef7115d904efbd1e555c382d94774b966a1b36c23bc7cfb1573e9622051f9a994e20e64d7dc1e1e2aa3fde8a9c8b4133ebf17ad2be935acf73de4870fe4ae9df4f0bde85d49af31bd833af691fd804c4bc9ef7b51bb165fa37a6f3db96f7b4ddaab79a6a8d7665de20572ddc1469a3665a3bb33af85ea88bb106d6c537cfbaf266b5d630aa7596873aa7fa594d281e306a8950e9cba6a6e33a670c5d2ad1d85e2d4fd350297611e1c63cc3422357c9820d30895364c59e799415e13173b95006a6fd7cbb44ea54d5125a3a650982ae00e7768d6cf7d2fb6e3297d6df56876eb92cdb96a3c1f9add5c3e1c64a7f214ceea5dc369649e4e735849d1a5b3c8da76ad0ebfbcc096111866ea2fa165b7f4141a9c5b091858dcf421cf88d9afd05cba2b9a795ad025f8ca392ee1859abdfdb9f4ce931a00f3cc64bed94f636f95bed63d9bbb1c875dc0b1a38843fbbe7a020f953037ca45103bad00a299835d7fdb3740d6bb2f05b4837bd04b7a493c0291a0c8955021c3c2d7f2de956201eda7eaa030b48e165401860287d77e86bf98738c1645105b7842d28bb8d0b29da4c2b64d38bac09333c9a6a74054e670ccd37e540c3aa116cbf8aed9f0388bb007337eb6fa2819bcc0b952666cfd7183f4780574ab834f9acdf5da07f42b975d0383951498c99a415b7dd9713de131a79d631e36d7603d7056d59edfd6b96a3789bbea98fcd8ece54f04ac0e1a6b5449a318b4012f383da36b8d1a9a31dc7a4ed4326f7db6b9e7b3fdcc7afb7b2e55737ef4649684a323f766c2735b3b1e9f9f50d9815fa5a0276b27094dfb9cd1b0d430f105193082b42acea113c739cd59a7792c24a12bbc1d9130e655145ecdd53978f58c7ee0a4ec283e0c6d7da094c21d46e7ea1abb1b447c1ec96df9a4073c183c5abb7794dcf61ea8e2a6e29d22eb2fc56c8f315625b89e2384846aa8fc276a9ab7e8864ed1e3fa0af25949bec263a557f329560068226921fec4522bfdc59decef69a578fcffe987afff07504b0102000014000000080000000000f9e195a90d0b00000b4c00000a000000000000000000000000000000000073746174652e6a736f6e504b0506000000000100010038000000350b00000000",
+  "terminalOutput": [],
+  "pendingActions": []
+}
