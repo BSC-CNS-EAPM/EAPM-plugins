@@ -79,7 +79,7 @@ def setupGlideDocking(block: PluginBlock):
         raise Exception("No valid ligands folder selected")
 
     # Get the original pdb models
-    original_pdb_folder = models_folder.replace("_mae", "")
+    original_pdb_folder = os.path.basename(models_folder).replace("_mae", "")
 
     if not os.path.isdir(original_pdb_folder):
         raise Exception(
@@ -102,11 +102,21 @@ def setupGlideDocking(block: PluginBlock):
         "docking", "grid", relative_ligand_folder, poses_per_lig=poses_per_lig
     )
 
-    print(f"Sucessfully prepared glide input. Jobs created: {len(jobs)}")
+    jobs_created = len(jobs)
+
+    if jobs_created == 0:
+        raise Exception("No jobs created. Did the Glide Grid block produce the correct output?")
+
+    print(f"Sucessfully prepared glide input. Jobs created: {jobs_created}")
 
     output_jobs = {
         "program": "glide",
         "jobs": jobs,
+        "results_data": {
+            "ligand_folder": ligand_folder,
+            "model_folder": original_pdb_folder,
+            "dock_folder": "docking",
+        },
     }
 
     block.setOutput("output_jobs", output_jobs)

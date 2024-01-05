@@ -98,14 +98,17 @@ def glideDocking(block: PluginBlock):
         raise Exception("No valid models found in the models folder")
 
     # Create a box from the radius
-    radius = radius * 2
+    radius = radius
     outerbox = (radius, radius, radius)
 
-    inner_box_size = block.inputs["inner_box"]["radius"] * 2
+    inner_box_size = block.inputs["inner_box"]["radius"]
     innerbox = (inner_box_size, inner_box_size, inner_box_size)
 
     jobs = models.setUpDockingGrid(
-        "grid", center_atoms, innerbox=innerbox, outerbox=outerbox
+        "grid",
+        center_atoms,
+        innerbox=innerbox,
+        outerbox=outerbox,
     )  # Set grid calcualtion
 
     # Copy the models .mae to the grid/input_models folder
@@ -114,6 +117,9 @@ def glideDocking(block: PluginBlock):
             model_path = os.path.join(models_folder, model)
             new_model_path = os.path.join("grid/input_models", model)
             os.system(f"cp {model_path} {new_model_path}")
+
+    # Remove any .pdb in the grid/input_models folder
+    os.system("rm grid/input_models/*.pdb")
 
     if len(jobs) == 0:
         raise Exception("No jobs created. Is Glide correctly installed?")

@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+import datetime
 
 from HorusAPI import SlurmBlock, VariableTypes, PluginVariable, VariableList
 
@@ -45,6 +46,15 @@ cpusVariable = PluginVariable(
     type=VariableTypes.INTEGER,
     defaultValue=1,
     category="Slurm configuration",
+)
+
+removeFolderOnFinishVariable = PluginVariable(
+    name="Remove remote folder on finish",
+    id="remove_folder_on_finish",
+    description="Deletes the calculation folder on the remote on finish.",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=True,
+    category="Remote",
 )
 
 # Advanced variables
@@ -108,7 +118,7 @@ def launchCalculationAction(block: SlurmBlock):
 
     block.extraData["simulationName"] = simulationName
 
-    from Utils.bsc_calculations_cluster import setup_bsc_calculations_based_on_horus_remote
+    from utils import setup_bsc_calculations_based_on_horus_remote
 
     print("Launching BSC calculations")
 
@@ -143,7 +153,8 @@ def launchCalculationAction(block: SlurmBlock):
             f.write(HOOK_SCRIPT)
 
     if cluster != "local":
-        simRemoteDir = os.path.join(block.remote.workDir, block.flow.savedID)
+        savedID_and_date = block.flow.savedID + "_" + str(datetime.datetime.now().timestamp())
+        simRemoteDir = os.path.join(block.remote.workDir, savedID_and_date)
         block.extraData["remoteDir"] = simRemoteDir
         block.remote.remoteCommand(f"mkdir -p -v {simRemoteDir}")
         block.extraData["remoteContainer"] = simRemoteDir
@@ -156,20 +167,23 @@ def launchCalculationAction(block: SlurmBlock):
         toUpload = jobs_input.get("send_data", None)
 
         if toUpload is not None:
+            block.extraData["uploadedFolder"] = False
             for file in toUpload:
                 block.remote.sendData(file, simRemoteDir)
         else:
             # Send the whole folder to the remote
-            block.remote.sendData(os.getcwd(), simRemoteDir)
+            simRemoteDir = block.remote.sendData(os.getcwd(), simRemoteDir)
+            block.extraData["uploadedFolder"] = True
 
-            base_folder = os.path.basename(os.getcwd())
+            # base_folder = os.path.basename(os.getcwd())
 
-            # Move the contents of the sent folder to its parent
-            # This is done because the folder is sent as a subfolder
-            block.remote.remoteCommand(f"mv {simRemoteDir}/{base_folder} {simRemoteDir}")
+            # # Move the contents of the sent folder to its parent
+            # # This is done because the folder is sent as a subfolder
+            # command = f"command: mv {simRemoteDir}/{base_folder} {simRemoteDir}"
+            # block.remote.remoteCommand(f"mv {simRemoteDir}/{base_folder} {simRemoteDir}")
 
-            # Remove the sent folder
-            block.remote.remoteCommand(f"rm -rf {simRemoteDir}/{base_folder}")
+            # # Remove the sent folder
+            # block.remote.remoteCommand(f"rm -rf {simRemoteDir}/{base_folder}")
 
         # Upload the commands
         for file in os.listdir("."):
@@ -264,6 +278,11 @@ def downloadResultsAction(block: SlurmBlock):
 
         final_path = block.remote.getData(simRemoteDir, folderDestinationOverride)
 
+        # If we sent the whole folder, the results are in a subfolder
+        # Move them to the parent folder
+        if block.extraData["uploadedFolder"]:
+            final_path = os.path.join(final_path, os.path.basename(currentFolder))
+
         # Move the contents of the downloaded folder to its parent
         # This is done because the folder is downloaded as a subfolder
         for file in os.listdir(final_path):
@@ -287,9 +306,13 @@ def downloadResultsAction(block: SlurmBlock):
 
         remoteContainer = block.extraData["remoteContainer"]
 
+        remove_remote_folder_on_finish = block.variables.get("remove_folder_on_finish", True)
+        remove_remote_folder_on_finish = False
+
         # Remove the remote folder
-        print(f"Removing remote folder {remoteContainer}")
-        block.remote.remoteCommand(f"rm -rf {remoteContainer}")
+        if remove_remote_folder_on_finish:
+            print(f"Removing remote folder {remoteContainer}")
+            block.remote.remoteCommand(f"rm -rf {remoteContainer}")
     else:
         final_path = os.path.join(os.getcwd())
         print("Calculation finished, results are in the folder: ", final_path)
@@ -317,6 +340,7 @@ bscCalculationsBlock = SlurmBlock(
         simulationNameVariable,
         scriptNameVariable,
         environmentList,
+        removeFolderOnFinishVariable,
     ],
     outputs=[outputSimulationResultsVariable, outputResultsFolderVariable],
     initialAction=launchCalculationAction,

@@ -26,6 +26,15 @@ structureVariable = PluginVariable(
     type=VariableTypes.STRUCTURE,
 )
 
+# Internal variables
+changeLigandNameVariable = PluginVariable(
+    id="change_ligand_name",
+    name="Change ligand name",
+    description="Change the ligand name inside the PDB. This will replace the chain, residue and atom names with the ligand name (L)",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
+)
+
 # Output variables
 outputVariable = PluginVariable(
     id="output",
@@ -56,32 +65,43 @@ def convertPDBToMAE(block: PluginBlock):
     if not os.path.isdir(pdb_folder):
         raise Exception(f"Invalid PDB folder: {pdb_folder}")
 
-    # Recursively get all the PDBs inside the folder
-    pdb_files = []
-    for root, dirs, files in os.walk(pdb_folder):
-        for file in files:
-            if file.endswith(".pdb"):
-                pdb_files.append(os.path.join(root, file))
+    # If there are subfolders inside the PDB folder, we need to move the files
+    # to the main folder
+    hasSubfolders = False
+    for subfolder in os.listdir(pdb_folder):
+        if os.path.isdir(os.path.join(pdb_folder, subfolder)):
+            hasSubfolders = True
 
-    if len(pdb_files) == 0:
-        raise Exception(f"No PDB files found in {pdb_folder}")
+    if hasSubfolders:
+        # Recursively get all the PDBs inside the folder
+        pdb_files = []
+        for root, dirs, files in os.walk(pdb_folder):
+            for file in files:
+                if file.endswith(".pdb"):
+                    pdb_files.append(os.path.join(root, file))
 
-    # Create a new folder for the PDB files
-    pdb_folder = os.path.join(os.getcwd(), "pdb_models")
+        if len(pdb_files) == 0:
+            raise Exception(f"No PDB files found in {pdb_folder}")
 
-    os.makedirs(pdb_folder, exist_ok=True)
+        # Create a new folder for the PDB files
+        folder_name = os.path.basename(pdb_folder)
+        pdb_folder = os.path.join(os.getcwd(), f"gathered_pdb_{folder_name}")
 
-    # Copy the PDB files to the new folder
-    for pdb_file in pdb_files:
-        shutil.copy(pdb_file, pdb_folder)
+        os.makedirs(pdb_folder, exist_ok=True)
+
+        # Copy the PDB files to the new folder
+        for pdb_file in pdb_files:
+            shutil.copy(pdb_file, pdb_folder)
 
     models = prepare_proteins.proteinModels(pdb_folder)
+
+    change_ligand_name = block.variables.get("change_ligand_name", False)
 
     # The first time we run this, the script will be generated but not executed
     # as we don't have the Schrodinger license locally. We need to run it again
     # on the remote once the convert script is generated.
     print("Generating conversion script")
-    models.convertLigandPDBtoMae(pdb_folder)
+    models.convertLigandPDBtoMae(pdb_folder, change_ligand_name=change_ligand_name)
 
     mae_folder = os.path.join(os.getcwd(), f"{pdb_folder}_mae")
 
@@ -109,7 +129,7 @@ def convertPDBToMAE(block: PluginBlock):
 
         os.system = mockSystem
         print("Running conversion script on remote")
-        models.convertLigandPDBtoMae(pdb_folder)
+        models.convertLigandPDBtoMae(pdb_folder, change_ligand_name=change_ligand_name)
 
         # Restore the os.system call
         os.system = old_system
@@ -155,6 +175,7 @@ convertPDBToMAEBlock = PluginBlock(
             variables=[pdbFolderVariable],
         ),
     ],
+    variables=[changeLigandNameVariable],
     outputs=[outputVariable],
     action=convertPDBToMAE,
 )
