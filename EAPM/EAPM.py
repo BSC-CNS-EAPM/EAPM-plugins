@@ -32,6 +32,9 @@ def createPlugin():
 
     eapmPlugin.addBlock(analyse_AF_confidence_block)
     
+    from Blocks.AlignPDBMaestro import align_pdb_schro_block
+
+    eapmPlugin.addBlock(align_pdb_schro_block)
     # Return the plugin
     return eapmPlugin
 
