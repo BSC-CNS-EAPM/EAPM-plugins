@@ -168,6 +168,7 @@ def launchCalculationAction(
         if uploadFolders is not None:
             for file in uploadFolders:
                 finalPath = block.remote.sendData(file, simRemoteDir)
+            block.extraData["uploadedFolder"] = False
         else:
             # Send the whole folder to the remote
             simRemoteDir = block.remote.sendData(os.getcwd(), simRemoteDir)
@@ -283,6 +284,7 @@ def downloadResultsAction(block: SlurmBlock):
         # If we sent the whole folder, the results are in a subfolder
         # Move them to the parent folder
         if block.extraData.get("uploadedFolder", False):
+            print("Uploaded folder, moving results to parent folder")
             final_path = os.path.join(final_path, os.path.basename(currentFolder))
 
         # Move the contents of the downloaded folder to its parent
@@ -309,8 +311,6 @@ def downloadResultsAction(block: SlurmBlock):
         remoteContainer = block.extraData["remoteContainer"]
 
         remove_remote_folder_on_finish = block.variables.get("remove_folder_on_finish", True)
-        remove_remote_folder_on_finish = False
-
         # Remove the remote folder
         if remove_remote_folder_on_finish:
             print(f"Removing remote folder {remoteContainer}")
