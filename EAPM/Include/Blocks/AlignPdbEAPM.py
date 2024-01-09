@@ -10,14 +10,14 @@ from HorusAPI import PluginVariable, VariableTypes, PluginBlock, VariableList
 inputFolderAlign = PluginVariable(
     name="Input folder",
     id="input_folder",
-    description="The input folder with the Pdbs to align.",
+    description="The input folder with the PDBs to align.",
     type=VariableTypes.FOLDER,
     defaultValue="trimmed_models",
 )
 pdbReferenceAlign = PluginVariable(
-    name="Pdb reference",
+    name="PDB reference",
     id="pdb_reference",
-    description="The reference Pdb to align to.",
+    description="The reference PDB to align to.",
     type=VariableTypes.FILE,
     defaultValue=None,
     allowedValues=["pdb"],
@@ -130,7 +130,6 @@ def initialAlign(block: PluginBlock):
 
     print("Aligning models...")
 
-
     models.alignModelsToReferencePDB(
         pdbReference,
         outputFolder,
@@ -157,6 +156,6 @@ alignBlock = PluginBlock(
         alignmentModeAlign,
         referenceResiduesAlign,
     ],
-    inputs=[inputFolderAlign, pdbReferenceAlign],
+    inputs=[pdbReferenceAlign, inputFolderAlign],
     outputs=[outputAlign],
 )

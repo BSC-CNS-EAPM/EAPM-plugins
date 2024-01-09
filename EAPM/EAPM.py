@@ -14,7 +14,6 @@ def createPlugin():
     eapmPlugin = Plugin(id="EAPM")
 
     # ========== Blocks ========== #
-
     from Blocks.AlphaFoldEAPM import alphafoldBlock  # type: ignore
 
     # Add the block to the plugin
@@ -27,6 +26,26 @@ def createPlugin():
     from Blocks.AlignPdbEAPM import alignBlock  # type: ignore
 
     eapmPlugin.addBlock(alignBlock)
+
+    from Blocks.SetupDockingGrid import setupDockingGrid  # type: ignore
+
+    eapmPlugin.addBlock(setupDockingGrid)
+
+    from Blocks.AnalyseGlideDocking import analyseGlideDocking
+
+    eapmPlugin.addBlock(analyseGlideDocking)
+
+    from Blocks.PDBToMAE import convertPDBToMAEBlock
+
+    eapmPlugin.addBlock(convertPDBToMAEBlock)
+
+    from Blocks.TrimAlphafoldModels import trimAlphaFoldModelsBlock
+
+    eapmPlugin.addBlock(trimAlphaFoldModelsBlock)
+
+    from Blocks.SetupGlide import setupGlideBlock
+
+    eapmPlugin.addBlock(setupGlideBlock)
 
     # Return the plugin
     return eapmPlugin
