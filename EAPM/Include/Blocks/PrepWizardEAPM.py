@@ -3,7 +3,7 @@ Module containing the PrepWizard block for the EAPM plugin
 """
 
 import os
-from HorusAPI import PluginVariable, PluginBlock, VariableTypes
+from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 
 # ==========================#
 # Variable inputs
@@ -20,30 +20,15 @@ inputFolderPW = PluginVariable(
 # Variable outputs
 # ==========================#
 outputPW = PluginVariable(
-    name="BSC job",
-    id="bsc_jobs",
-    description="Jobs to be run in the BSC Jobs block",
-    type=VariableTypes.CUSTOM,
-    allowedValues=["bsc_jobs"],
+    name="Prepared proteins",
+    id="prepared_proteins",
+    description="Folder containing the prepared proteins.",
+    type=VariableTypes.FOLDER,
 )
 
 ##############################
 # Block's advanced variables #
 ##############################
-folderNamePW = PluginVariable(
-    name="Simulation name",
-    id="folder_name",
-    description="Name of the simulation folder.",
-    type=VariableTypes.STRING,
-    defaultValue="prepwizard",
-)
-scriptNamePW = PluginVariable(
-    name="Simulation name",
-    id="script_name",
-    description="Name of the script.",
-    type=VariableTypes.STRING,
-    defaultValue="slurm_array.sh",
-)
 phPW = PluginVariable(
     name="PH",
     id="ph",
@@ -110,7 +95,7 @@ noProtAssignPW = PluginVariable(
 
 
 # PrepWizard action block
-def prepWizardAction(block: PluginBlock):
+def prepWizardAction(block: SlurmBlock):
     """
     Initial action of the block. It prepares the simulation and sends it to the remote.
 
@@ -124,7 +109,6 @@ def prepWizardAction(block: PluginBlock):
 
     # Get prepWizard variables
     folderName = block.variables.get("folder_name", None)
-    scriptName = block.variables.get("script_name", None)
     ph = block.variables.get("ph", None)
     epikPH = block.variables.get("epik_ph", None)
     sampleWater = block.variables.get("sample_water", None)
@@ -156,39 +140,44 @@ def prepWizardAction(block: PluginBlock):
         noprotassign=noProtAssign,
     )
 
-    print("Preparing launch files...")
-
-    prerpwizard_output_models_folder = os.path.join(os.getcwd(), folderName, "output_models")
-
-    output_jobs = {
-        "program": "schrodinger",
-        "jobs": jobs,
-        "send_data": [folderName],
-        "results_data": prerpwizard_output_models_folder,
-    }
-
     print("Jobs ready to be run.")
 
-    block.setOutput("bsc_jobs", output_jobs)
+    from utils import launchCalculationAction
+
+    launchCalculationAction(block, jobs, "schrodinger", [folderName])
 
 
-prepWizardBlock = PluginBlock(
+def downloadPrepWizardResults(block: SlurmBlock):
+    from utils import downloadResultsAction
+
+    downloadResultsAction(block)
+
+    folderName = block.variables.get("folder_name", None)
+    prerpwizard_output_models_folder = os.path.join(os.getcwd(), folderName, "output_models")
+    block.setOutput("prepared_proteins", prerpwizard_output_models_folder)
+
+
+from utils import BSC_JOB_VARIABLES
+
+block_variables = BSC_JOB_VARIABLES + [
+    phPW,
+    epikPHPW,
+    sampleWaterPW,
+    removeHydrogensPW,
+    delWaterHbondCutOffPW,
+    fillLoopsPW,
+    protonationStatesPW,
+    noepikPW,
+    noProtAssignPW,
+]
+
+
+prepWizardBlock = SlurmBlock(
     name="PrepWizard",
     description="Run Preparation Wizard optimization. (For AMD cluster, workstations and local)",
-    action=prepWizardAction,
-    variables=[
-        folderNamePW,
-        scriptNamePW,
-        phPW,
-        epikPHPW,
-        sampleWaterPW,
-        removeHydrogensPW,
-        delWaterHbondCutOffPW,
-        fillLoopsPW,
-        protonationStatesPW,
-        noepikPW,
-        noProtAssignPW,
-    ],
+    initialAction=prepWizardAction,
+    finalAction=downloadPrepWizardResults,
+    variables=block_variables,
     inputs=[inputFolderPW],
     outputs=[outputPW],
 )

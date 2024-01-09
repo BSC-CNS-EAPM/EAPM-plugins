@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from HorusAPI import PluginBlock, VariableTypes, PluginVariable, VariableGroup
+from HorusAPI import SlurmBlock, VariableTypes, PluginVariable, VariableGroup
 
 # Input variables
 modelFolderVariable = PluginVariable(
@@ -32,7 +32,7 @@ gridOutputVariable = PluginVariable(
     name="Grid output",
     description="Grid calculation output from the BSC calculations block",
     type=VariableTypes.CUSTOM,
-    allowedValues=["bsc_results"],
+    allowedValues=["grid_output"],
 )
 
 # Other variables
@@ -44,17 +44,16 @@ posesPerLigandVariable = PluginVariable(
     defaultValue=10000,
 )
 
-# Output variables
-outputJobsVariable = PluginVariable(
-    id="output_jobs",
-    name="BSC jobs",
-    description="Output jobs from the docking calculation",
+outputDockingResultsVariable = PluginVariable(
+    id="docking_results",
+    name="Docking results",
+    description="Information containing the docking results for the analyse block",
     type=VariableTypes.CUSTOM,
-    allowedValues=["bsc_jobs"],
+    allowedValues=["glide_docking_results"],
 )
 
 
-def setupGlideDocking(block: PluginBlock):
+def setupGlideDocking(block: SlurmBlock):
     import prepare_proteins
 
     if block.selectedInputGroup == "folder_input_group":
@@ -86,6 +85,10 @@ def setupGlideDocking(block: PluginBlock):
             f"PDB models folder ({original_pdb_folder}) not found. Please convert the models to PDB using the 'MAE to PDB' block and keep the original PDB models folder"
         )
 
+    block.extraData["original_pdb_folder"] = original_pdb_folder
+    block.extraData["ligand_folder"] = ligand_folder
+    block.extraData["models_folder"] = original_pdb_folder
+
     models = prepare_proteins.proteinModels(original_pdb_folder)
 
     poses_per_lig = block.variables.get("poses_per_ligand", 10000)
@@ -107,24 +110,32 @@ def setupGlideDocking(block: PluginBlock):
     if jobs_created == 0:
         raise Exception("No jobs created. Did the Glide Grid block produce the correct output?")
 
-    print(f"Sucessfully prepared glide input. Jobs created: {jobs_created}")
+    from utils import launchCalculationAction
 
-    output_jobs = {
-        "program": "glide",
-        "jobs": jobs,
-        "results_data": {
-            "ligand_folder": ligand_folder,
-            "model_folder": original_pdb_folder,
-            "dock_folder": "docking",
-        },
+    launchCalculationAction(block, jobs, "glide")
+
+
+def downloadGlideDocking(block: SlurmBlock):
+    from utils import downloadResultsAction
+
+    downloadResultsAction(block)
+
+    results_data = {
+        "ligand_folder": block.extraData["ligand_folder"],
+        "model_folder": block.extraData["models_folder"],
+        "dock_folder": "docking",
     }
 
-    block.setOutput("output_jobs", output_jobs)
+    block.setOutput(outputDockingResultsVariable.id, results_data)
 
 
-setupGlideBlock = PluginBlock(
-    name="Setup Glide",
-    description="Setup a glide docking calculation.",
+from utils import BSC_JOB_VARIABLES
+
+block_variables = BSC_JOB_VARIABLES + [posesPerLigandVariable]
+
+setupGlideBlock = SlurmBlock(
+    name="Run Glide",
+    description="Run a glide docking calculation.",
     inputGroups=[
         folderInputGroup,
         VariableGroup(
@@ -134,7 +145,8 @@ setupGlideBlock = PluginBlock(
             variables=[gridOutputVariable],
         ),
     ],
-    variables=[posesPerLigandVariable],
-    action=setupGlideDocking,
-    outputs=[outputJobsVariable],
+    variables=block_variables,
+    initialAction=setupGlideDocking,
+    finalAction=downloadGlideDocking,
+    outputs=[outputDockingResultsVariable],
 )

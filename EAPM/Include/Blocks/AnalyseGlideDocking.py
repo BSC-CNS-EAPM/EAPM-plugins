@@ -1,7 +1,14 @@
 import os
 import datetime
 
-from HorusAPI import PluginBlock, VariableTypes, PluginVariable, VariableList, VariableGroup
+from HorusAPI import (
+    PluginBlock,
+    VariableTypes,
+    PluginVariable,
+    VariableList,
+    VariableGroup,
+    Extensions,
+)
 
 # Input variables
 dockingFolderVariable = PluginVariable(
@@ -163,6 +170,9 @@ def analyseDockingAction(block: PluginBlock):
 
             atom_pairs[model][ligandName].append((protein_tuple, ligand_atom))
 
+    if atom_pairs == {}:
+        raise Exception("No atom pairs were given, check the configuration of the block.")
+
     # If the folder to analyse is not on the current working directory, we need to
     # copy it to the curret working directory
     current_folder = os.getcwd()
@@ -191,20 +201,9 @@ def analyseDockingAction(block: PluginBlock):
     # Create the remote folder
     block.remote.remoteCommand(f"mkdir -p {remote_folder}")
 
-    analyseDocking(block, models, folder_to_analyse, atom_pairs=atom_pairs)
-
-    # # Run the analysis
-    # from utils import OverrideOSSystemSchrodinger
-    # with OverrideOSSystemSchrodinger(
-    #     block,
-    #     command_starts_with="run",
-    #     override_with=override_schrodinger,
-    #     files_to_upload=[folder_to_analyse],
-    # ):
-    #     models.analyseDocking(folder_to_analyse, atom_pairs=atom_pairs)
+    analyseDocking(block, models, folder_to_analyse, atom_pairs=atom_pairs, return_failed=True)
 
     metric_distances = {}  # Define the global dictionary
-
     for group in groups:
         metric_distances[group] = {}  # Define the metric nested dictionary
         for model in models:
@@ -215,6 +214,14 @@ def analyseDockingAction(block: PluginBlock):
 
     models.combineDockingDistancesIntoMetrics(metric_distances, overwrite=True)
 
+    # Generate an HTML report containing the results
+    if models.docking_data is not None:
+        html = models.docking_data.to_html()
+
+        Extensions().storeExtensionResults(
+            "horus", "html_loader", data={"html": html}, title="Docking results"
+        )
+
     max_threshold = float(block.variables.get("max_threshold", 5))
 
     best_poses = models.getBestDockingPosesIteratively(
@@ -224,29 +231,17 @@ def analyseDockingAction(block: PluginBlock):
     if len(best_poses) == 0:
         raise Exception("No best poses found with the given threshold. Try a lower threshold")
 
+    html = best_poses.to_html()
+
+    Extensions().storeExtensionResults(
+        "horus", "html_loader", data={"html": html}, title="Best docking poses"
+    )
+
     output_poses = block.variables.get("poses_folder_name", "best_docking_poses")
 
     extractDockingPoses(
         block, models, best_poses, block.extraData["final_path_folder_to_analyse"], output_poses
     )
-
-    # override_extract = f"cd {remote_output_poses} && " + output + "/run"
-
-    # with OverrideOSSystemSchrodinger(
-    #     block,
-    #     command_starts_with="run",
-    #     override_with=override_extract,
-    #     files_to_upload=[folder_to_analyse, output_poses_abs],
-    #     remove_remote=False,
-    #     remote_folder=remote_folder,
-    # ):
-    #     models.extractDockingPoses(
-    #         best_poses,
-    #         folder_to_analyse,
-    #         output_poses,
-    #         only_extract_new=False,
-    #         remove_previous=True,
-    #     )
 
     print("Docking analysis finished")
 

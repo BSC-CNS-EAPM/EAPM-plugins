@@ -14,11 +14,6 @@ def createPlugin():
     eapmPlugin = Plugin(id="EAPM")
 
     # ========== Blocks ========== #
-
-    from Blocks.BSCCalculations import bscCalculationsBlock
-
-    eapmPlugin.addBlock(bscCalculationsBlock)
-
     from Blocks.AlphaFoldEAPM import alphafoldBlock  # type: ignore
 
     # Add the block to the plugin

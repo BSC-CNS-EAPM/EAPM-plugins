@@ -1,22 +1,14 @@
 import os
 import shutil
 
-from HorusAPI import PluginBlock, PluginVariable, VariableTypes, VariableGroup
+from HorusAPI import PluginBlock, PluginVariable, VariableTypes
 
 resultsFolderAF = PluginVariable(
-    name="Models folder",
+    name="Models",
     id="results_folder",
     description="Folder containing the Alphafold output PDBs",
     type=VariableTypes.FOLDER,
     defaultValue="alphafold",
-)
-
-alphafoldOutputResultsVariable = PluginVariable(
-    id="alphafold_output_results",
-    name="Alphafold results",
-    description="BSC JOB Alphafold results",
-    type=VariableTypes.CUSTOM,
-    allowedValues=["bsc_results"],
 )
 
 confidenceThresholdAF = PluginVariable(
@@ -45,14 +37,9 @@ trimmedModelsOutputAF = PluginVariable(
 
 
 def trimAlphaFoldModels(block: PluginBlock):
-    if block.selectedInputGroup == "alphafold_folder_group":
-        models_folder = block.inputs.get("results_folder", None)
-    elif block.selectedInputGroup == "alphafold_job_group":
-        models_folder = block.inputs.get("alphafold_output_results", None)
 
-        models_folder = models_folder.get("output_models", None)
-    else:
-        raise Exception("No valid input group selected")
+    # Get the models folder
+    models_folder = block.inputs.get("results_folder", None)
 
     if models_folder is None:
         raise Exception("No models folder selected")
@@ -108,24 +95,7 @@ def trimAlphaFoldModels(block: PluginBlock):
 trimAlphaFoldModelsBlock = PluginBlock(
     name="Trim Alphafold models",
     description="Trim the Alphafold models",
-    inputGroups=[
-        VariableGroup(
-            id="alphafold_folder_group",
-            name="Alphafold folder",
-            description="Alphafold models folder",
-            variables=[
-                resultsFolderAF,
-            ],
-        ),
-        VariableGroup(
-            id="alphafold_job_group",
-            name="Alphafold output",
-            description="Output models from BSC job calculation from Alphafold",
-            variables=[
-                alphafoldOutputResultsVariable,
-            ],
-        ),
-    ],
+    inputs=[resultsFolderAF],
     variables=[
         confidenceThresholdAF,
     ],

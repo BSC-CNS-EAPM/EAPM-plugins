@@ -2,12 +2,8 @@
 Module containing the AlphaFold block for the EAPM plugin
 """
 
-import datetime
 import os
-import shutil
-import subprocess
-import tarfile
-from HorusAPI import PluginVariable, PluginBlock, VariableTypes
+from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 
 # ==========================#
 # Variable inputs
@@ -32,18 +28,25 @@ outputAF = PluginVariable(
     defaultValue="alphafold",
 )
 
+removeExistingResults = PluginVariable(
+    name="Remove existing results",
+    id="remove_existing_results",
+    description="Remove existing results",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
+)
+
 # Output variables
-outputJobsVariable = PluginVariable(
-    id="output_jobs",
-    name="BSC jobs",
-    description="Output jobs from the docking calculation",
-    type=VariableTypes.CUSTOM,
-    allowedValues=["bsc_jobs"],
+outputModelsVariable = PluginVariable(
+    id="models",
+    name="Alphafold models",
+    description="The output models",
+    type=VariableTypes.FOLDER,
 )
 
 
 # Alphafold action block
-def initialAlphafold(block: PluginBlock):
+def initialAlphafold(block: SlurmBlock):
     """
     Initial action of the block. It prepares the simulation and sends it to the remote.
 
@@ -57,8 +60,20 @@ def initialAlphafold(block: PluginBlock):
         raise Exception("No fasta file provided.")
 
     folderName = block.variables.get("folder_name", "alphafold")
+    removeExisting = block.variables.get("remove_existing_results", False)
 
-    output_models_folder = os.path.join(os.getcwd(), folderName, "output_models")
+    # If folder already exists, raise exception
+    if removeExisting and os.path.exists(folderName):
+        os.system("rm -rf " + folderName)
+
+    if not removeExisting and os.path.exists(folderName):
+        raise Exception(
+            "The folder {} already exists. Please, choose another name or remove it.".format(
+                folderName
+            )
+        )
+
+    block.extraData["folder_name"] = folderName
 
     import prepare_proteins
 
@@ -70,24 +85,31 @@ def initialAlphafold(block: PluginBlock):
 
     jobs = sequences.setUpAlphaFold(folderName)
 
-    output_jobs = {
-        "program": "alphafold",
-        "jobs": jobs,
-        "results_data": {
-            "output_models": output_models_folder,
-        },
-    }
+    from utils import launchCalculationAction
 
-    print("Jobs created")
-
-    block.setOutput("output_jobs", output_jobs)
+    launchCalculationAction(block, jobs, folderName)
 
 
-alphafoldBlock = PluginBlock(
+def finalAlhafoldAction(block: SlurmBlock):
+    from utils import downloadResultsAction
+
+    downloaded_path = downloadResultsAction(block)
+
+    resultsFolder = block.extraData["folder_name"]
+
+    output_models_folder = os.path.join(downloaded_path, resultsFolder, "output_models")
+
+    block.setOutput(outputModelsVariable.id, output_models_folder)
+
+
+from utils import BSC_JOB_VARIABLES
+
+alphafoldBlock = SlurmBlock(
     name="Alphafold",
     description="Run Alphafold. (For cte_power, marenostrum and minotauro clusters or local)",
-    action=initialAlphafold,
-    variables=[],
+    initialAction=initialAlphafold,
+    finalAction=finalAlhafoldAction,
+    variables=BSC_JOB_VARIABLES + [outputAF, removeExistingResults],
     inputs=[fasta_fileAF],
-    outputs=[outputJobsVariable],
+    outputs=[outputModelsVariable],
 )

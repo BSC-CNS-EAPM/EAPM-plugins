@@ -1,6 +1,6 @@
 import os
 
-from HorusAPI import PluginBlock, VariableTypes, PluginVariable, VariableGroup
+from HorusAPI import SlurmBlock, VariableTypes, PluginVariable, VariableGroup
 
 # Input variables
 modelFolderVariable = PluginVariable(
@@ -34,17 +34,22 @@ innerBoxVariable = PluginVariable(
 )
 
 # Output variables
-outputJobsVariable = PluginVariable(
-    id="output_jobs",
-    name="BSC jobs",
-    description="Output jobs from the docking calculation",
+gridOutputVariable = PluginVariable(
+    id="grid_output",
+    name="GRID",
+    description="Grid to be used in the docking calculation",
     type=VariableTypes.CUSTOM,
-    allowedValues=["bsc_jobs"],
+    allowedValues=["grid_output"],
 )
 
 
 # Action
-def glideDocking(block: PluginBlock):
+def glideDocking(block: SlurmBlock):
+    if block.selectedInputGroup != "single_model":
+        raise Exception(
+            "The multiple model selection is not implemented yet. Please select the single model option"
+        )
+
     import prepare_proteins
 
     models_folder = block.inputs.get("model_folder")
@@ -124,25 +129,61 @@ def glideDocking(block: PluginBlock):
     if len(jobs) == 0:
         raise Exception("No jobs created. Is Glide correctly installed?")
 
-    print(f"Sucessfully prepared docking grid input. Jobs created: {len(jobs)}")
+    from utils import launchCalculationAction
 
-    output_jobs = {
-        "program": "glide",
-        "jobs": jobs,
-        "results_data": {
-            "ligand_folder": ligand_folder,
-            "model_folder": models_folder,
-        },
+    launchCalculationAction(block, jobs, "glide")
+
+
+def downloadGridResults(block: SlurmBlock):
+    from utils import downloadResultsAction
+
+    downloadResultsAction(block)
+
+    # Set as the output the same models and ligands folder as the input
+    grid_output = {
+        "model_folder": block.inputs["model_folder"],
+        "ligand_folder": block.inputs["ligand_folder"],
     }
 
-    block.setOutput("output_jobs", output_jobs)
+    block.setOutput("grid_output", grid_output)
 
 
-setupDockingGrid = PluginBlock(
+from utils import BSC_JOB_VARIABLES
+
+setupDockingGrid = SlurmBlock(
     name="Setup Docking Grid",
     description="Prepare the files for a GLIDE docking calculation",
-    action=glideDocking,
-    inputs=[modelFolderVariable, ligandFolderVariable, dockingCenterVariable, innerBoxVariable],
-    variables=[],
-    outputs=[outputJobsVariable],
+    initialAction=glideDocking,
+    finalAction=downloadGridResults,
+    inputGroups=[
+        VariableGroup(
+            id="single_model",
+            name="Single model",
+            description="Specify the box center and size for a single model",
+            variables=[
+                modelFolderVariable,
+                ligandFolderVariable,
+                dockingCenterVariable,
+                innerBoxVariable,
+            ],
+        ),
+        VariableGroup(
+            id="multiple_models",
+            name="Multiple models",
+            description="Provide a file with the box center and size for each model",
+            variables=[
+                modelFolderVariable,
+                ligandFolderVariable,
+                PluginVariable(
+                    id="multimodel_center_atoms",
+                    name="Center atoms",
+                    description="File containing the center atoms for each model",
+                    type=VariableTypes.FILE,
+                    allowedValues=["json"],
+                ),
+            ],
+        ),
+    ],
+    variables=BSC_JOB_VARIABLES,
+    outputs=[gridOutputVariable],
 )
