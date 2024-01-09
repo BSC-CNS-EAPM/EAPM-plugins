@@ -6,7 +6,7 @@
   "pluginFile": "EAPM.py",
   "dependencies": [
     "pandas",
-    "biopython",
+    "biopython==1.81",
     "scipy",
     "pyyaml",
     "numpy",
