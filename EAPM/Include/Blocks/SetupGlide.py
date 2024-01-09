@@ -77,6 +77,16 @@ def setupGlideDocking(block: SlurmBlock):
     if ligand_folder is None or not os.path.isdir(ligand_folder):
         raise Exception("No valid ligands folder selected")
 
+    # If no maes are inside the ligan folder, raise an exception
+    mae_found = False
+    for file in os.listdir(ligand_folder):
+        if file.endswith(".mae"):
+            mae_found = True
+            break
+
+    if not mae_found:
+        raise Exception(f"No .mae files found in {ligand_folder}")
+
     # Get the original pdb models
     original_pdb_folder = os.path.basename(models_folder).replace("_mae", "")
 
@@ -112,7 +122,9 @@ def setupGlideDocking(block: SlurmBlock):
 
     from utils import launchCalculationAction
 
-    launchCalculationAction(block, jobs, "glide")
+    launchCalculationAction(
+        block, jobs, "glide", uploadFolders=["docking", "grid", relative_ligand_folder]
+    )
 
 
 def downloadGlideDocking(block: SlurmBlock):
@@ -125,6 +137,29 @@ def downloadGlideDocking(block: SlurmBlock):
         "model_folder": block.extraData["models_folder"],
         "dock_folder": "docking",
     }
+
+    # Check on the output logs for each model if there was an error
+    for model in os.listdir(os.path.join(os.getcwd(), "docking", "output_models")):
+        # Get the log file (the only file that ends with .log)
+        log_file = None
+        for file in os.listdir(os.path.join(os.getcwd(), "docking", "output_models", model)):
+            if file.endswith(".log"):
+                log_file = os.path.join(os.getcwd(), "docking", "output_models", model, file)
+                break
+
+        if log_file is None:
+            continue
+
+        if not os.path.isfile(log_file):
+            continue
+
+        with open(log_file, "r") as f:
+            log_content = f.read()
+
+            if "ROUGH POSE REFINE FAILED" in log_content:
+                raise Exception(
+                    f"Rough pose refine failed for model {model}, try a different grid size"
+                )
 
     block.setOutput(outputDockingResultsVariable.id, results_data)
 
