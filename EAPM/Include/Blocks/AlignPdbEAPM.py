@@ -71,6 +71,14 @@ trajectoryChainIndexesAlign = VariableList(
     prototypes=[trajectoryChainIndexVariable],
 )
 
+mafftExecutableAlign = PluginVariable(
+    name="MAFFT executable",
+    id="mafft_executable",
+    description="The path to the MAFFT executable.",
+    type=VariableTypes.FILE,
+    defaultValue="mafft",
+)
+
 
 alignmentModeAlign = PluginVariable(
     name="Alignment mode",
@@ -104,23 +112,45 @@ def initialAlign(block: PluginBlock):
     Args:
         block (SlurmBlock): The block to run the action on.
     """
+
+
+    if block.remote.name != "Local":
+        raise Exception("This block is only available for local execution.")
+
+    mafftExecutable = block.config.get("mafft_path", "mafft")
+    # Check if the remote has the mafft executable
+    try:
+        block.remote.remoteCommand(f"{mafftExecutable} --version")
+    except Exception as exc:
+        raise Exception(
+            "MAFFT is not installed in the selected machine. Please install MAFFT in order to align the PDBs"
+        ) from exc
+
     # Loading plugin variables
-    inputFolder = block.inputs.get("input_folder", "None")
-    pdbReference = block.inputs.get("pdb_reference", "None")
+    inputFolder = block.inputs.get("input_folder", None)
+    pdbReference = block.inputs.get("pdb_reference", None)
     outputFolder = block.outputs.get("path", "aligned_models")
-    chainIndexes = block.variables.get("chain_indexes", None)
-    trajectoryChainIndexes = block.variables.get("trajectory_chain_indexes", None)
-    alignmentMode = block.variables.get("alignment_mode", None)
-    referenceResidues = block.variables.get("reference_residues", None)
+
+    defaultChainIndex = {"chain_index": 0}
+
+    chainIndexes = block.variables.get("chain_indexes", [defaultChainIndex])
+    trajectoryChainIndexes = block.variables.get("trajectory_chain_indexes", [])
+    alignmentMode = block.variables.get("alignment_mode", "aligned")
+    referenceResidues = block.variables.get("reference_residues", [])
 
     # Parse the chain indexes
-    chainIndexes = [x["chain_index"] for x in chainIndexes]
+    if chainIndexes is not None:
+        chainIndexes = [x["chain_index"] for x in chainIndexes]
+    else:
+        chainIndexes = [0]
 
     # Parse the trajectory chain indexes
-    trajectoryChainIndexes = [x["trajectory_chain_index"] for x in trajectoryChainIndexes]
+    if trajectoryChainIndexes is not None:
+        trajectoryChainIndexes = [x["trajectory_chain_index"] for x in trajectoryChainIndexes]
 
     # Parse the reference residues
-    referenceResidues = [x["reference_residues"] for x in referenceResidues]
+    if referenceResidues is not None:
+        referenceResidues = [x["reference_residues"] for x in referenceResidues]
 
     import prepare_proteins
 
@@ -130,15 +160,30 @@ def initialAlign(block: PluginBlock):
 
     print("Aligning models...")
 
-    models.alignModelsToReferencePDB(
-        pdbReference,
-        outputFolder,
-        chain_indexes=chainIndexes,
-        trajectory_chain_indexes=trajectoryChainIndexes,
-        aligment_mode=alignmentMode,
-        reference_residues=referenceResidues,
-        verbose=True,
-    )
+    import subprocess
+
+    oldSubprocess = subprocess.run
+
+    def hookSubprocessMafft(command, **kwargs):
+        if command.startswith("mafft"):
+            command = command.replace("mafft", mafftExecutable)
+
+        print("Running command:", command)
+        return oldSubprocess(command, **kwargs)
+
+    try:
+        subprocess.run = hookSubprocessMafft
+        models.alignModelsToReferencePDB(
+            pdbReference,
+            outputFolder,
+            chain_indexes=chainIndexes,
+            trajectory_chain_indexes=trajectoryChainIndexes,
+            aligment_mode=alignmentMode,
+            reference_residues=referenceResidues,
+            verbose=True,
+        )
+    finally:
+        subprocess.run = oldSubprocess
 
     print("Setting output of block to the results directory...")
 
@@ -155,6 +200,7 @@ alignBlock = PluginBlock(
         trajectoryChainIndexesAlign,
         alignmentModeAlign,
         referenceResiduesAlign,
+        mafftExecutableAlign,
     ],
     inputs=[pdbReferenceAlign, inputFolderAlign],
     outputs=[outputAlign],

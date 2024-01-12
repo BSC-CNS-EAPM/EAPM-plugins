@@ -22,6 +22,30 @@ def setup_bsc_calculations_based_on_horus_remote(
     if remote_host in localIPs.values():
         cluster = "powerpuff"
 
+    # If we are working with pele, only marenostrum and nord3 are allowed
+    if program == "pele":
+        if cluster not in ["mn1.bsc.es", "mn2.bsc.es", "mn3.bsc.es", "nord3.bsc.es"]:
+            raise Exception("Pele can only be run on Marenostrum or Nord3")
+
+        if cluster == "nord3.bsc.es":
+            bsc_calculations.nord3.setUpPELEForNord3(
+                jobs,
+                partition=partition,
+                cpus=cpus,
+                general_script=scriptName,
+                scripts_folder=scriptName + "_scripts",
+            )
+        elif "mn" in cluster:
+            bsc_calculations.marenostrum.setUpPELEForMarenostrum(
+                jobs,
+                partition=partition,
+                cpus=cpus,
+                general_script=scriptName,
+                scripts_folder=scriptName + "_scripts",
+            )
+
+        return cluster
+
     ## Define cluster
     # cte_power
     if cluster == "plogin1.bsc.es":
@@ -77,12 +101,12 @@ def setup_bsc_calculations_based_on_horus_remote(
 
 HOOK_SCRIPT = """
 for script in calculation_script.sh_?; do
-    sh "$script" > "${script%.*}.out" 2> "${script%.*}.err"
+    sh "$script" > "${script%.*}.out" 2> "${script%.*}.err" &
     exit_code=$?
-    
-    # Wait for the last background process to finish
-    wait $!
 done
+
+# Wait for all background processes to finish
+wait
 
 if [ $exit_code -ne 0 ]; then
     echo "Error: Script $script failed with exit code $exit_code" >&2
@@ -122,7 +146,7 @@ def launchCalculationAction(
 
     block.extraData["simulationName"] = simulationName
 
-    print("Launching BSC calculations")
+    print(f"Launching BSC calculation with {cpus} CPUs")
 
     cluster = setup_bsc_calculations_based_on_horus_remote(
         block.remote.name.lower(),
@@ -206,9 +230,20 @@ def launchCalculationAction(
             block.remote.remoteCommand(command)
 
         else:
-            jobID = block.remote.submitJob(scriptPath)
+            print(f"Submitting the job to the remote... {scriptPath}")
+            if program == "pele":
+                with block.remote.cd(simRemoteDir):
+                    for jobScript in os.listdir(scriptName + "_scripts"):
+                        if jobScript.endswith(".sh"):
+                            jobID = block.remote.submitJob(
+                                scriptPath + "_scripts/" + jobScript, changeDir=False
+                            )
+                            print("Submitted job with ID: ", jobID)
+                print("Waiting for the jobs to finish...")
+            else:
+                jobID = block.remote.submitJob(scriptPath)
+                print(f"Simulation running with job ID {jobID}. Waiting for it to finish...")
 
-            print(f"Simulation running with job ID {jobID}. Waiting for it to finish...")
     # * Local
     else:
         print("Running the simulation locally...")

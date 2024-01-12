@@ -1,6 +1,6 @@
 import os
 
-from HorusAPI import SlurmBlock, VariableTypes, PluginVariable, VariableGroup
+from HorusAPI import InputBlock, SlurmBlock, VariableTypes, PluginVariable, VariableGroup
 
 # Input variables
 modelFolderVariable = PluginVariable(
@@ -45,11 +45,6 @@ gridOutputVariable = PluginVariable(
 
 # Action
 def glideDocking(block: SlurmBlock):
-    if block.selectedInputGroup != "single_model":
-        raise Exception(
-            "The multiple model selection is not implemented yet. Please select the single model option"
-        )
-
     import prepare_proteins
 
     models_folder = block.inputs.get("model_folder")
@@ -91,12 +86,31 @@ def glideDocking(block: SlurmBlock):
 
     models = prepare_proteins.proteinModels(pdb_models_folder)
 
-    # Create a fake center_atoms variable for the library
-    center_atoms = {}
-    for model in os.listdir(models_folder):
-        if model.endswith(".mae"):
-            model_name = model.split(".")[0]
-            center_atoms[model_name] = [x, y, z]
+    if block.selectedInputGroup != "single_model":
+        # Get the common residues
+        common_residues = block.inputs.get("multimodel_common_residue", {})
+
+        # Parse the atomcenter for each model
+        center_atoms = {}  # Create dictionary to store the atom 3-element tuple for each model
+        for model in models:  # Iterate the models inside the library
+            for r in models.structures[
+                model
+            ].get_residues():  # Iterate the residues for each Bio.PDB.Structure object
+                if (
+                    r.id[1] == common_residues[model][0]
+                ):  # Check that the residue matches the defined index
+                    center_atoms[model] = (
+                        r.get_parent().id,
+                        r.id[1],
+                        RESIDUE_DICTIONARY[r.resname],
+                    )  # Store the corresponsing tuple.
+    else:
+        # Create a fake center_atoms variable for the library
+        center_atoms = {}
+        for model in os.listdir(models_folder):
+            if model.endswith(".mae"):
+                model_name = model.split(".")[0]
+                center_atoms[model_name] = [x, y, z]
 
     # If the center_atoms is empty, raise an exception
     if len(center_atoms) == 0:
@@ -131,7 +145,7 @@ def glideDocking(block: SlurmBlock):
 
     from utils import launchCalculationAction
 
-    launchCalculationAction(block, jobs, "glide")
+    launchCalculationAction(block, jobs, "glide", ["grid"])
 
 
 def downloadGridResults(block: SlurmBlock):
@@ -169,17 +183,19 @@ setupDockingGrid = SlurmBlock(
         ),
         VariableGroup(
             id="multiple_models",
-            name="Multiple models",
-            description="Provide a file with the box center and size for each model",
+            name="Multiple models common residue",
+            description="Provide a common residue for all the models",
             variables=[
                 modelFolderVariable,
                 ligandFolderVariable,
+                dockingCenterVariable,
+                innerBoxVariable,
                 PluginVariable(
-                    id="multimodel_center_atoms",
-                    name="Center atoms",
-                    description="File containing the center atoms for each model",
-                    type=VariableTypes.FILE,
-                    allowedValues=["json"],
+                    id="multimodel_common_residue",
+                    name="Common residue",
+                    description="Select a residue that is common to all the models",
+                    type=VariableTypes.CUSTOM,
+                    allowedValues=["multimodel_common_residue_grid"],
                 ),
             ],
         ),
@@ -187,3 +203,26 @@ setupDockingGrid = SlurmBlock(
     variables=BSC_JOB_VARIABLES,
     outputs=[gridOutputVariable],
 )
+
+RESIDUE_DICTIONARY = {
+    "ALA": "CB",
+    "CYS": "SG",
+    "ASP": "CG",
+    "GLU": "CD",
+    "PHE": "CZ",
+    "GLY": "CA",
+    "HIS": "NE2",
+    "ILE": "CB",
+    "LYS": "NZ",
+    "LEU": "CG",
+    "MET": "SD",
+    "ASN": "CG",
+    "PRO": "CG",
+    "GLN": "CD",
+    "ARG": "CZ",
+    "SER": "OG",
+    "THR": "OG1",
+    "TRP": "NE1",
+    "VAL": "CB",
+    "TYR": "OH",
+}

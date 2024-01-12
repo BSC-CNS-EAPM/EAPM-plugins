@@ -2,7 +2,7 @@
 Entry point for the EAPM plugin
 """
 
-from HorusAPI import Plugin
+from HorusAPI import Plugin, PluginConfig
 
 
 def createPlugin():
@@ -46,6 +46,23 @@ def createPlugin():
     from Blocks.SetupGlide import setupGlideBlock
 
     eapmPlugin.addBlock(setupGlideBlock)
+
+    from Blocks.PeleEAPM import peleBlock
+
+    eapmPlugin.addBlock(peleBlock)
+
+    from Blocks.AnalysePELE import analysePELEBlock
+
+    eapmPlugin.addBlock(analysePELEBlock)
+
+    from Blocks.MultipleSequenceAlignment import multipleSequenceAlignmentBlock
+
+    eapmPlugin.addBlock(multipleSequenceAlignmentBlock)
+
+    # Add the configs
+    from Configs.mffaConfig import mffaExecutableConfig
+
+    eapmPlugin.addConfig(mffaExecutableConfig)
 
     # Return the plugin
     return eapmPlugin
