@@ -50,6 +50,14 @@ glideOutputVariableGroup = VariableGroup(
 )
 
 # Variables
+ligandSeparatorVariable = PluginVariable(
+    id="ligand_separator",
+    name="Ligand separator",
+    description="Separator used to separate the ligand name from the docking pose",
+    type=VariableTypes.STRING,
+    defaultValue="-",
+)
+
 atom1SelectionVariable = PluginVariable(
     id="protein_atom",
     name="Protein atom",
@@ -145,6 +153,69 @@ def analyseDockingAction(block: PluginBlock):
 
     # Generate the atom pairs based on the selections
     selections = block.variables.get("selections_list", [])
+    output_poses = block.variables.get("poses_folder_name", "best_docking_poses")
+
+    # If the folder to analyse is not on the current working directory, we need to
+    # copy it to the curret working directory
+    current_folder = os.getcwd()
+
+    # If the folder starts with a different path, we need to copy it to the current dir
+    # If its a relative path (under the current dir) pass
+    if (
+        not folder_to_analyse.startswith(current_folder)
+        and not os.path.basename(folder_to_analyse) == folder_to_analyse
+    ):
+        # Copy the folder to the current working directory
+        import shutil
+
+        shutil.copytree(
+            folder_to_analyse, os.path.join(current_folder, folder_to_analyse), dirs_exist_ok=True
+        )
+
+    folder_to_analyse = os.path.abspath(folder_to_analyse)
+
+    # If we are on the remote, create the output folder
+    remote_folder = str(block.flow.savedID + "_" + str(datetime.datetime.now().timestamp()))
+    remote_folder = os.path.join(block.remote.workDir, remote_folder)
+
+    block.extraData["remote_folder"] = remote_folder
+
+    # Create the remote folder
+    block.remote.remoteCommand(f"mkdir -p {remote_folder}")
+
+    separatorValue = block.variables.get("ligand_separator", "-")
+
+    if selections is None or selections == []:
+
+        # Extract single docking poses
+        docking_data = models.getSingleDockingData(
+            models.models_names[0], models.docking_ligands[models.models_names[0]]
+        )
+        models.extractDockingPoses(
+            docking_data, folder_to_analyse, output_folder="poses", separator=separatorValue
+        )
+
+        extractDockingPoses(
+            block,
+            models,
+            docking_data,
+            block.extraData["final_path_folder_to_analyse"],
+            output_poses,
+        )
+
+        block.setOutput("output_poses", output_poses)
+
+        glideOutput = {
+            "poses_folder": output_poses,
+            "models_folder": model_folder,
+            "atom_pairs": atom_pairs,
+        }
+
+        block.setOutput("glide_results_output", glideOutput)
+
+        print("Successfully extracted a single docking pose")
+
+        return
 
     atom_pairs = {}
     atom_pairs_for_pele = {}
@@ -189,35 +260,18 @@ def analyseDockingAction(block: PluginBlock):
     if atom_pairs == {}:
         raise Exception("No atom pairs were given, check the configuration of the block.")
 
-    # If the folder to analyse is not on the current working directory, we need to
-    # copy it to the curret working directory
-    current_folder = os.getcwd()
+    print("Starting docking analysis")
 
-    # If the folder starts with a different path, we need to copy it to the current dir
-    # If its a relative path (under the current dir) pass
-    if (
-        not folder_to_analyse.startswith(current_folder)
-        and not os.path.basename(folder_to_analyse) == folder_to_analyse
-    ):
-        # Copy the folder to the current working directory
-        import shutil
+    analyseDocking(
+        block,
+        models,
+        folder_to_analyse,
+        atom_pairs=atom_pairs,
+        return_failed=True,
+        separator=separatorValue,
+    )
 
-        shutil.copytree(
-            folder_to_analyse, os.path.join(current_folder, folder_to_analyse), dirs_exist_ok=True
-        )
-
-    folder_to_analyse = os.path.abspath(folder_to_analyse)
-
-    # If we are on the remote, create the output folder
-    remote_folder = str(block.flow.savedID + "_" + str(datetime.datetime.now().timestamp()))
-    remote_folder = os.path.join(block.remote.workDir, remote_folder)
-
-    block.extraData["remote_folder"] = remote_folder
-
-    # Create the remote folder
-    block.remote.remoteCommand(f"mkdir -p {remote_folder}")
-
-    analyseDocking(block, models, folder_to_analyse, atom_pairs=atom_pairs, return_failed=True)
+    print("Docking analysis finished")
 
     metric_distances = {}  # Define the global dictionary
     for group in groups:
@@ -253,8 +307,6 @@ def analyseDockingAction(block: PluginBlock):
         "horus", "html_loader", data={"html": html}, title="Best docking poses"
     )
 
-    output_poses = block.variables.get("poses_folder_name", "best_docking_poses")
-
     extractDockingPoses(
         block, models, best_poses, block.extraData["final_path_folder_to_analyse"], output_poses
     )
@@ -276,7 +328,12 @@ analyseGlideDocking = PluginBlock(
     name="Analyse Glide Docking",
     description="Analyse the docking results from Glide",
     inputGroups=[folderVariableGroup, glideOutputVariableGroup],
-    variables=[maxThresholdVariable, posesFolderNameVariable, selectionsListVariable],
+    variables=[
+        ligandSeparatorVariable,
+        maxThresholdVariable,
+        posesFolderNameVariable,
+        selectionsListVariable,
+    ],
     outputs=[outputPosesVariable, analyseGlideOutputVariable],
     action=analyseDockingAction,
 )

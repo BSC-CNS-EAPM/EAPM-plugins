@@ -55,7 +55,7 @@ def initialAlphafold(block: SlurmBlock):
     """
 
     # Loading plugin variables
-    fastaFile = block.inputs.get("fasta_file", "None")
+    fastaFile = block.inputs["fasta_file"]
     if fastaFile == "None":
         raise Exception("No fasta file provided.")
 
