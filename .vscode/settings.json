@@ -6,7 +6,7 @@
         "--line-length",
         "98"
     ],
-    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.typeCheckingMode": "off",
     "python.analysis.extraPaths": [
         "EAPM/deps/",
         "EAPM/Include/",

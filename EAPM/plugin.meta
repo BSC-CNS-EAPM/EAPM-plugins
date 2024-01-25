@@ -6,7 +6,6 @@
   "pluginFile": "EAPM.py",
   "dependencies": [
     "pandas",
-    "biopython==1.81",
     "scipy",
     "pyyaml",
     "numpy",
@@ -16,6 +15,8 @@
     "ipywidgets",
     "networkx",
     "git+https://github.com/Martin-Floor/bsc_calculations.git",
-    "git+https://github.com/Martin-Floor/prepare_proteins.git"
+    "git+https://github.com/Martin-Floor/prepare_proteins.git",
+    "git+https://github.com/Martin-Floor/PELE_scripts.git",
+    "biopython==1.81"
   ]
 }

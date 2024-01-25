@@ -29,6 +29,15 @@ outputPW = PluginVariable(
 ##############################
 # Block's advanced variables #
 ##############################
+folderNameVariable = PluginVariable(
+    name="Folder Name",
+    id="folder_name",
+    description="Folder name for the prepared proteins.",
+    type=VariableTypes.STRING,
+    defaultValue="prepared_proteins",
+)
+
+
 phPW = PluginVariable(
     name="PH",
     id="ph",
@@ -103,21 +112,21 @@ def prepWizardAction(block: SlurmBlock):
         block (SlurmBlock): The block to run the action on.
     """
     # Loading plugin variables
-    inputFolder = block.inputs.get("input_folder", "None")
-    if inputFolder == "None":
-        raise Exception("No folder provided.")
+    inputFolder = block.inputs.get("input_folder", None)
+    if inputFolder is None:
+        raise Exception("No input folder provided.")
 
     # Get prepWizard variables
-    folderName = block.variables.get("folder_name", None)
-    ph = block.variables.get("ph", None)
-    epikPH = block.variables.get("epik_ph", None)
-    sampleWater = block.variables.get("sample_water", None)
-    removeHydrogens = block.variables.get("remove_hydrogens", None)
-    delWaterHbondCutOff = block.variables.get("del_water_hbond_cut_off", None)
-    fillLoops = block.variables.get("fill_loops", None)
+    folderName = block.variables.get("folder_name", "prepared_proteins")
+    ph = int(block.variables.get("ph", 7))
+    epikPH = block.variables.get("epik_ph", False)
+    sampleWater = block.variables.get("sample_water", False)
+    removeHydrogens = block.variables.get("remove_hydrogens", False)
+    delWaterHbondCutOff = block.variables.get("del_water_hbond_cut_off", False)
+    fillLoops = block.variables.get("fill_loops", False)
     protonationStates = block.variables.get("protonation_states", None)
-    noepik = block.variables.get("no_epik", None)
-    noProtAssign = block.variables.get("no_prot_assign", None)
+    noepik = block.variables.get("no_epik", False)
+    noProtAssign = block.variables.get("no_prot_assign", False)
 
     import prepare_proteins
 
@@ -127,24 +136,33 @@ def prepWizardAction(block: SlurmBlock):
 
     print("Setting up PrepWizard Optimitzations...")
 
-    jobs = models.setUpPrepwizardOptimization(
-        prepare_folder=folderName,
-        pH=ph,
-        epik_pH=epikPH,
-        samplewater=sampleWater,
-        remove_hydrogens=removeHydrogens,
-        delwater_hbond_cutoff=delWaterHbondCutOff,
-        fill_loops=fillLoops,
-        protonation_states=protonationStates,
-        noepik=noepik,
-        noprotassign=noProtAssign,
-    )
+    folderNameWizard = folderName + "_wizard"
+
+    try:
+        jobs = models.setUpPrepwizardOptimization(
+            prepare_folder=folderNameWizard,
+            pH=ph,
+            epik_pH=epikPH,
+            samplewater=sampleWater,
+            remove_hydrogens=removeHydrogens,
+            delwater_hbond_cutoff=delWaterHbondCutOff,
+            fill_loops=fillLoops,
+            protonation_states=protonationStates,
+            noepik=noepik,
+            noprotassign=noProtAssign,
+        )
+    except Exception as exc:
+        import traceback
+
+        trace = traceback.format_exc()
+
+        raise Exception(f"Error setting up PrepWizard optimization: {trace}") from exc
 
     print("Jobs ready to be run.")
 
     from utils import launchCalculationAction
 
-    launchCalculationAction(block, jobs, "schrodinger", [folderName])
+    launchCalculationAction(block, jobs, "schrodinger", [folderNameWizard])
 
 
 def downloadPrepWizardResults(block: SlurmBlock):
@@ -152,14 +170,29 @@ def downloadPrepWizardResults(block: SlurmBlock):
 
     downloadResultsAction(block)
 
-    folderName = block.variables.get("folder_name", None)
-    prerpwizard_output_models_folder = os.path.join(os.getcwd(), folderName, "output_models")
-    block.setOutput("prepared_proteins", prerpwizard_output_models_folder)
+    folderName = block.variables.get("folder_name")
+
+    # Create the output folder containing the prepared proteins
+    if not os.path.exists(folderName):
+        os.mkdir(folderName)
+
+    import shutil
+
+    # Move the prepared proteins to the output folder
+    for model in os.listdir(os.path.join(folderName + "_wizard", "output_models")):
+        for file in os.listdir(os.path.join(folderName + "_wizard", "output_models", model)):
+            if file.endswith(".pdb"):
+                finalPath = os.path.join(folderName, file)
+                pdbPath = os.path.join(folderName + "_wizard", "output_models", model, file)
+                shutil.copyfile(pdbPath, finalPath)
+
+    block.setOutput("prepared_proteins", folderName)
 
 
 from utils import BSC_JOB_VARIABLES
 
 block_variables = BSC_JOB_VARIABLES + [
+    folderNameVariable,
     phPW,
     epikPHPW,
     sampleWaterPW,

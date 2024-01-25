@@ -140,6 +140,10 @@ def downloadGlideDocking(block: SlurmBlock):
 
     # Check on the output logs for each model if there was an error
     for model in os.listdir(os.path.join(os.getcwd(), "docking", "output_models")):
+        # Skip .DS_Store files
+        if model.startswith("."):
+            continue
+
         # Get the log file (the only file that ends with .log)
         log_file = None
         for file in os.listdir(os.path.join(os.getcwd(), "docking", "output_models", model)):

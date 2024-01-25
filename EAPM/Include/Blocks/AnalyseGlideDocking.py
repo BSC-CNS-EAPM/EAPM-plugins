@@ -50,6 +50,14 @@ glideOutputVariableGroup = VariableGroup(
 )
 
 # Variables
+ligandSeparatorVariable = PluginVariable(
+    id="ligand_separator",
+    name="Ligand separator",
+    description="Separator used to separate the ligand name from the docking pose",
+    type=VariableTypes.STRING,
+    defaultValue="-",
+)
+
 atom1SelectionVariable = PluginVariable(
     id="protein_atom",
     name="Protein atom",
@@ -114,6 +122,14 @@ outputPosesVariable = PluginVariable(
     type=VariableTypes.FOLDER,
 )
 
+analyseGlideOutputVariable = PluginVariable(
+    id="glide_results_output",
+    name="Glide results output",
+    description="Output results of the Glide analysis",
+    type=VariableTypes.CUSTOM,
+    allowedValues=["glide_output"],
+)
+
 
 def analyseDockingAction(block: PluginBlock):
     if block.selectedInputGroup == "folder_variable_group":
@@ -137,41 +153,7 @@ def analyseDockingAction(block: PluginBlock):
 
     # Generate the atom pairs based on the selections
     selections = block.variables.get("selections_list", [])
-
-    atom_pairs = {}
-    groups = []
-    for model in models:
-        atom_pairs[model] = {}
-        for selection in selections:
-            current_group = selection["group"]
-            if current_group not in groups:
-                groups.append(current_group)
-            atom1 = selection["protein_atom"]
-
-            protein_chain = atom1["chainID"]
-            prtoein_resnum = atom1["residue"]
-            protein_atom = atom1["auth_atom_id"]
-
-            protein_tuple = (protein_chain, prtoein_resnum, protein_atom)
-
-            atom2 = selection["ligand_atom"]
-            ligandName = atom2["auth_comp_id"]
-
-            if (
-                selection.get("override_ligand_name") is not None
-                and selection["override_ligand_name"] != ""
-            ):
-                ligandName = selection["override_ligand_name"]
-
-            ligand_atom = atom2["auth_atom_id"]
-
-            if atom_pairs[model].get(ligandName, None) is None:
-                atom_pairs[model][ligandName] = []
-
-            atom_pairs[model][ligandName].append((protein_tuple, ligand_atom))
-
-    if atom_pairs == {}:
-        raise Exception("No atom pairs were given, check the configuration of the block.")
+    output_poses = block.variables.get("poses_folder_name", "best_docking_poses")
 
     # If the folder to analyse is not on the current working directory, we need to
     # copy it to the curret working directory
@@ -201,7 +183,95 @@ def analyseDockingAction(block: PluginBlock):
     # Create the remote folder
     block.remote.remoteCommand(f"mkdir -p {remote_folder}")
 
-    analyseDocking(block, models, folder_to_analyse, atom_pairs=atom_pairs, return_failed=True)
+    separatorValue = block.variables.get("ligand_separator", "-")
+
+    if selections is None or selections == []:
+
+        # Extract single docking poses
+        docking_data = models.getSingleDockingData(
+            models.models_names[0], models.docking_ligands[models.models_names[0]]
+        )
+        models.extractDockingPoses(
+            docking_data, folder_to_analyse, output_folder="poses", separator=separatorValue
+        )
+
+        extractDockingPoses(
+            block,
+            models,
+            docking_data,
+            block.extraData["final_path_folder_to_analyse"],
+            output_poses,
+        )
+
+        block.setOutput("output_poses", output_poses)
+
+        glideOutput = {
+            "poses_folder": output_poses,
+            "models_folder": model_folder,
+            "atom_pairs": atom_pairs,
+        }
+
+        block.setOutput("glide_results_output", glideOutput)
+
+        print("Successfully extracted a single docking pose")
+
+        return
+
+    atom_pairs = {}
+    atom_pairs_for_pele = {}
+    groups = []
+    for model in models:
+        atom_pairs[model] = {}
+        atom_pairs_for_pele[model] = {}
+        for selection in selections:
+            current_group = selection["group"]
+            if current_group not in groups:
+                groups.append(current_group)
+            atom1 = selection["protein_atom"]
+
+            protein_chain = atom1["chainID"]
+            prtoein_resnum = atom1["residue"]
+            protein_atom = atom1["auth_atom_id"]
+
+            protein_tuple = (protein_chain, prtoein_resnum, protein_atom)
+
+            atom2 = selection["ligand_atom"]
+            ligandName = atom2["auth_comp_id"]
+
+            ligand_chain = atom2["chainID"]
+            ligand_resnum = atom2["residue"]
+            ligand_atom = atom2["auth_atom_id"]
+
+            atom_tuple = (ligand_chain, ligand_resnum, ligand_atom)
+
+            if (
+                selection.get("override_ligand_name") is not None
+                and selection["override_ligand_name"] != ""
+            ):
+                ligandName = selection["override_ligand_name"]
+
+            if atom_pairs[model].get(ligandName, None) is None:
+                atom_pairs[model][ligandName] = []
+                atom_pairs_for_pele[model][ligandName] = []
+
+            atom_pairs[model][ligandName].append((protein_tuple, ligand_atom))
+            atom_pairs_for_pele[model][ligandName].append((protein_tuple, atom_tuple))
+
+    if atom_pairs == {}:
+        raise Exception("No atom pairs were given, check the configuration of the block.")
+
+    print("Starting docking analysis")
+
+    analyseDocking(
+        block,
+        models,
+        folder_to_analyse,
+        atom_pairs=atom_pairs,
+        return_failed=True,
+        separator=separatorValue,
+    )
+
+    print("Docking analysis finished")
 
     metric_distances = {}  # Define the global dictionary
     for group in groups:
@@ -237,8 +307,6 @@ def analyseDockingAction(block: PluginBlock):
         "horus", "html_loader", data={"html": html}, title="Best docking poses"
     )
 
-    output_poses = block.variables.get("poses_folder_name", "best_docking_poses")
-
     extractDockingPoses(
         block, models, best_poses, block.extraData["final_path_folder_to_analyse"], output_poses
     )
@@ -247,13 +315,26 @@ def analyseDockingAction(block: PluginBlock):
 
     block.setOutput("output_poses", output_poses)
 
+    glideOutput = {
+        "poses_folder": output_poses,
+        "models_folder": model_folder,
+        "atom_pairs": atom_pairs,
+    }
+
+    block.setOutput("glide_results_output", glideOutput)
+
 
 analyseGlideDocking = PluginBlock(
     name="Analyse Glide Docking",
     description="Analyse the docking results from Glide",
     inputGroups=[folderVariableGroup, glideOutputVariableGroup],
-    variables=[maxThresholdVariable, posesFolderNameVariable, selectionsListVariable],
-    outputs=[outputPosesVariable],
+    variables=[
+        ligandSeparatorVariable,
+        maxThresholdVariable,
+        posesFolderNameVariable,
+        selectionsListVariable,
+    ],
+    outputs=[outputPosesVariable, analyseGlideOutputVariable],
     action=analyseDockingAction,
 )
 
