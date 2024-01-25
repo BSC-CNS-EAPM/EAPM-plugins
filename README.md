@@ -11,16 +11,22 @@ To install a plugin, simply download the plugin file and place it in the appropr
 Once a plugin is installed, it will appear in the left with all the available blocks
 
 ## Troubleshooting
-How to solve error while installing dependency 'mdtraj':
+### mdtraj
 
 You need to install:
-- sudo apt install python3.x-dev
+```bash
+sudo apt install python3.x-dev
+```
 
 If the error is "x86_64-linux-gnu-gcc: fatal error: cannot execute ‘cc1plus’: execvp: No such file or directory compilation terminated." run this command:
-- sudo apt install --reinstall build-essential
+```bash
+sudo apt install --reinstall build-essential
+```
 
 If this doesn't work, try:
-- sudo apt install g++
+```bash
+    sudo apt install g++
+```
 
 ## Contributing
 
