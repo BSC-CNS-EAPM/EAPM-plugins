@@ -25,7 +25,7 @@ sudo apt install --reinstall build-essential
 
 If this doesn't work, try:
 ```bash
-    sudo apt install g++
+sudo apt install g++
 ```
 
 ## Contributing
