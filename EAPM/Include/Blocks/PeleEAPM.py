@@ -392,7 +392,7 @@ def peleAction(block: SlurmBlock):
         models_folder = block.inputs.get("models_folder")
         atom_pairs = {}
 
-    # Gert all the variables from the block
+    # Get all the variables from the block
     boxCentersValue = block.variables.get("box_centers", [])
     constraintsValue = block.variables.get("constraints", [])
     ligandIndexValue = block.variables.get("ligand_index", 1)
@@ -425,8 +425,29 @@ def peleAction(block: SlurmBlock):
     ligandTemplateValue = block.variables.get("ligand_template", "")
     seedValue = block.variables.get("seed", -1)
 
+    # Parse spawningValue
+    validSpawnings = ['independent', 'inverselyProportional', 'epsilon', 'variableEpsilon',
+                     'independentMetric', 'UCB', 'FAST', 'ProbabilityMSM', 'MetastabilityMSM',
+                     'IndependentMSM']
+    
+    if spawningValue != None and spawningValue not in validSpawnings:
+            message = 'Spawning method %s not found.' % spawningValue
+            message = 'Allowed options are: ' + str(validSpawnings)
+            raise ValueError(message)
+
+    # Parse energyByResidueValue
+    energy_by_residue_types = ['all', 'lennard_jones', 'sgb', 'electrostatic']
+    if energyByResidueValue not in energy_by_residue_types:
+        raise ValueError('%s not found. Try: %s' % (energyByResidueValue, energy_by_residue_types))
+
+    # Parse seedValue
     if seedValue == -1:
         seedValue = random.randint(0, 1000000)
+
+    # Parse ligandEnergyGroups
+    if not isinstance(ligandEnergyGroupsValue, type(None)):
+        if not isinstance(ligandEnergyGroupsValue, dict):
+            raise ValueError('Ligand energy groups, must be given as a dictionary')
 
     import prepare_proteins
 
@@ -473,6 +494,23 @@ def peleAction(block: SlurmBlock):
         cpus=cpus,
         distances=atom_pairs,
         separator=peleSeparatorValue,
+        steps=peleStepsValue,
+        seed=seedValue,
+        energy_by_residue=energyByResidueValue,
+        debug=peleDebugValue,
+        equilibration_steps=equilibrationStepsValue,
+        ligand_index=ligandIndexValue,
+        use_peleffy=usePeleffyValue,
+        use_srun=useSrunValue,
+        ebr_new_flag=ebrNewFlagValue,
+        ninety_degrees_version=ninetyDegreesVersionValue,
+        extend_iterations=extendIterationsValue,
+        continuation=continuationValue,
+        equilibration=equilibrationValue,
+        peptide=peptideValue,
+        analysis=analysisValue,
+        energy_by_residue_type=energyByResidueTypeValue,
+        
         # Implement all the variables...
     )
 
