@@ -328,6 +328,42 @@ extendIterationsVariable = PluginVariable(
     category="PELE",
 )
 
+logFileVariable = PluginVariable(
+    id="log_file",
+    name="Log file",
+    description="Enable log file",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
+    category="PELE"
+)
+
+rescoringVariable = PluginVariable(
+    id="rescoring",
+    name="Rescoring",
+    description="Enable rescoring",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
+    category="PELE"
+)
+
+epsilonVariable = PluginVariable(
+    id="epsilon",
+    name="Epsilon",
+    description="TODO Epsilon description",
+    type=VariableTypes.FLOAT,
+    defaultValue=0.5,
+    category="PELE"
+)
+
+ligandEquilibrationCstValue = PluginVariable(
+    id="ligand_equilibration_cst",
+    name="Ligand equilibration cst",
+    description="TODO Ligand equilibration cst description",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=True,
+    category="PELE"
+)
+
 onlyModelsVariable = PluginVariable(
     id="only_models",
     name="Only models",
@@ -424,6 +460,10 @@ def peleAction(block: SlurmBlock):
     onlyCombinationsValue = block.variables.get("only_combinations", [])
     ligandTemplateValue = block.variables.get("ligand_template", "")
     seedValue = block.variables.get("seed", -1)
+    logFileValue = block.variables.get("log_file", False)
+    rescoringValue = block.variables.get("rescoring", False)
+    epsilonValue = block.variables.get("epsilon", 0.5)
+    ligandEquilibrationCstValue = block.variables.get("ligand_equilibration_cst", True)
 
     # Parse spawningValue
     validSpawnings = ['independent', 'inverselyProportional', 'epsilon', 'variableEpsilon',
@@ -485,6 +525,14 @@ def peleAction(block: SlurmBlock):
     cpus = block.variables.get("cpus", 48)
     peleFolderName = block.variables.get("pele_folder_name", "pele")
 
+    # Remaining variables to implement:
+
+    # box_centers=None, constraints=None, box_radius=10, ligand_energy_groups=None,
+    # skip_models=None, skip_ligands=None,
+    # only_models=None, only_ligands=None, only_combinations=None, ligand_templates=None,
+    # nonbonded_energy=None, nonbonded_energy_type='all', nonbonded_new_flag=False, covalent_setup=False, covalent_base_aa=None,
+    # membrane_residues=None, bias_to_point=None, com_bias1=None, com_bias2=None
+
     # Setup pele
     jobs = models.setUpPELECalculation(
         peleFolderName,
@@ -501,7 +549,7 @@ def peleAction(block: SlurmBlock):
         equilibration_steps=equilibrationStepsValue,
         ligand_index=ligandIndexValue,
         use_peleffy=usePeleffyValue,
-        use_srun=useSrunValue,
+        usesrun=useSrunValue,
         ebr_new_flag=ebrNewFlagValue,
         ninety_degrees_version=ninetyDegreesVersionValue,
         extend_iterations=extendIterationsValue,
@@ -510,6 +558,13 @@ def peleAction(block: SlurmBlock):
         peptide=peptideValue,
         analysis=analysisValue,
         energy_by_residue_type=energyByResidueTypeValue,
+        equilibration_mode=equilibrationModeValue,
+        spawning=spawningValue,
+        log_file=logFileValue,
+        rescoring=rescoringValue,
+        epsilon=epsilonValue,
+        ligand_equilibration_cst=ligandEquilibrationCstValue,
+
         
         # Implement all the variables...
     )
@@ -573,6 +628,9 @@ blockVariables = BSC_JOB_VARIABLES + [
     onlyCombinationsVariable,
     ligandTemplateVariable,
     seedVariable,
+    logFileVariable,
+    rescoringVariable,
+    epsilonVariable
 ]
 
 peleBlock = SlurmBlock(
