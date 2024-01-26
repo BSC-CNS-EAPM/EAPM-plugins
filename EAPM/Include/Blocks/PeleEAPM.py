@@ -355,12 +355,30 @@ epsilonVariable = PluginVariable(
     category="PELE"
 )
 
-ligandEquilibrationCstValue = PluginVariable(
+ligandEquilibrationCstVariable = PluginVariable(
     id="ligand_equilibration_cst",
     name="Ligand equilibration cst",
     description="TODO Ligand equilibration cst description",
     type=VariableTypes.BOOLEAN,
     defaultValue=True,
+    category="PELE"
+)
+
+covalentSetupVariable = PluginVariable(
+    id="covalent_setup",
+    name="Covalent setup",
+    description="Enable covalent setup",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
+    category="PELE"
+)
+
+nonbondedNewFlagVariable = PluginVariable(
+    id="nonbonded_new_flag",
+    name="Nonbonded new flag",
+    description="Enable nonbonded new flag",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
     category="PELE"
 )
 
@@ -464,6 +482,8 @@ def peleAction(block: SlurmBlock):
     rescoringValue = block.variables.get("rescoring", False)
     epsilonValue = block.variables.get("epsilon", 0.5)
     ligandEquilibrationCstValue = block.variables.get("ligand_equilibration_cst", True)
+    covalentSetupValue = block.variables.get("covalent_setup", False)
+    nonbondedNewFlagValue = block.variables.get("nonbonded_new_flag", False)
 
     # Parse spawningValue
     validSpawnings = ['independent', 'inverselyProportional', 'epsilon', 'variableEpsilon',
@@ -530,8 +550,11 @@ def peleAction(block: SlurmBlock):
     # box_centers=None, constraints=None, box_radius=10, ligand_energy_groups=None,
     # skip_models=None, skip_ligands=None,
     # only_models=None, only_ligands=None, only_combinations=None, ligand_templates=None,
-    # nonbonded_energy=None, nonbonded_energy_type='all', nonbonded_new_flag=False, covalent_setup=False, covalent_base_aa=None,
+    # nonbonded_energy=None, covalent_base_aa=None
     # membrane_residues=None, bias_to_point=None, com_bias1=None, com_bias2=None
+
+    # Implemention not needed:
+    # nonbonded_energy_type='all', 
 
     # Setup pele
     jobs = models.setUpPELECalculation(
@@ -564,6 +587,8 @@ def peleAction(block: SlurmBlock):
         rescoring=rescoringValue,
         epsilon=epsilonValue,
         ligand_equilibration_cst=ligandEquilibrationCstValue,
+        covalent_setup=covalentSetupValue,
+        nonbonded_new_flag=nonbondedNewFlagValue
 
         
         # Implement all the variables...
@@ -582,7 +607,7 @@ def peleAction(block: SlurmBlock):
     )
 
 
-def peleFinalAction(block: SlurmBlock):
+def peleFinalAction(block: SlurmBlock):#
     print("Pele finished")
 
     from utils import downloadResultsAction
@@ -630,7 +655,10 @@ blockVariables = BSC_JOB_VARIABLES + [
     seedVariable,
     logFileVariable,
     rescoringVariable,
-    epsilonVariable
+    epsilonVariable,
+    ligandEquilibrationCstVariable,
+    covalentSetupVariable,
+    nonbondedNewFlagVariable
 ]
 
 peleBlock = SlurmBlock(
