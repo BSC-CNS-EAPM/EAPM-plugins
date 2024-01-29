@@ -423,6 +423,60 @@ seedVariable = PluginVariable(
     category="PELE",
 )
 
+boxRadiusVariable = PluginVariable(
+    id="box_radius",
+    name="Box radius",
+    description="TODO box radius description",
+    type=VariableTypes.INTEGER,
+    defaultValue=10,
+    category="PELE",
+)
+
+
+# box_centers input
+modelVariable = PluginVariable(
+    id="model",
+    name="Model",
+    description="TODO model variable description",
+    type=VariableTypes.STRING
+)
+
+chainVariable = PluginVariable(
+    id="chain",
+    name="Chain",
+    description="TODO chain variable description",
+    type=VariableTypes.STRING
+)
+
+residueVariable = PluginVariable(
+    id="residue",
+    name="Residue number",
+    description="TODO residue number variable description",
+    type=VariableTypes.INTEGER
+)
+
+atomNameVariable = PluginVariable(
+    id="atom_name",
+    name="Atom name",
+    description="TODO atom name variable description",
+    type=VariableTypes.STRING
+)
+
+# box_centers VariableList
+boxCentersVariable = VariableList(
+    id="box_centers",
+    name="Box centers",
+    description="TODO Box center variable description",
+    category="PELE",
+    prototypes=[
+        modelVariable,
+        chainVariable,
+        residueVariable,
+        atomNameVariable
+        
+    ],
+)
+
 # Outputs
 peleOutputFolderOutput = PluginVariable(
     id="pele_output_folder",
@@ -448,6 +502,7 @@ def peleAction(block: SlurmBlock):
 
     # Get all the variables from the block
     boxCentersValue = block.variables.get("box_centers", [])
+    boxRadiusValue = block.variables.get("box_radius", 10)
     constraintsValue = block.variables.get("constraints", [])
     ligandIndexValue = block.variables.get("ligand_index", 1)
     peleStepsValue = block.variables.get("pele_steps", 100)
@@ -508,6 +563,33 @@ def peleAction(block: SlurmBlock):
     if not isinstance(ligandEnergyGroupsValue, type(None)):
         if not isinstance(ligandEnergyGroupsValue, dict):
             raise ValueError('Ligand energy groups, must be given as a dictionary')
+        
+    # Parse box_centers
+    if boxCentersValue != None or boxCentersValue != []:
+        if boxCentersValue['residue'] < 1:
+            raise ValueError('The residue number must be a positive integer.')
+        if len(boxCentersValue['chain']) < 1:
+            raise ValueError('Chain length must be at least 1.')
+
+    # Parse skip_models
+    if not isinstance(skipModelsValue, list):
+        raise ValueError('skip_models must be a list.')
+    
+    # Parse skip_ligands
+    if not isinstance(skipLigandsValue, list):
+        raise ValueError('skip_ligands must be a list.')
+
+    # Parse only_ligands
+    if not isinstance(onlyLigandsValue, list):
+        raise ValueError('only_ligands must be a list.')
+    
+    # Parse only_models
+    if not isinstance(onlyModelsValue, list):
+        raise ValueError('only_models must be a list.')
+    
+    # Parse only_combinations
+    if not isinstance(onlyCombinationsValue, list):
+        raise ValueError('only_combinations must be a list.')
 
     import prepare_proteins
 
@@ -547,9 +629,7 @@ def peleAction(block: SlurmBlock):
 
     # Remaining variables to implement:
 
-    # box_centers=None, constraints=None, box_radius=10, ligand_energy_groups=None,
-    # skip_models=None, skip_ligands=None,
-    # only_models=None, only_ligands=None, only_combinations=None, ligand_templates=None,
+    # ligand_energy_groups=None
     # nonbonded_energy=None, covalent_base_aa=None
     # membrane_residues=None, bias_to_point=None, com_bias1=None, com_bias2=None
 
@@ -561,6 +641,7 @@ def peleAction(block: SlurmBlock):
         peleFolderName,
         poses_folder,
         cst_yaml,
+        box_radius=boxRadiusValue,
         iterations=peleIterationsValue,
         cpus=cpus,
         distances=atom_pairs,
@@ -588,8 +669,15 @@ def peleAction(block: SlurmBlock):
         epsilon=epsilonValue,
         ligand_equilibration_cst=ligandEquilibrationCstValue,
         covalent_setup=covalentSetupValue,
-        nonbonded_new_flag=nonbondedNewFlagValue
-
+        nonbonded_new_flag=nonbondedNewFlagValue,
+        box_centers=boxCentersValue,
+        constraints=constraintsValue,
+        skip_models=skipModelsValue,
+        skip_ligands=skipLigandsValue,
+        only_ligands=onlyLigandsValue,
+        only_models=onlyModelsValue,
+        only_combinations=onlyCombinationsValue,
+        ligand_templates=ligandTemplateValue
         
         # Implement all the variables...
     )
@@ -625,6 +713,7 @@ blockVariables = BSC_JOB_VARIABLES + [
     peleFolderNameVariable,
     selectionsListVariable,
     boxCentersVariable,
+    boxRadiusVariable,
     constraintsVariable,
     ligandIndexVariable,
     peleStepsVariable,
