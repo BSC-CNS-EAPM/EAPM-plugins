@@ -21,12 +21,11 @@ modelFolderVariable = PluginVariable(
     defaultValue="models",
 )
 
-bestDockingPosesVariable = PluginVariable(
-    id="best_docking_poses",
+posesFolderVariable = PluginVariable(
+    id="poses_folder",
     name="Best docking poses",
-    description="Number of best docking poses to analyse",
-    type=VariableTypes.INTEGER,
-    defaultValue=100,
+    description="Best docking poses to analyse",
+    type=VariableTypes.FOLDER
 )
 
 glideOutputVariable = PluginVariable(
@@ -42,7 +41,7 @@ folderInputGroup = VariableGroup(
     id="folder_input_group",
     name="Folder input group",
     description="Input the model and ligand folders after a Dcoking Grid setup has been run",
-    variables=[modelFolderVariable, bestDockingPosesVariable, yamlPELEFileVariable],
+    variables=[modelFolderVariable, posesFolderVariable, yamlPELEFileVariable]
 )
 
 glideOutputGroup = VariableGroup(
@@ -102,13 +101,13 @@ selectionsListVariable = VariableList(
 )
 
 # PELE variables
-boxCentersVariable = PluginVariable(
-    id="box_centers",
-    name="Box centers",
-    description="List of box centers",
-    type=VariableTypes.SPHERE,
-    category="PELE",
-)
+# boxCentersVariable = PluginVariable(
+#     id="box_centers",
+#     name="Box centers",
+#     description="List of box centers",
+#     type=VariableTypes.SPHERE,
+#     category="PELE",
+# )
 
 constraintsVariable = PluginVariable(
     id="constraints",
@@ -441,6 +440,13 @@ modelVariable = PluginVariable(
     type=VariableTypes.STRING
 )
 
+ligandsVariable = PluginVariable(
+    id="ligands",
+    name="Ligands",
+    description="TODO ligands variable description",
+    type=VariableTypes.STRING
+)
+
 chainVariable = PluginVariable(
     id="chain",
     name="Chain",
@@ -470,10 +476,10 @@ boxCentersVariable = VariableList(
     category="PELE",
     prototypes=[
         modelVariable,
+        ligandsVariable,
         chainVariable,
         residueVariable,
         atomNameVariable
-        
     ],
 )
 
@@ -484,6 +490,7 @@ peleOutputFolderOutput = PluginVariable(
     description="Folder containing the PELE output",
     type=VariableTypes.FOLDER,
 )
+
 
 
 def peleAction(block: SlurmBlock):
@@ -497,7 +504,7 @@ def peleAction(block: SlurmBlock):
             raise Exception("Glide output does not contain the required folders")
     else:
         poses_folder = block.inputs.get("poses_folder")
-        models_folder = block.inputs.get("models_folder")
+        models_folder = block.inputs.get("model_folder")
         atom_pairs = {}
 
     # Get all the variables from the block
@@ -565,35 +572,59 @@ def peleAction(block: SlurmBlock):
             raise ValueError('Ligand energy groups, must be given as a dictionary')
         
     # Parse box_centers
-    if boxCentersValue != None or boxCentersValue != []:
-        if boxCentersValue['residue'] < 1:
-            raise ValueError('The residue number must be a positive integer.')
-        if len(boxCentersValue['chain']) < 1:
-            raise ValueError('Chain length must be at least 1.')
+
+    atom_pairs = {}
+    for model in boxCentersValue:
+        print(model)
+        atom_pairs[model['model']] = {}
+        for ligand in model:
+            atom_pairs[model['model']][ligand] = []
+
+    print(atom_pairs)
+        #     for atom in ligand_atoms[ligand]:
+        #         atom_pairs[model][ligand].append((('A', ct_indexes[model][0], 'OG'), ('L', 1, atom)))
+        #     atom_pairs[model][ligand].append((('A', ct_indexes[model][0], 'OG'), ('A', ct_indexes[model][1], 'ND1')))
+        #     atom_pairs[model][ligand].append((('A', ct_indexes[model][0], 'OG'), ('A', ct_indexes[model][1], 'NE2')))
+        #     atom_pairs[model][ligand].append((('A', ct_indexes[model][1], 'ND1'), ('A', ct_indexes[model][2], 'OD1')))
+        #     atom_pairs[model][ligand].append((('A', ct_indexes[model][1], 'ND1'), ('A', ct_indexes[model][2], 'OD2')))
+        #     atom_pairs[model][ligand].append((('A', ct_indexes[model][1], 'NE2'), ('A', ct_indexes[model][2], 'OD1')))
+        #     atom_pairs[model][ligand].append((('A', ct_indexes[model][1], 'NE2'), ('A', ct_indexes[model][2], 'OD2')))
+
+    # if boxCentersValue != None or boxCentersValue != []:
+    #     if boxCentersValue['residue'] < 1:
+    #         raise ValueError('The residue number must be a positive integer.')
+    #     if len(boxCentersValue['chain']) < 1:
+    #         raise ValueError('Chain length must be at least 1.')
 
     # Parse skip_models
-    if not isinstance(skipModelsValue, list):
-        raise ValueError('skip_models must be a list.')
+    if not isinstance(skipModelsValue, type(None)):
+        if not isinstance(skipModelsValue, list):
+            raise ValueError('skip_models must be a list.')
+
     
     # Parse skip_ligands
-    if not isinstance(skipLigandsValue, list):
-        raise ValueError('skip_ligands must be a list.')
+    if not isinstance(skipLigandsValue, type(None)):
+        if not isinstance(skipLigandsValue, list):
+            raise ValueError('skip_ligands must be a list.')
 
     # Parse only_ligands
-    if not isinstance(onlyLigandsValue, list):
-        raise ValueError('only_ligands must be a list.')
+    if not isinstance(onlyLigandsValue, type(None)):
+        if not isinstance(onlyLigandsValue, list):
+            raise ValueError('only_ligands must be a list.')
     
     # Parse only_models
-    if not isinstance(onlyModelsValue, list):
-        raise ValueError('only_models must be a list.')
+    if not isinstance(onlyModelsValue, type(None)):
+        if not isinstance(onlyModelsValue, list):
+            raise ValueError('only_models must be a list.')
     
     # Parse only_combinations
-    if not isinstance(onlyCombinationsValue, list):
-        raise ValueError('only_combinations must be a list.')
+    if not isinstance(onlyCombinationsValue, type(None)):
+        if not isinstance(onlyCombinationsValue, list):
+            raise ValueError('only_combinations must be a list.')
 
     import prepare_proteins
 
-    print("Using models folder: ", models_folder)
+    print("Using models folder: ", str(models_folder))
     models = prepare_proteins.proteinModels(models_folder)
 
     selections = block.variables.get("selections_list", [])
@@ -707,6 +738,7 @@ def peleFinalAction(block: SlurmBlock):#
     block.setOutput("pele_output_folder", peleFolderName)
 
 
+
 from utils import BSC_JOB_VARIABLES
 
 blockVariables = BSC_JOB_VARIABLES + [
@@ -750,10 +782,18 @@ blockVariables = BSC_JOB_VARIABLES + [
     nonbondedNewFlagVariable
 ]
 
+def wrappedFunction(block: SlurmBlock):
+    try:
+        peleAction(block)
+    except Exception as e:
+        import traceback
+        print("Exception:", e)
+        traceback.print_exc()
+
 peleBlock = SlurmBlock(
     name="PELE",
     description="Run PELE",
-    initialAction=peleAction,
+    initialAction=wrappedFunction,
     finalAction=peleFinalAction,
     inputGroups=[folderInputGroup, glideOutputGroup],
     variables=blockVariables,
