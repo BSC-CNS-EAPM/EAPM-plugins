@@ -552,8 +552,8 @@ def peleAction(block: SlurmBlock):
 
     # Parse energyByResidueValue
     energy_by_residue_types = ['all', 'lennard_jones', 'sgb', 'electrostatic']
-    if energyByResidueValue not in energy_by_residue_types:
-        raise ValueError('%s not found. Try: %s' % (energyByResidueValue, energy_by_residue_types))
+    if energyByResidueTypeValue not in energy_by_residue_types:
+        raise ValueError('%s not found. Try: %s' % (energyByResidueTypeValue, energy_by_residue_types))
 
     # Parse seedValue
     if seedValue == -1:
