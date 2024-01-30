@@ -440,13 +440,6 @@ modelVariable = PluginVariable(
     type=VariableTypes.STRING
 )
 
-ligandsVariable = PluginVariable(
-    id="ligands",
-    name="Ligands",
-    description="TODO ligands variable description",
-    type=VariableTypes.STRING
-)
-
 chainVariable = PluginVariable(
     id="chain",
     name="Chain",
@@ -476,7 +469,6 @@ boxCentersVariable = VariableList(
     category="PELE",
     prototypes=[
         modelVariable,
-        ligandsVariable,
         chainVariable,
         residueVariable,
         atomNameVariable
@@ -573,22 +565,12 @@ def peleAction(block: SlurmBlock):
         
     # Parse box_centers
 
-    atom_pairs = {}
+    box_centers = {}
     for model in boxCentersValue:
-        print(model)
-        atom_pairs[model['model']] = {}
-        for ligand in model:
-            atom_pairs[model['model']][ligand] = []
+        box_centers[model['model']] = (model['chain'], model['residue'], model['atom_name'])
+    print(box_centers)
 
-    print(atom_pairs)
-        #     for atom in ligand_atoms[ligand]:
-        #         atom_pairs[model][ligand].append((('A', ct_indexes[model][0], 'OG'), ('L', 1, atom)))
-        #     atom_pairs[model][ligand].append((('A', ct_indexes[model][0], 'OG'), ('A', ct_indexes[model][1], 'ND1')))
-        #     atom_pairs[model][ligand].append((('A', ct_indexes[model][0], 'OG'), ('A', ct_indexes[model][1], 'NE2')))
-        #     atom_pairs[model][ligand].append((('A', ct_indexes[model][1], 'ND1'), ('A', ct_indexes[model][2], 'OD1')))
-        #     atom_pairs[model][ligand].append((('A', ct_indexes[model][1], 'ND1'), ('A', ct_indexes[model][2], 'OD2')))
-        #     atom_pairs[model][ligand].append((('A', ct_indexes[model][1], 'NE2'), ('A', ct_indexes[model][2], 'OD1')))
-        #     atom_pairs[model][ligand].append((('A', ct_indexes[model][1], 'NE2'), ('A', ct_indexes[model][2], 'OD2')))
+    # model [chain, atom.residue, atom.name]
 
     # if boxCentersValue != None or boxCentersValue != []:
     #     if boxCentersValue['residue'] < 1:
@@ -630,7 +612,7 @@ def peleAction(block: SlurmBlock):
     selections = block.variables.get("selections_list", [])
     if atom_pairs == {}:
         groups = []
-        for model in models:
+        for model in models:  
             atom_pairs[model] = {}
             for selection in selections:
                 current_group = selection["group"]
@@ -701,7 +683,7 @@ def peleAction(block: SlurmBlock):
         ligand_equilibration_cst=ligandEquilibrationCstValue,
         covalent_setup=covalentSetupValue,
         nonbonded_new_flag=nonbondedNewFlagValue,
-        box_centers=boxCentersValue,
+        box_centers=box_centers,
         constraints=constraintsValue,
         skip_models=skipModelsValue,
         skip_ligands=skipLigandsValue,
