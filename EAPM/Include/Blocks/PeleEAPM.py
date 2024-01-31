@@ -398,6 +398,54 @@ onlyCombinationsVariable = PluginVariable(
     category="PELE",
 )
 
+nonbondedEnergyVariable = PluginVariable(
+    id="nonbonded_energy",
+    name="Nonbonded energy",
+    description="TODO nonbonded_energy description",
+    type=VariableTypes.LIST,
+    category="PELE",
+)
+
+covalentBaseAaVariable = PluginVariable(
+    id="covalent_base_aa",
+    name="Covalent base AA",
+    description="TODO covalent_base_aa description",
+    type=VariableTypes.LIST,
+    category="PELE",
+)
+
+membraneResiduesVariable= PluginVariable(
+    id="membrane_residues",
+    name="Membrane residues",
+    description="TODO membrane residues description",
+    type=VariableTypes.LIST,
+    category="PELE"
+)
+
+biasToPointVariable = PluginVariable(
+    id="bias_to_point",
+    name="Bias to point",
+    description="TODO bias_to_point description",
+    type=VariableTypes.LIST,
+    category="PELE"
+)
+
+comBias1Variable = PluginVariable(
+    id="com_bias1",
+    name="com bias1",
+    description="TODO com_bias1 description",
+    type=VariableTypes.LIST,
+    category="PELE"
+)
+
+comBias2Variable = PluginVariable(
+    id="com_bias2",
+    name="com bias2",
+    description="TODO com_bias2 description",
+    type=VariableTypes.LIST,
+    category="PELE"
+)
+
 ligandTemplateVariable = PluginVariable(
     id="ligand_template",
     name="Ligand template",
@@ -531,6 +579,7 @@ def peleAction(block: SlurmBlock):
     onlyModelsValue = block.variables.get("only_models", [])
     onlyLigandsValue = block.variables.get("only_ligands", [])
     onlyCombinationsValue = block.variables.get("only_combinations", [])
+    nonbondedEnergyValue = block.variables.get('nonbonded_energy', {})
     ligandTemplateValue = block.variables.get("ligand_template", "")
     seedValue = block.variables.get("seed", -1)
     logFileValue = block.variables.get("log_file", False)
@@ -539,6 +588,11 @@ def peleAction(block: SlurmBlock):
     ligandEquilibrationCstValue = block.variables.get("ligand_equilibration_cst", True)
     covalentSetupValue = block.variables.get("covalent_setup", False)
     nonbondedNewFlagValue = block.variables.get("nonbonded_new_flag", False)
+    covalentBaseAaValue = block.variables.get("covalent_base_aa", {})
+    membraneResiduesValue = block.variables.get("membrane_residues", {})
+    biasToPointValue = block.variables.get("bias_to_point", {})
+    comBias1Value = block.variables.get("com_bias1", {})
+    comBias2Value = block.variables.get("com_bias2", {})
 
     # Parse spawningValue
     validSpawnings = ['independent', 'inverselyProportional', 'epsilon', 'variableEpsilon',
@@ -581,6 +635,11 @@ def peleAction(block: SlurmBlock):
         if not isinstance(skipLigandsValue, list):
             raise ValueError('skip_ligands must be a list.')
 
+    # Parse nonbonded_energy
+    if not isinstance(nonbondedEnergyValue, type(None)):
+        if not isinstance(nonbondedEnergyValue, dict):
+            raise ValueError('nonbonded_energy, must be given as a dictionary')
+
     # Parse only_ligands
     if not isinstance(onlyLigandsValue, type(None)):
         if not isinstance(onlyLigandsValue, list):
@@ -590,7 +649,7 @@ def peleAction(block: SlurmBlock):
     if not isinstance(onlyModelsValue, type(None)):
         if not isinstance(onlyModelsValue, list):
             raise ValueError('only_models must be a list.')
-    
+
     # Parse only_combinations
     if not isinstance(onlyCombinationsValue, type(None)):
         if not isinstance(onlyCombinationsValue, list):
@@ -632,15 +691,6 @@ def peleAction(block: SlurmBlock):
     cpus = block.variables.get("cpus", 48)
     peleFolderName = block.variables.get("pele_folder_name", "pele")
 
-    # Remaining variables to implement:
-
-    # ligand_energy_groups=None
-    # nonbonded_energy=None, covalent_base_aa=None
-    # membrane_residues=None, bias_to_point=None, com_bias1=None, com_bias2=None
-
-    # Implemention not needed:
-    # nonbonded_energy_type='all', 
-
     jobs = models.setUpPELECalculation(
         peleFolderName,
         poses_folder,
@@ -681,9 +731,14 @@ def peleAction(block: SlurmBlock):
         only_ligands=onlyLigandsValue,
         only_models=onlyModelsValue,
         only_combinations=onlyCombinationsValue,
-        ligand_templates=ligandTemplateValue
-        
-        # Implement all the variables...
+        ligand_templates=ligandTemplateValue,
+        nonbonded_energy=nonbondedEnergyValue,
+        covalent_base_aa=covalentBaseAaValue,
+        membrane_residues=membraneResiduesValue,
+        bias_to_point=biasToPointValue,
+        com_bias1=comBias1Value,
+        com_bias2=comBias2Value,
+        ligand_energy_groups=ligandEnergyGroupsValue
     )
 
     from utils import launchCalculationAction
@@ -752,7 +807,14 @@ blockVariables = BSC_JOB_VARIABLES + [
     epsilonVariable,
     ligandEquilibrationCstVariable,
     covalentSetupVariable,
-    nonbondedNewFlagVariable
+    nonbondedNewFlagVariable,
+    nonbondedEnergyVariable,
+    covalentBaseAaVariable,
+    membraneResiduesVariable,
+    biasToPointVariable,
+    comBias1Variable,
+    comBias2Variable
+
 ]
 
 def wrappedFunction(block: SlurmBlock):
