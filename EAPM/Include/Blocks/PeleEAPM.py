@@ -440,6 +440,13 @@ modelVariable = PluginVariable(
     type=VariableTypes.STRING
 )
 
+ligandVariable = PluginVariable(
+    id="ligand",
+    name="Ligand",
+    description="TODO ligand variable description",
+    type=VariableTypes.STRING
+)
+
 chainVariable = PluginVariable(
     id="chain",
     name="Chain",
@@ -469,6 +476,7 @@ boxCentersVariable = VariableList(
     category="PELE",
     prototypes=[
         modelVariable,
+        ligandVariable,
         chainVariable,
         residueVariable,
         atomNameVariable
@@ -567,16 +575,7 @@ def peleAction(block: SlurmBlock):
 
     box_centers = {}
     for model in boxCentersValue:
-        box_centers[model['model']] = (model['chain'], model['residue'], model['atom_name'])
-    print(box_centers)
-
-    # model [chain, atom.residue, atom.name]
-
-    # if boxCentersValue != None or boxCentersValue != []:
-    #     if boxCentersValue['residue'] < 1:
-    #         raise ValueError('The residue number must be a positive integer.')
-    #     if len(boxCentersValue['chain']) < 1:
-    #         raise ValueError('Chain length must be at least 1.')
+        box_centers[(model['model'], model['ligand'])] = (model['chain'], model['residue'], model['atom_name'])
 
     # Parse skip_models
     if not isinstance(skipModelsValue, type(None)):
@@ -650,6 +649,18 @@ def peleAction(block: SlurmBlock):
     # nonbonded_energy_type='all', 
 
     # Setup pele
+    # jobs = models.setUpPELECalculation(
+    #     peleFolderName,
+    #     poses_folder,
+    #     cst_yaml, 
+    #     iterations=peleIterationsValue,
+    #     cpus=cpus,
+    #     distances=atom_pairs,
+    #     separator=peleSeparatorValue,
+        
+    #     # Implement all the variables...
+    # )
+
     jobs = models.setUpPELECalculation(
         peleFolderName,
         poses_folder,
