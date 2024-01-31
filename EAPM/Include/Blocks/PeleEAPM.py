@@ -101,13 +101,6 @@ selectionsListVariable = VariableList(
 )
 
 # PELE variables
-# boxCentersVariable = PluginVariable(
-#     id="box_centers",
-#     name="Box centers",
-#     description="List of box centers",
-#     type=VariableTypes.SPHERE,
-#     category="PELE",
-# )
 
 constraintsVariable = PluginVariable(
     id="constraints",
@@ -647,19 +640,6 @@ def peleAction(block: SlurmBlock):
 
     # Implemention not needed:
     # nonbonded_energy_type='all', 
-
-    # Setup pele
-    # jobs = models.setUpPELECalculation(
-    #     peleFolderName,
-    #     poses_folder,
-    #     cst_yaml, 
-    #     iterations=peleIterationsValue,
-    #     cpus=cpus,
-    #     distances=atom_pairs,
-    #     separator=peleSeparatorValue,
-        
-    #     # Implement all the variables...
-    # )
 
     jobs = models.setUpPELECalculation(
         peleFolderName,
