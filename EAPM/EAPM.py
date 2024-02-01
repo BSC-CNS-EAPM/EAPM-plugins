@@ -59,6 +59,11 @@ def createPlugin():
 
     eapmPlugin.addBlock(multipleSequenceAlignmentBlock)
 
+    # Add extensions
+    from Pages.peleResults import peleResultsPage
+
+    eapmPlugin.addPage(peleResultsPage)
+
     # Add the configs
     from Configs.mffaConfig import mffaExecutableConfig
 

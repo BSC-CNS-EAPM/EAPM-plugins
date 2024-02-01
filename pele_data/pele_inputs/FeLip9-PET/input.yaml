@@ -1,0 +1,58 @@
+system: 'FeLip9-PET-1.pdb'
+chain: 'L'
+resname: 'LIG'
+steps: 100
+iterations: 3
+cpus: 48
+equilibration: true
+equilibration_mode: 'equilibrationLastSnapshot'
+equilibration_steps: 100
+spawning: 'independent'
+traj: trajectory.xtc
+working_folder: 'output'
+usesrun: true
+use_peleffy: true
+analyse: false
+box_radius: 10
+debug: true
+atom_dist:
+- 'A:111:OG'
+- 'L:1:C25'
+- 'A:111:OG'
+- 'L:1:C33'
+- 'A:111:OG'
+- 'L:1:C47'
+- 'A:111:OG'
+- 'L:1:C55'
+- 'A:111:OG'
+- 'L:1:C69'
+- 'A:111:OG'
+- 'L:1:C77'
+- 'A:111:OG'
+- 'L:1:C91'
+- 'A:111:OG'
+- 'L:1:C99'
+- 'A:111:OG'
+- 'A:190:ND1'
+- 'A:111:OG'
+- 'A:190:NE2'
+- 'A:190:ND1'
+- 'A:167:OD1'
+- 'A:190:ND1'
+- 'A:167:OD2'
+- 'A:190:NE2'
+- 'A:167:OD1'
+- 'A:190:NE2'
+- 'A:167:OD2'
+seed: 12345
+
+#Options gathered from cst_input.yaml
+ca_constr: 10 #Strength of constraint
+ca_interval: 2 #Apply constraints every n CA
+terminal_constr: 10 #Constraints on terminal residues
+polarize_metals: true #Reduce metal charge
+polarization_factor: 2.5 #divide metal charge by value
+constraint_level: 3 #Set cst at 5 every 5 CA (does it overwrite previous?)
+anm_freq: 0 #Disable ANM
+sidechain_res: 10
+sidechain_freq: 1
