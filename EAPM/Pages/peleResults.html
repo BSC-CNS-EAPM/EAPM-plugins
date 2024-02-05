@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script defer src="peleResults.js"></script>
     <title>Document</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
 </head>
 <body>
     <h1>Hello, World!</h1>
 
-    <form method="POST">
+    <form id="peleForm" method="POST">
         <label for="peleSimulationFolder">PELE simulation folder (required): </label>
         <input type="text" name="peleSimulationFolder" id="peleSimulationFolder"> <br>
 
@@ -18,5 +19,13 @@
 
         <button id="peleSimulationFolderBtn">Send</button>
     </form>
+
+    <form id="plotForm" style="display: none;">
+        <select name="proteinSelector" id="proteinSelector"></select>
+        <select name="ligandSelector" id="ligandSelector"></select>
+        <select name="distanceSelector" id="distanceSelector"></select>
+    </form>
+
+    <div id="testPlot" style="width:600px;height:250px;"></div>
 </body>
 </html>

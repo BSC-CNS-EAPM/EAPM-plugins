@@ -1,6 +1,5 @@
 from HorusAPI import PluginPage, PluginEndpoint
 from flask import request
-import pele_analysis
 import os
 
 peleResultsPage = PluginPage(
@@ -10,7 +9,13 @@ peleResultsPage = PluginPage(
     html="peleResults.html"
 )
 
+
+
+
+
 def getPeleResults():
+    import pele_analysis
+    from flask import jsonify
     try:
         data = request.json
     
@@ -44,14 +49,11 @@ def getPeleResults():
 
             catalytic_labels = {}
             for cn in catalytic_names:
-                print('test cata')
                 catalytic_labels[cn] = {}
                 for protein in pele.proteins:
-                    print('test protein')
                     if protein not in catalytic_labels[cn]:
                         catalytic_labels[cn][protein] = {}
                     for ligand in pele.ligands:
-                        print('test ligand')
                         if ligand not in catalytic_labels[cn][protein]:
                             catalytic_labels[cn][protein][ligand] = []
 
@@ -61,7 +63,6 @@ def getPeleResults():
                     if distances == None:
                         continue
                     for d in distances:
-                        print('test distances')
                         at1 = d.replace('distance_','').split('_')[0]
                         at2 = d.replace('distance_','').split('_')[1]
                         if at1.endswith('OG') and at2.startswith('L'):
@@ -73,14 +74,13 @@ def getPeleResults():
                         elif at1.endswith('ND1') and (at2.endswith('OD1') or at2.endswith('OD2')):
                             catalytic_labels['HIS-ASP'][protein][ligand].append(d)
 
-            print(catalytic_labels)
+            pele.combineDistancesIntoMetrics(catalytic_labels, overwrite=True)
 
-            return {"ok": True, "msg": catalytic_labels}
+            return jsonify({"ok": True, "distances": distances, "proteins": pele.proteins, "ligands": pele.ligands})
 
-        return {"ok": False, "msg": "No pele simulations folder provided"}
+        return jsonify({"ok": False, "msg": "No pele simulations folder provided"})
     except Exception as e:
-            print(e)
-            return {"ok", False}
+            return jsonify({"ok": False, "msg": str(e)})
 
 # Add the endpoint to the PluginPage
 testEndpoint = PluginEndpoint(
