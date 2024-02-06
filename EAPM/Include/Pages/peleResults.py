@@ -74,9 +74,103 @@ def getPeleResults():
                         elif at1.endswith('ND1') and (at2.endswith('OD1') or at2.endswith('OD2')):
                             catalytic_labels['HIS-ASP'][protein][ligand].append(d)
 
-            pele.combineDistancesIntoMetrics(catalytic_labels, overwrite=True)
+            # pele.combineDistancesIntoMetrics(catalytic_labels, overwrite=True)
 
-            return jsonify({"ok": True, "distances": distances, "proteins": pele.proteins, "ligands": pele.ligands})
+    # def returnPlot(self, protein, ligand, vertical_line=None, color_column=None, size=1.0, labels_size=10.0, plot_label=None,
+    #                                     xlim=None, ylim=None, metrics=None, labels=None, title=None, title_size=14.0, return_axis=False, dpi=300, show_legend=False,
+    #                                     axis=None, xlabel=None, ylabel=None, vertical_line_color='k', vertical_line_width=0.5, marker_size=0.8, clim=None, show=False,
+    #                                     clabel=None, legend_font_size=6, no_xticks=False, no_yticks=False, no_cbar=False, no_xlabel=False, no_ylabel=False,
+    #                                     relative_color_values=False, dataframe=None, **kwargs):
+    #     """
+    #     Creates a scatter plot for the selected protein and ligand using the x and y
+    #     columns. Data series can be filtered by specific metrics.
+
+    #     Parameters
+    #     ==========
+    #     protein : str
+    #         The target protein.
+    #     ligand : str
+    #         The target ligand.
+    #     x : str
+    #         The column name of the data to plot in the x-axis.
+    #     y : str
+    #         The column name of the data to plot in the y-axis.
+    #     vertical_line : float
+    #         Position to plot a vertical line.
+    #     color_column : str
+    #         The column name to use for coloring the plot. Also a color cna be given
+    #         to use uniformly for the points.
+    #     xlim : tuple
+    #         The limits for the x-range.
+    #     ylim : tuple
+    #         The limits for the y-range.
+    #     clim : tuple
+    #         The limits for the color range.
+    #     metrics : dict
+    #         A set of metrics for filtering the data points.
+    #     labels : dict
+    #         Analog to metrics, use the label column values to filter the data.
+    #     title : str
+    #         The plot's title.
+    #     return_axis : bool
+    #         Whether to return the axis of this plot.
+    #     axis : matplotlib.pyplot.axis
+    #         The axis to use for plotting the data.
+    #     """
+    #     try:
+    #         if not isinstance(dataframe, type(None)):
+    #             protein_series = dataframe[dataframe.index.get_level_values('Protein') == protein]
+    #         else:
+    #             protein_series = self.data[self.data.index.get_level_values('Protein') == protein]
+
+    #         if protein_series.empty:
+    #             raise ValueError('Protein name %s not found in data!' % protein)
+    #         ligand_series = protein_series[protein_series.index.get_level_values('Ligand') == ligand]
+    #         if ligand_series.empty:
+    #             raise ValueError("Ligand name %s not found in protein's %s data!" % (ligand, protein))
+
+
+    #         # Add distance data to ligand_series
+    #         if len(ligand_series) != 0:
+    #             if protein in self.distances:
+    #                 if ligand in self.distances[protein]:
+    #                     if not isinstance(self.distances[protein][ligand], type(None)):
+    #                         for distance in self.distances[protein][ligand]:
+    #                             #if distance.startswith('distance_'):
+
+    #                             if not isinstance(dataframe, type(None)):
+    #                                 indexes = dataframe.reset_index().set_index(['Protein', 'Ligand', 'Epoch', 'Trajectory', 'Accepted Pele Steps', 'Step']).index
+    #                                 ligand_series[distance] = self.distances[protein][ligand][self.distances[protein][ligand].index.isin(indexes)][distance].tolist()
+    #                             else:
+    #                                 ligand_series[distance] = self.distances[protein][ligand][distance].tolist()
+
+    #         # Filter points by metric
+    #         if not isinstance(metrics, type(None)):
+    #             for metric in metrics:
+    #                 mask = ligand_series[metric] <= metrics[metric]
+    #                 ligand_series = ligand_series[mask]
+
+    #         if not isinstance(labels, type(None)):
+    #             for label in labels:
+    #                 if labels[label] != None:
+    #                     mask = ligand_series[label] == labels[label]
+    #                     ligand_series = ligand_series[mask]
+
+    #         return ligand_series
+    #     except Exception as e:
+    #         print(e)
+    #         return {"error": e}
+        
+            print('aqui llega')
+
+            try:
+                dict = pele.returnPlot(pele.proteins[0], pele.ligands[0])
+            except Exception as e:
+                print(e)
+
+            print(dict)
+            print('tambien aqui')
+            return jsonify({"ok": True, "distances": distances, "proteins": pele.proteins, "ligands": pele.ligands, "dict": dict.to_dict(orient='split')})
 
         return jsonify({"ok": False, "msg": "No pele simulations folder provided"})
     except Exception as e:
