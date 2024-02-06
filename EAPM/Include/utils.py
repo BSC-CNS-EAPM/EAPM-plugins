@@ -6,7 +6,7 @@ import typing
 
 from HorusAPI import SlurmBlock, PluginBlock, VariableList, PluginVariable, VariableTypes
 
-localIPs = {"cactus": "84.88.51.217", "alma": "84.88.51.250", "bubbles": "84.88.51.219"}
+localIPs = {"cactus": "84.88.51.217", "blossom": "84.88.51.250", "bubbles": "84.88.51.219"}
 
 
 def setup_bsc_calculations_based_on_horus_remote(

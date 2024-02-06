@@ -58,6 +58,10 @@ def createPlugin():
     from Blocks.MultipleSequenceAlignment import multipleSequenceAlignmentBlock
 
     eapmPlugin.addBlock(multipleSequenceAlignmentBlock)
+    
+    from Blocks.AsiteDesign import multipleSequenceAlignmentBlock
+
+    eapmPlugin.addBlock(multipleSequenceAlignmentBlock)
 
     # Add the configs
     from Configs.mffaConfig import mffaExecutableConfig
