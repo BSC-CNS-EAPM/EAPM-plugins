@@ -10,6 +10,7 @@ peleResultsPage = PluginPage(
 )
 
 
+
 def getDistanceByProtein(pele):
     pass
 
@@ -17,6 +18,7 @@ def getDistanceByProtein(pele):
 def getPeleResults():
     import pele_analysis
     from flask import jsonify
+
     try:
         data = request.json
 
@@ -38,7 +40,7 @@ def getPeleResults():
 
                 peleFolder = peleSimFolder.split("/")[len(peleSimFolder.split("/")) - 2]
                 pele = pele_analysis.peleAnalysis(peleFolder, verbose=True, separator='-', trajectories=False, data_folder_name=peleOutputFolder, read_equilibration=True)
-
+                
                 # Classify distances into common metrics --> the catalytic labels
                 # catalytic_names = ['SER-L', 'SER-HIS', 'HIS-ASP']
 
@@ -78,14 +80,23 @@ def getPeleResults():
                         if gettedDistances != []:
                             distances[protein][ligand] = gettedDistances
 
+                firstProteinCouple = None
+                firstLigandCouple = None
 
+                for protein in pele.proteins:
+                    for ligand in pele.ligands:
+                        if pele.getDistances(protein, ligand):
+                            firstProteinCouple = protein
+                            firstLigandCouple = ligand
+                            break
+                    if firstProteinCouple:
+                        break
 
                 # pele.combineDistancesIntoMetrics(catalytic_labels, overwrite=True)
 
-                dict = pele.returnDataframe(pele.proteins[1], pele.ligands[0])
+                dict = pele.returnDataframe(firstProteinCouple, firstLigandCouple)
 
                 return jsonify({"ok": True, "distances": distances, "proteins": pele.proteins, "ligands": pele.ligands, "dict": dict.to_dict(orient='split')})
-                # return jsonify({"ok": True, "distances": distances, "proteins": pele.proteins, "ligands": pele.ligands})
             else:
                 peleSimFolder = data['peleSimulationFolder']
 
@@ -112,15 +123,14 @@ def getPeleResults():
                         if gettedDistances != []:
                             distances[protein][ligand] = gettedDistances
 
+                # TODO IndexOf and get the desired
+                            
+                desiredProtein = data['desiredProtein']
+                desiredLigand = data['desiredLigand']
 
+                dict = pele.returnDataframe(pele.proteins[pele.proteins.index(desiredProtein)], pele.ligands[pele.ligands.index(desiredLigand)])
 
-                # pele.combineDistancesIntoMetrics(catalytic_labels, overwrite=True)
-
-
-                # TODO IndexOf and get the derired
-                dict = pele.returnDataframe(pele.proteins[1], pele.ligands[0])
-
-                return jsonify({"ok": True, "dict": dict.to_dict(orient='split')})
+                return jsonify({"ok": True, "dict": dict.to_dict(orient='split'), "distances": distances})
 
         return jsonify({"ok": False, "msg": "No pele simulations folder provided"})
     except Exception as e:

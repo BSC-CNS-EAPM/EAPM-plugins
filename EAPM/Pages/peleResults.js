@@ -11,6 +11,12 @@ const colorSelector = document.querySelector('#colorSelector')
 let fetchData
 let dataColumn
 
+const horusData = window.parent.extensionData;
+
+if(horusData?.peleFolder !== undefined){
+    peleSimulationFolder.innerHTML = horusData.peleFolder
+}
+
 const addOption = (selector, array) => {
     array.forEach(i => {
         option = document.createElement('option')
@@ -121,7 +127,7 @@ const showPlot = () => {
             marker: { size: 3 }
         };
     
-        Plotly.newPlot('testPlot', [trace], layout);
+        Plotly.newPlot('pelePlot', [trace], layout);
     }else{
         let trace = {
             x: distanceColumn,
@@ -150,7 +156,7 @@ const showPlot = () => {
             },
             
         };
-        Plotly.newPlot('testPlot', [trace], layout);
+        Plotly.newPlot('pelePlot', [trace], layout);
     }
 }
 
@@ -158,11 +164,13 @@ plotForm.addEventListener("change", (e) => {
 
     if(e.target.id === "proteinSelector"){
 
+        const href = window.location.href
+
         const data = {
             peleSimulationFolder: peleSimulationFolder.value,
             peleOutputFolder: peleOutputFolder.value,
             desiredProtein: proteinSelector.value,
-            desiredLigand: ligandSelector.value
+            desiredLigand: Object.keys(fetchData.distances[proteinSelector.value])[0]
         }
 
         fetch(href + '/testEndpoint', {
@@ -177,23 +185,19 @@ plotForm.addEventListener("change", (e) => {
                 if(parsedData.ok){
                     fetchData = parsedData
                     console.log(parsedData)
-    
-                    // const proteins = parsedData.distances
-                    // const proteinValue = Object.keys(proteins)[0]
-                    // const ligands = parsedData.distances[proteinValue]
-                    // const distances = parsedData.distances[proteinValue][Object.keys(ligands)[0]]
                     
                     ligandSelector.innerHTML = ''
                     distanceSelector.innerHTML = ''
 
                     const proteinValue = e.target.value
                     const ligands = parsedData.distances[proteinValue]
+                    
+                    addDictOption(ligandSelector, ligands)
+                    
                     const distances = parsedData.distances[proteinValue][ligandSelector.value]
 
-                    addDictOption(ligandSelector, ligands)
-
                     addOption(distanceSelector, distances)
-                    
+
                     showPlot()
                 }else{
                     console.log('Error: ' + parsedData.msg)
@@ -201,6 +205,12 @@ plotForm.addEventListener("change", (e) => {
             })
             .catch(error => console.error('Error en la solicitud:', error));
     }
+
+    // TODO implement ligand selector changes distances.
+
+    // else if(e.target.id === "proteinSelector"){
+        
+    // }
 
 
     showPlot()

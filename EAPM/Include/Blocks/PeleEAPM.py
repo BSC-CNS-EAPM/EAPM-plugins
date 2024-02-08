@@ -1,6 +1,6 @@
 import random
 
-from HorusAPI import SlurmBlock, PluginVariable, VariableTypes, VariableGroup, VariableList
+from HorusAPI import SlurmBlock, PluginVariable, VariableTypes, VariableGroup, VariableList, Extensions
 
 
 # Input variables
@@ -764,6 +764,8 @@ def peleFinalAction(block: SlurmBlock):#
     peleFolderName = block.variables.get("pele_folder_name", "pele")
 
     block.setOutput("pele_output_folder", peleFolderName)
+
+    Extensions().storeExtensionResults('EAPM', 'peleresults', {'peleFolder': peleFolderName})
 
 
 
