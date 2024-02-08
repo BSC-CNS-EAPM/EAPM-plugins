@@ -204,13 +204,43 @@ plotForm.addEventListener("change", (e) => {
                 }
             })
             .catch(error => console.error('Error en la solicitud:', error));
+    }else if(e.target.id === "ligandSelector"){
+        const href = window.location.href
+
+        const data = {
+            peleSimulationFolder: peleSimulationFolder.value,
+            peleOutputFolder: peleOutputFolder.value,
+            desiredProtein: proteinSelector.value,
+            desiredLigand: ligandSelector.value
+        }
+
+        fetch(href + '/testEndpoint', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => response.json())
+            .then(parsedData => {
+                if(parsedData.ok){
+                    fetchData = parsedData
+                    console.log(parsedData)
+
+                    const proteinValue = proteinSelector.value
+                    const distances = fetchData.distances[proteinValue][ligandSelector.value]
+
+                    distanceSelector.innerHTML = ''
+
+                    addOption(distanceSelector, distances)
+
+                    showPlot()
+                }else{
+                    console.log('Error: ' + parsedData.msg)
+                }
+            })
+            .catch(error => console.error('Error en la solicitud:', error));
     }
-
-    // TODO implement ligand selector changes distances.
-
-    // else if(e.target.id === "proteinSelector"){
-        
-    // }
 
 
     showPlot()
