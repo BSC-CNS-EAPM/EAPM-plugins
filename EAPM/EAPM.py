@@ -62,6 +62,14 @@ def createPlugin():
     from Blocks.Mafft import multipleSequenceAlignmentBlock
 
     eapmPlugin.addBlock(multipleSequenceAlignmentBlock)
+    
+    from Blocks.MSA2HMM import convertMSAToHMMBlock
+
+    eapmPlugin.addBlock(convertMSAToHMMBlock)
+    
+    from Blocks.HmmSearch import hmmsearchBlock
+
+    eapmPlugin.addBlock(hmmsearchBlock)
 
     # Add the configs
     from Configs.mffaConfig import mffaExecutableConfig

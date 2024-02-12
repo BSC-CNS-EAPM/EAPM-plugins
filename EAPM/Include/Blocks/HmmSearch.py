@@ -80,7 +80,14 @@ def runHmmSearch(block: PluginBlock):
     block.setOutput("outputVariable", output)
     
 
-
+hmmsearchBlock = PluginBlock(
+    name="HmmSearch",
+    description="Searches a sequence database with a given hmm",
+    inputs=[hmmInput, sequenceDBVar],
+    variables=[],
+    outputs=[outputVariable],
+    action=runHmmSearch,
+)
 
 
 
