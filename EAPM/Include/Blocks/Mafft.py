@@ -2,50 +2,81 @@
 Module containing the Mafft block for the EAPM plugin
 """
 
-import os
-import subprocess
-from HorusAPI import PluginVariable, PluginBlock, VariableTypes
+from HorusAPI import PluginBlock, PluginVariable, VariableTypes, Extensions
 
 
 # ==========================#
 # Variable inputs
 # ==========================#
-sequences_mafft = PluginVariable(
-    name="Sequences",
-    id="sequences",
-    description="The sequences for the msa",
-    type=VariableTypes.FILE,
-    defaultValue=None,
-    allowedValues=["fasta"],
+proteinFolderVariable = PluginVariable(
+    id="protein_folder",
+    name="Protein folder",
+    description="Folder containing the proteins",
+    type=VariableTypes.FOLDER,
+    defaultValue="proteins",
 )
 
 # ==========================#
 # Variable outputs
 # ==========================#
-output_mafft = PluginVariable(
-    name="Output",
-    id="output",
-    description="The fasta output for the msa",
-    type=VariableTypes.FILE,
-    defaultValue=None,
-    allowedValues=["fasta"],
+msaVariable = PluginVariable(
+    id="msa",
+    name="MSA",
+    description="Multiple Sequence Alignment",
+    type=VariableTypes.CUSTOM,
+    allowedValues=["msa"],
 )
 
-def initialMafft(block: PluginBlock):
-    sequences = block.inputs.get("sequences", None)
-    output = block.outputs.get("output", None)
-    
-    try:
-        subprocess.run(["mafft", "--version"], check=True)
-    except Exception as exc:
-        raise Exception(
-            "MAFFT is not installed in the selected machine. Please install MAFFT in order to align the PDBs"
-        ) 
-    
-    subprocess.run(["mafft", "--thread", "-1", "--auto", sequences, ">", output])
-    
-    block.setOutput("output", output)
 
+def calculateMSAAction(block: PluginBlock):
+    proteinFolder = block.inputs.get("protein_folder", "proteins")
+
+    import prepare_proteins
+
+    # Check that there is at least one pdb file in the folder
+    import os
+
+    hasPDB = False
+    for file in os.listdir(proteinFolder):
+        if file.endswith(".pdb"):
+            hasPDB = True
+            break
+
+    if not hasPDB:
+        raise Exception(f"There are no pdb files in the protein folder: {proteinFolder}")
+
+    models = prepare_proteins.proteinModels(proteinFolder)
+
+    import subprocess
+
+    oldSubprocess = subprocess.run
+
+    if block.remote.name != "Local":
+        raise Exception("This block only works on the local machine.")
+
+    mafftExecutable = block.config.get("mffa_path", "mffa")
+
+    def hookSubprocessMafft(command, **kwargs):
+        if command.startswith("mafft"):
+            command = command.replace("mafft", mafftExecutable)
+        return oldSubprocess(command, **kwargs)
+
+    try:
+        subprocess.run = hookSubprocessMafft
+        msa = models.calculateMSA()
+        block.setOutput("msaVariable", msa)
+    finally:
+        subprocess.run = oldSubprocess
+
+
+multipleSequenceAlignmentBlock = PluginBlock(
+    name="MultipleSequenceAlignment with Mafft",
+    description="Get the MSA from Mafft",
+    inputs=[proteinFolderVariable],
+    variables=[],
+    outputs=[msaVariable],
+    action=calculateMSAAction,
+)
 
 
 

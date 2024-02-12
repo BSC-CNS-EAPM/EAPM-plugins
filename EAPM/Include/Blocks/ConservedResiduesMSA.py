@@ -101,8 +101,8 @@ def getConservedMSAPositions(block: PluginBlock):
         subprocess.run = oldSubprocess
 
 
-multipleSequenceAlignmentBlock = PluginBlock(
-    name="Multiple sequence alignment",
+conservedResiduesMSABlock = PluginBlock(
+    name="Conserved Residues from MSA",
     description="Get the conserved residues from a set of proteins",
     inputs=[proteinFolderVariable],
     variables=[residueIndexToGetVariable],

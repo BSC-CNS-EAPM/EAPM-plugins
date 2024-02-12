@@ -55,7 +55,11 @@ def createPlugin():
 
     eapmPlugin.addBlock(analysePELEBlock)
 
-    from Blocks.MultipleSequenceAlignment import multipleSequenceAlignmentBlock
+    from Blocks.ConservedResiduesMSA import conservedResiduesMSABlock
+
+    eapmPlugin.addBlock(conservedResiduesMSABlock)
+    
+    from Blocks.Mafft import multipleSequenceAlignmentBlock
 
     eapmPlugin.addBlock(multipleSequenceAlignmentBlock)
 
