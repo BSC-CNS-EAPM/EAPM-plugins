@@ -1,7 +1,7 @@
 """
 Module containing the Mafft block for the EAPM plugin
 """
-
+import AlignIO, SeqIO
 from HorusAPI import PluginBlock, PluginVariable, VariableTypes, Extensions
 
 
@@ -19,12 +19,12 @@ proteinFolderVariable = PluginVariable(
 # ==========================#
 # Variable outputs
 # ==========================#
-msaVariable = PluginVariable(
-    id="msa",
-    name="MSA",
-    description="Multiple Sequence Alignment",
-    type=VariableTypes.CUSTOM,
-    allowedValues=["msa"],
+msaFile = PluginVariable(
+    id="msa_file",
+    name="MSA File",
+    description="Multiple Sequence Alignment file",
+    type=VariableTypes.FILE,
+    allowedValues=["fasta"],
 )
 
 
@@ -64,17 +64,22 @@ def calculateMSAAction(block: PluginBlock):
     try:
         subprocess.run = hookSubprocessMafft
         msa = models.calculateMSA()
-        block.setOutput("msaVariable", msa)
+        
+        output = block.outputs.get("msa_file", "output.fasta")
+        with open(output, "w") as output_handle:
+            AlignIO.write(msa, output_handle, "fasta")
+            
+        block.setOutput("msaVariable", output)
     finally:
         subprocess.run = oldSubprocess
 
 
 multipleSequenceAlignmentBlock = PluginBlock(
-    name="MultipleSequenceAlignment with Mafft",
+    name="Multiple Sequence Alignment with Mafft",
     description="Get the MSA from Mafft",
     inputs=[proteinFolderVariable],
     variables=[],
-    outputs=[msaVariable],
+    outputs=[msaFile],
     action=calculateMSAAction,
 )
 
