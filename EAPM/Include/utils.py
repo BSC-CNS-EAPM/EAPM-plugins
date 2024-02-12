@@ -10,7 +10,7 @@ localIPs = {"cactus": "84.88.51.217", "blossom": "84.88.51.250", "bubbles": "84.
 
 
 def setup_bsc_calculations_based_on_horus_remote(
-    remote_name, remote_host: str, jobs, partition, scriptName, cpus, job_name, program
+    remote_name, remote_host: str, jobs, partition, scriptName, cpus, job_name, program, modulePurge
 ):
     import bsc_calculations
 
@@ -56,9 +56,10 @@ def setup_bsc_calculations_based_on_horus_remote(
             program=program,
             script_name=scriptName,
             gpus=cpus,
+            module_purge=modulePurge,
         )
     # marenostrum
-    elif cluster == "mn1.bsc.es":
+    elif "mn" in cluster:
         bsc_calculations.marenostrum.jobArrays(
             jobs,
             job_name=job_name,
@@ -66,6 +67,7 @@ def setup_bsc_calculations_based_on_horus_remote(
             program=program,
             script_name=scriptName,
             cpus=cpus,
+            module_purge=modulePurge,
         )
     # minotauro
     elif cluster == "mt1.bsc.es":
@@ -76,6 +78,7 @@ def setup_bsc_calculations_based_on_horus_remote(
             program=program,
             script_name=scriptName,
             gpus=cpus,
+            module_purge=modulePurge,
         )
     # powerpuff
     elif cluster == "powerpuff":
@@ -132,6 +135,7 @@ def launchCalculationAction(
     jobs: typing.List[str],
     program: str,
     uploadFolders: typing.Optional[typing.List[str]] = None,
+    modulePurge: typing.Optional[bool] = False,
 ):
     if jobs is None:
         raise Exception("No jobs selected")
@@ -157,6 +161,7 @@ def launchCalculationAction(
         cpus,
         simulationName,
         program,
+        modulePurge
     )
 
     # Read the environment variables
