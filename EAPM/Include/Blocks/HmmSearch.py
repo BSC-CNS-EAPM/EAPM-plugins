@@ -88,6 +88,3 @@ hmmsearchBlock = PluginBlock(
     outputs=[outputVariable],
     action=runHmmSearch,
 )
-
-
-
