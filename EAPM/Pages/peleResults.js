@@ -331,9 +331,7 @@ plotForm.addEventListener("change", (e) => {
             },
             body: JSON.stringify(data)
         })
-            .then(response => {
-                response.json()
-            })
+            .then(response => response.json())
             .then(parsedData => {
                 if(parsedData.ok){
                     fetchData = parsedData

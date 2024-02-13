@@ -200,6 +200,36 @@ def getPeleResults():
                 peleFolder = peleSimFolder.split("/")[len(peleSimFolder.split("/")) - 2]
                 pele = pele_analysis.peleAnalysis(peleFolder, verbose=True, separator='-', trajectories=False, data_folder_name=peleOutputFolder, read_equilibration=True)
 
+                # Classify distances into common metrics --> the catalytic labels
+                catalytic_names = ['SER-L', 'SER-HIS', 'HIS-ASP']
+
+                catalytic_labels = {}
+                for cn in catalytic_names:
+                    catalytic_labels[cn] = {}
+                    for protein in pele.proteins:
+                        if protein not in catalytic_labels[cn]:
+                            catalytic_labels[cn][protein] = {}
+                        for ligand in pele.ligands:
+                            if ligand not in catalytic_labels[cn][protein]:
+                                catalytic_labels[cn][protein][ligand] = []
+
+                for protein in pele.proteins:
+                    for ligand in pele.ligands:
+                        distances = pele.getDistances(protein, ligand)
+                        if distances == None:
+                            continue
+                        for d in distances:
+                            at1 = d.replace('distance_','').split('_')[0]
+                            at2 = d.replace('distance_','').split('_')[1]
+                            if at1.endswith('OG') and at2.startswith('L'):
+                                catalytic_labels['SER-L'][protein][ligand].append(d)
+
+                            elif at1.endswith('OG') and at2.endswith('NE2'):
+                                catalytic_labels['SER-HIS'][protein][ligand].append(d)
+
+                            elif at1.endswith('ND1') and (at2.endswith('OD1') or at2.endswith('OD2')):
+                                catalytic_labels['HIS-ASP'][protein][ligand].append(d)
+
                 distances = {}
                 for protein in pele.proteins:
                     distances[protein] = {}
@@ -212,6 +242,8 @@ def getPeleResults():
                             
                 desiredProtein = data['desiredProtein']
                 desiredLigand = data['desiredLigand']
+
+                pele.combineDistancesIntoMetrics(catalytic_labels, overwrite=True)
 
                 dict = returnDataframe(pele, pele.proteins[pele.proteins.index(desiredProtein)], pele.ligands[pele.ligands.index(desiredLigand)])
 
