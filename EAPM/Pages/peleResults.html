@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script defer src="peleResults.js"></script>
+    <link rel="stylesheet" href="peleResults.css">
     <title>Document</title>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
 </head>
 <body>
     <h1>Pele results extension</h1>
@@ -33,6 +35,10 @@
         <!-- <button id="plotButton">Enviar</button> -->
     </form>
 
+    <span id="loader" class="loader"></span>
+   
     <div id="pelePlot" style="width:600px;height:250px;"></div>
+
+    <div id="myGrid" style="margin-top: 300px; height: 200px; width: 600px;" class="ag-theme-alpine"></div>
 </body>
 </html>
