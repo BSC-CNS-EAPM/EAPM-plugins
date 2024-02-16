@@ -6,22 +6,49 @@ const plotForm = document.querySelector('#plotForm')
 const proteinSelector = document.querySelector('#proteinSelector')
 const ligandSelector = document.querySelector('#ligandSelector')
 const distanceSelector = document.querySelector('#distanceSelector')
+const metricSelector = document.querySelector('#metricSelector')
 const colorSelector = document.querySelector('#colorSelector')
 const loader = document.querySelector('#loader')
 
-
-
+const byMetric = document.querySelector('#byMetric')
+const colorByMetric = document.querySelector('#colorByMetric')
+const filterByMetric = document.querySelector('#filterByMetric')
+const metricSerL = document.querySelector('#metric_SER-L-slider')
+const metricSerHis = document.querySelector('#metric_SER-HIS-slider')
+const metricHisAsp = document.querySelector('#metric_HIS-ASP-slider')
+const metricSerLOutput = document.querySelector('#metric_SER-L-output')
+const metricSerHisOutput = document.querySelector('#metric_SER-HIS-output')
+const metricHisAspOutput = document.querySelector('#metric_HIS-ASP-output')
+const metricSerLLabel = document.querySelector('#metric_SER-L-label')
+const metricSerHisLabel = document.querySelector('#metric_SER-HIS-label')
+const metricHisAspLabel = document.querySelector('#metric_HIS-ASP-label')
 
 let fetchData
 let dataColumn
+let gridApi
+
+metricSerL.addEventListener('change', () => {
+    metricSerLOutput.value = metricSerL.value
+})
+
+metricSerHis.addEventListener('change', () => {
+    metricSerHisOutput.value = metricSerHis.value
+})
+
+metricHisAsp.addEventListener('change', () => {
+    metricHisAspOutput.value = metricHisAsp.value
+})
+
 
 const horusData = window.parent.extensionData;
 
 if(horusData?.peleFolder !== undefined){
     peleSimulationFolder.innerHTML = horusData.peleFolder
 }
+// TODO pendiente refactorizar para no tener que crear el evento de plotly_click
 
-//   parent.molstar.loadPDB(pdbData, label)
+
+// parent.molstar.loadPDB(pdbData, label)
 
 const addOption = (selector, array) => {
     array.forEach(i => {
@@ -73,56 +100,47 @@ peleSimulationFolderBtn.addEventListener("click", (e) => {
                 const proteinValue = Object.keys(proteins)[0]
                 const ligands = parsedData.distances[proteinValue]
                 const distances = parsedData.distances[proteinValue][Object.keys(ligands)[0]]
-                
+                const metrics = parsedData.metrics.map(metric => "metric_" + metric);
+
                 addDictOption(proteinSelector, proteins)
-
                 addDictOption(ligandSelector, ligands)
-
                 addOption(distanceSelector, distances)
-
-                console.log(distances)
+                addOption(metricSelector, metrics)
 
                 peleForm.style.display = 'none'
-
                 plotForm.style.display = 'block'
-
-                const bindingEnergyIndex = fetchData.dict.columns.indexOf("Binding Energy")
-
-                dataColumn = fetchData.dict.data.map(row => row[bindingEnergyIndex])
-
                 loader.style.display = 'none'
 
-                showPlot()
+                showPlot(distanceSelector.value, "Binding Energy")
+                createGrid()
 
                 pelePlot.on("plotly_click", (data) => {
-                    const d = data.points[0];
+                    console.log(gridApi.rowModel.rowsToDisplay)
 
-                    const distance = d.x 
-                    const bindingEnergy = d.y
+                    let newData = []
 
-                    const href = window.location.href
+                    gridApi.rowModel.rowsToDisplay.forEach(row => {
+                        newData.push(row.data)
+                    });
 
-                    const plotlyData = {
-                        distance: distance,
-                        bindingEnergy: bindingEnergy
-                    }
+                    const pointData = data.points[0].data.data;
 
-                    fetch(href + '/plotlyClick', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(plotlyData)
+                    newData.push({
+                        "Protein": proteinSelector.value,
+                        "Ligand": ligandSelector.value,
+                        "Epoch": pointData["Epoch"],
+                        "Trajectory": pointData["Trajectory"],
+                        "Accepted Pele Steps": pointData["Accepted Pele Steps"],
+                        "Step": pointData["Step"],
+                        "Total Energy": pointData["Total Energy"],
+                        "Binding Energy": pointData["Binding Energy"],
+                        "Ligand SASA": pointData["Ligand SASA"],
+                        "metric_SER-L": pointData["metric_SER-L"],
+                        "metric_SER-HIS": pointData["metric_SER-HIS"],
+                        "metric_HIS-ASP": pointData["metric_HIS-ASP"]
                     })
-                        .then(response => response.json())
-                        .then(parsedData => {
-                            if(parsedData.ok){
-                                console.log(parsedData.msg)
-                            }
-                        })
 
-                    console.log(d)
-                    // addRowToTable(d);
+                    gridApi.setGridOption('rowData', newData)
                 });
             }else{
                 console.log('Error: ' + parsedData.msg)
@@ -135,43 +153,7 @@ peleSimulationFolderBtn.addEventListener("click", (e) => {
     
 })
 
-const showGrid = () => {
-    const proteinColumnIndex = fetchData.dict.columns.indexOf('Protein');
-    const proteinColumn = fetchData.dict.data.map(row => row[proteinColumnIndex]);
-
-    const ligandColumnIndex = fetchData.dict.columns.indexOf('Ligand');
-    const ligandColumn = fetchData.dict.data.map(row => row[ligandColumnIndex]);
-    
-    const epochColumnIndex = fetchData.dict.columns.indexOf('Epoch');
-    const epochColumn = fetchData.dict.data.map(row => row[epochColumnIndex]);
-
-    const trajectoryColumnIndex = fetchData.dict.columns.indexOf('Trajectory');
-    const trajectoryColumn = fetchData.dict.data.map(row => row[trajectoryColumnIndex]);
-
-    const acceptedPeleStepsColumnIndex = fetchData.dict.columns.indexOf('Accepted Pele Steps');
-    const acceptedPeleStepsColumn = fetchData.dict.data.map(row => row[acceptedPeleStepsColumnIndex]);
-
-    const stepColumnIndex = fetchData.dict.columns.indexOf('Step');
-    const stepColumn = fetchData.dict.data.map(row => row[stepColumnIndex]);
-
-    const totalEnergyColumnIndex = fetchData.dict.columns.indexOf('Total Energy');
-    const totalEnergyColumn = fetchData.dict.data.map(row => row[totalEnergyColumnIndex]);
-
-    const bindingEnergyColumnIndex = fetchData.dict.columns.indexOf('Binding Energy');
-    const bindingEnergyColumn = fetchData.dict.data.map(row => row[bindingEnergyColumnIndex]);
-
-    const ligandSASAColumnIndex = fetchData.dict.columns.indexOf('Ligand SASA');
-    const ligandSASAColumn = fetchData.dict.data.map(row => row[ligandSASAColumnIndex]);
-
-    const metricSERLColumnIndex = fetchData.dict.columns.indexOf('metric_SER-L');
-    const metricSERLColumn = fetchData.dict.data.map(row => row[metricSERLColumnIndex]);
-
-    const metricSERHISColumnIndex = fetchData.dict.columns.indexOf('metric_SER-HIS');
-    const metricSERHISColumn = fetchData.dict.data.map(row => row[metricSERHISColumnIndex]);
-
-    const metricHISASPColumnIndex = fetchData.dict.columns.indexOf('metric_HIS-ASP');
-    const metricHISASPColumn = fetchData.dict.data.map(row => row[metricHISASPColumnIndex]);
-
+const createGrid = () => {
     const columnNames = [
         "Protein",
         "Ligand",
@@ -186,124 +168,113 @@ const showGrid = () => {
         "metric_SER-HIS",
         "metric_HIS-ASP"
     ];
-    
-    const distances = fetchData.distances[proteinSelector.value][ligandSelector.value]
 
-    console.log(distances)
-    
-    // Combina columnNames con las distancias dinámicas
-    const allColumnNames = [...columnNames, ...distances];
-    
-    console.log(allColumnNames)
-
-    // Mapea los nombres de las columnas a las definiciones de columnas de ag-Grid
-    const columnDefs = allColumnNames.map(column => {
+    const columnDefs = columnNames.map(column => {
         return { field: column };
     });
     
-    const rowData = proteinColumn.map((protein, index) => {
-        return {
-            "Protein": protein,
-            "Ligand": ligandColumn[index],
-            "Epoch": epochColumn[index],
-            "Trajectory": trajectoryColumn[index],
-            "Accepted Pele Steps": acceptedPeleStepsColumn[index],
-            "Step": stepColumn[index],
-            "Total Energy": totalEnergyColumn[index],
-            "Binding Energy": bindingEnergyColumn[index],
-            "Ligand SASA": ligandSASAColumn[index],
-            "metric_SER-L": metricSERLColumn[index],
-            "metric_SER-HIS": metricSERHISColumn[index],
-            "metric_HIS-ASP": metricHISASPColumn[index]
-        };
-    });
-
-    distances.forEach((distance, distanceIndex) => {
-        const distanceColumnIndex = 12 + distanceIndex;
-        const distanceColumn = fetchData.dict.data.map(row => row[distanceColumnIndex]);
-    
-        rowData.forEach((row, rowIndex) => {
-            row[distance] = distanceColumn[rowIndex];
-        });
-    });
-
     const gridOptions = {
-        rowData: rowData,
+        rowData: [],
         columnDefs: columnDefs,
-        suppressSizeToFit: true
+        rowSelection: 'single',
+        onRowClicked: event => {
+            console.log(event.data);
+            const href = window.location.href;
+        
+            const jsonData = JSON.stringify(event.data);
+        
+            fetch(href + '/plotlyClick', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: jsonData
+            })
+            .then(response => response.json())
+            .then(parsedData => {
+                if (parsedData.ok) {
+                    console.log(parsedData.msg);
+                }
+            });
+        }
     };
     
     const gridElement = document.querySelector('#myGrid');
-    const gridApi = agGrid.createGrid(gridElement, gridOptions);
+    gridApi = agGrid.createGrid(gridElement, gridOptions);
 }
 
-const showPlot = () => {
-    let distanceValue = distanceSelector.value
-    const distanceColumnIndex = fetchData.dict.columns.indexOf(distanceValue);
-    distanceColumn = fetchData.dict.data.map(row => row[distanceColumnIndex]);
+const changeDisplayStyle = (array, string) => {
+    array.forEach(element => {
+        element.style.display = string
+    });
+}
 
-    let colorSelectorIndex = fetchData.dict.columns.indexOf(colorSelector.value);
-    let colorSelectorColumn = fetchData.dict.data.map(row => row[colorSelectorIndex]);
+const showPlot = (xVal, yVal) => {
+    let toPlotData = []
 
-    showGrid()
+    for (const value in fetchData.dict) {
+        bindingEnergy = fetchData.dict[value]["Binding Energy"]
+        acceptedPeleStep = fetchData.dict[value]["Accepted Pele Steps"]
 
-    if(colorSelector.value == 'None'){
-        var pelePlot = document.getElementById('pelePlot'),
-        data = [{
-            x: distanceColumn, 
-            y: dataColumn, 
-            type: 'scatter',
-            mode: 'markers', 
-            marker: {
-                size: 6,
-                color: 'rgba(45, 85, 255, 0.7)',    
+        let marker
+
+        if(filterByMetric.checked){
+            if((fetchData.dict[value]["metric_SER-L"] > metricSerL.value) 
+            || (fetchData.dict[value]["metric_SER-HIS"] > metricSerHis.value) 
+            || (fetchData.dict[value]["metric_HIS-ASP"] > metricHisAsp.value)){
+                continue
             }
-                }],
-        layout = {
-            title: 'Scatter plot',
-            hovermode: 'closest',
-            width: 500,
-            height: 500,
-            xaxis: {
-                title: distanceValue
-            },
-            yaxis: {
-                title: 'Binding energy'
-            },
-            marker: { size: 3 }
-        };
-    
-        Plotly.newPlot('pelePlot', data, layout);
-    }else{
-        let trace = {
-            x: distanceColumn,
-            y: dataColumn,
-            mode: 'markers',
-            type: 'scatter',
-            marker: {
-                size: 4,
-                color: colorSelectorColumn,
+        }
+
+        if(colorSelector.value == 'None'){
+            marker = {
+                size: 6,
+                color: colorByMetric.checked ? (fetchData.dict[value]["metric_SER-L"] <= metricSerL.value) 
+                && (fetchData.dict[value]["metric_SER-HIS"] <= metricSerHis.value) 
+                && (fetchData.dict[value]["metric_HIS-ASP"] <= metricHisAsp.value) 
+                ? 'rgb(255, 0, 0)' : 'rgb(0, 0, 0)' : 'rgba(45, 85, 255, 0.7)'
+            }
+        }else{
+            marker = {
+                size: 6,
+                color: colorSelector.value,
                 colorscale: 'Viridis',
                 colorbar: {
                     title: colorSelector.value
                 }
-            },
-        };
-        
-        let layout = {
-            title: 'Scatter plot',
-            width: 600,
-            height: 500,
-            xaxis: {
-                title: distanceValue
-            },
-            yaxis: {
-                title: 'Binding energy'
-            },
-            
-        };
-        Plotly.newPlot('pelePlot', [trace], layout);
+             }
+        }
+
+        const data = {
+            x: [fetchData.dict[value][xVal]],
+            y: [fetchData.dict[value][yVal]],
+            type: "scatter",
+            mode: "markers",
+            marker: marker,
+            data: fetchData.dict[value],
+            showlegend: false
+        }
+
+        toPlotData.push(data)
     }
+
+    console.log(toPlotData)
+
+    var pelePlot = document.getElementById('pelePlot'),
+    layout = {
+        title: 'Scatter plot',
+        hovermode: 'closest',
+        width: 0.60 * pelePlot.offsetWidth,
+        height: 0.60 * pelePlot.offsetWidth,
+        xaxis: {
+            title: xVal
+        },
+        yaxis: {
+            title: yVal
+        }
+    };
+
+    Plotly.newPlot('pelePlot', toPlotData, layout);
 }
 
 plotForm.addEventListener("change", (e) => {
@@ -355,10 +326,35 @@ plotForm.addEventListener("change", (e) => {
                     colorSelector.disabled = false
                     loader.style.display = 'none'
 
-                    showPlot()
+                    showPlot(distanceSelector.value, "Binding Energy")
 
-                    pelePlot.on('plotly_click', function(){
-                        alert('You clicked this Plotly chart!');
+                    pelePlot.on("plotly_click", (data) => {
+                        console.log(gridApi.rowModel.rowsToDisplay)
+    
+                        let newData = []
+    
+                        gridApi.rowModel.rowsToDisplay.forEach(row => {
+                            newData.push(row.data)
+                        });
+    
+                        const pointData = data.points[0].data.data;
+    
+                        newData.push({
+                            "Protein": proteinSelector.value,
+                            "Ligand": ligandSelector.value,
+                            "Epoch": pointData["Epoch"],
+                            "Trajectory": pointData["Trajectory"],
+                            "Accepted Pele Steps": pointData["Accepted Pele Steps"],
+                            "Step": pointData["Step"],
+                            "Total Energy": pointData["Total Energy"],
+                            "Binding Energy": pointData["Binding Energy"],
+                            "Ligand SASA": pointData["Ligand SASA"],
+                            "metric_SER-L": pointData["metric_SER-L"],
+                            "metric_SER-HIS": pointData["metric_SER-HIS"],
+                            "metric_HIS-ASP": pointData["metric_HIS-ASP"]
+                        })
+    
+                        gridApi.setGridOption('rowData', newData)
                     });
                 }else{
                     console.log('Error: ' + parsedData.msg)
@@ -406,18 +402,254 @@ plotForm.addEventListener("change", (e) => {
                     colorSelector.disabled = false
                     loader.style.display = 'none'
 
-                    showPlot()
+                    showPlot(distanceSelector.value, "Binding Energy")
+
+                    pelePlot.on("plotly_click", (data) => {
+                        console.log(gridApi.rowModel.rowsToDisplay)
+    
+                        let newData = []
+    
+                        gridApi.rowModel.rowsToDisplay.forEach(row => {
+                            newData.push(row.data)
+                        });
+    
+                        const pointData = data.points[0].data.data;
+    
+                        newData.push({
+                            "Protein": proteinSelector.value,
+                            "Ligand": ligandSelector.value,
+                            "Epoch": pointData["Epoch"],
+                            "Trajectory": pointData["Trajectory"],
+                            "Accepted Pele Steps": pointData["Accepted Pele Steps"],
+                            "Step": pointData["Step"],
+                            "Total Energy": pointData["Total Energy"],
+                            "Binding Energy": pointData["Binding Energy"],
+                            "Ligand SASA": pointData["Ligand SASA"],
+                            "metric_SER-L": pointData["metric_SER-L"],
+                            "metric_SER-HIS": pointData["metric_SER-HIS"],
+                            "metric_HIS-ASP": pointData["metric_HIS-ASP"]
+                        })
+    
+                        gridApi.setGridOption('rowData', newData)
+                    });
                 }else{
                     console.log('Error: ' + parsedData.msg)
                 }
             })
             .catch(error => console.error('Error en la solicitud:', error));
+    }else if(e.target.id === "distanceSelector"){
+        showPlot(distanceSelector.value, "Binding Energy")
+        pelePlot.on("plotly_click", (data) => {
+            console.log(gridApi.rowModel.rowsToDisplay)
+
+            let newData = []
+
+            gridApi.rowModel.rowsToDisplay.forEach(row => {
+                newData.push(row.data)
+            });
+
+            const pointData = data.points[0].data.data;
+
+            newData.push({
+                "Protein": proteinSelector.value,
+                "Ligand": ligandSelector.value,
+                "Epoch": pointData["Epoch"],
+                "Trajectory": pointData["Trajectory"],
+                "Accepted Pele Steps": pointData["Accepted Pele Steps"],
+                "Step": pointData["Step"],
+                "Total Energy": pointData["Total Energy"],
+                "Binding Energy": pointData["Binding Energy"],
+                "Ligand SASA": pointData["Ligand SASA"],
+                "metric_SER-L": pointData["metric_SER-L"],
+                "metric_SER-HIS": pointData["metric_SER-HIS"],
+                "metric_HIS-ASP": pointData["metric_HIS-ASP"]
+            })
+
+            gridApi.setGridOption('rowData', newData)
+        });
+    }else if(e.target.id === 'colorByMetric'){
+
+        let metricsDisplay = [
+            metricSerL, metricSerLOutput, metricSerLLabel, metricSerHis, metricSerHisOutput, 
+            metricSerHisLabel, metricHisAsp, metricHisAspOutput, metricHisAspLabel
+        ] 
+
+        if(e.target.checked){
+            changeDisplayStyle(metricsDisplay, 'inline-block')
+        }else{
+            changeDisplayStyle(metricsDisplay, 'none')
+        }
+
+        showPlot(distanceSelector.value, "Binding Energy")
+        pelePlot.on("plotly_click", (data) => {
+            console.log(gridApi.rowModel.rowsToDisplay)
+
+            let newData = []
+
+            gridApi.rowModel.rowsToDisplay.forEach(row => {
+                newData.push(row.data)
+            });
+
+            const pointData = data.points[0].data.data;
+
+            newData.push({
+                "Protein": proteinSelector.value,
+                "Ligand": ligandSelector.value,
+                "Epoch": pointData["Epoch"],
+                "Trajectory": pointData["Trajectory"],
+                "Accepted Pele Steps": pointData["Accepted Pele Steps"],
+                "Step": pointData["Step"],
+                "Total Energy": pointData["Total Energy"],
+                "Binding Energy": pointData["Binding Energy"],
+                "Ligand SASA": pointData["Ligand SASA"],
+                "metric_SER-L": pointData["metric_SER-L"],
+                "metric_SER-HIS": pointData["metric_SER-HIS"],
+                "metric_HIS-ASP": pointData["metric_HIS-ASP"]
+            })
+
+            gridApi.setGridOption('rowData', newData)
+        })
+    }else if(e.target.id === 'metric_SER-L-slider' || e.target.id === 'metric_SER-HIS-slider' || e.target.id === 'metric_HIS-ASP-slider'){
+        showPlot(distanceSelector.value, "Binding Energy")
+        pelePlot.on("plotly_click", (data) => {
+            console.log(gridApi.rowModel.rowsToDisplay)
+
+            let newData = []
+
+            gridApi.rowModel.rowsToDisplay.forEach(row => {
+                newData.push(row.data)
+            });
+
+            const pointData = data.points[0].data.data;
+
+            newData.push({
+                "Protein": proteinSelector.value,
+                "Ligand": ligandSelector.value,
+                "Epoch": pointData["Epoch"],
+                "Trajectory": pointData["Trajectory"],
+                "Accepted Pele Steps": pointData["Accepted Pele Steps"],
+                "Step": pointData["Step"],
+                "Total Energy": pointData["Total Energy"],
+                "Binding Energy": pointData["Binding Energy"],
+                "Ligand SASA": pointData["Ligand SASA"],
+                "metric_SER-L": pointData["metric_SER-L"],
+                "metric_SER-HIS": pointData["metric_SER-HIS"],
+                "metric_HIS-ASP": pointData["metric_HIS-ASP"]
+            })
+
+            gridApi.setGridOption('rowData', newData)
+        })
+    }else if(e.target.id === 'colorSelector'){
+        showPlot(distanceSelector.value, "Binding Energy")
+        pelePlot.on("plotly_click", (data) => {
+            console.log(gridApi.rowModel.rowsToDisplay)
+
+            let newData = []
+
+            gridApi.rowModel.rowsToDisplay.forEach(row => {
+                newData.push(row.data)
+            });
+
+            const pointData = data.points[0].data.data;
+
+            newData.push({
+                "Protein": proteinSelector.value,
+                "Ligand": ligandSelector.value,
+                "Epoch": pointData["Epoch"],
+                "Trajectory": pointData["Trajectory"],
+                "Accepted Pele Steps": pointData["Accepted Pele Steps"],
+                "Step": pointData["Step"],
+                "Total Energy": pointData["Total Energy"],
+                "Binding Energy": pointData["Binding Energy"],
+                "Ligand SASA": pointData["Ligand SASA"],
+                "metric_SER-L": pointData["metric_SER-L"],
+                "metric_SER-HIS": pointData["metric_SER-HIS"],
+                "metric_HIS-ASP": pointData["metric_HIS-ASP"]
+            })
+
+            gridApi.setGridOption('rowData', newData)
+        })
+    }else if(e.target.id === 'filterByMetric'){
+
+        let metricsDisplay = [
+            metricSerL, metricSerLOutput, metricSerLLabel, metricSerHis, metricSerHisOutput, 
+            metricSerHisLabel, metricHisAsp, metricHisAspOutput, metricHisAspLabel
+        ] 
+
+        if(e.target.checked){
+            changeDisplayStyle(metricsDisplay, 'inline-block')
+        }else{
+            changeDisplayStyle(metricsDisplay, 'none')
+        }
+
+        showPlot(distanceSelector.value, "Binding Energy")
+        pelePlot.on("plotly_click", (data) => {
+            console.log(gridApi.rowModel.rowsToDisplay)
+
+            let newData = []
+
+            gridApi.rowModel.rowsToDisplay.forEach(row => {
+                newData.push(row.data)
+            });
+
+            const pointData = data.points[0].data.data;
+
+            newData.push({
+                "Protein": proteinSelector.value,
+                "Ligand": ligandSelector.value,
+                "Epoch": pointData["Epoch"],
+                "Trajectory": pointData["Trajectory"],
+                "Accepted Pele Steps": pointData["Accepted Pele Steps"],
+                "Step": pointData["Step"],
+                "Total Energy": pointData["Total Energy"],
+                "Binding Energy": pointData["Binding Energy"],
+                "Ligand SASA": pointData["Ligand SASA"],
+                "metric_SER-L": pointData["metric_SER-L"],
+                "metric_SER-HIS": pointData["metric_SER-HIS"],
+                "metric_HIS-ASP": pointData["metric_HIS-ASP"]
+            })
+
+            gridApi.setGridOption('rowData', newData)
+        })
+    }else if(e.target.id === 'byMetric'){
+        if(e.target.checked){
+            changeDisplayStyle([distanceSelector], 'none')
+            changeDisplayStyle([metricSelector], 'inline-block')
+        }else{
+            changeDisplayStyle([distanceSelector], 'inline-block')
+            changeDisplayStyle([metricSelector], 'none')
+        }
+    }else if(e.target.id === 'metricSelector'){
+        showPlot(metricSelector.value, "Binding Energy")
+        pelePlot.on("plotly_click", (data) => {
+            console.log(gridApi.rowModel.rowsToDisplay)
+
+            let newData = []
+
+            gridApi.rowModel.rowsToDisplay.forEach(row => {
+                newData.push(row.data)
+            });
+
+            const pointData = data.points[0].data.data;
+
+            newData.push({
+                "Protein": proteinSelector.value,
+                "Ligand": ligandSelector.value,
+                "Epoch": pointData["Epoch"],
+                "Trajectory": pointData["Trajectory"],
+                "Accepted Pele Steps": pointData["Accepted Pele Steps"],
+                "Step": pointData["Step"],
+                "Total Energy": pointData["Total Energy"],
+                "Binding Energy": pointData["Binding Energy"],
+                "Ligand SASA": pointData["Ligand SASA"],
+                "metric_SER-L": pointData["metric_SER-L"],
+                "metric_SER-HIS": pointData["metric_SER-HIS"],
+                "metric_HIS-ASP": pointData["metric_HIS-ASP"]
+            })
+
+            gridApi.setGridOption('rowData', newData)
+        })
     }
-
-
-    showPlot()
-
-    pelePlot.on('plotly_click', function(){
-        alert('You clicked this Plotly chart!');
-    });
 })
+
+

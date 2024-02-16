@@ -26,18 +26,36 @@
         <select name="proteinSelector" id="proteinSelector"></select>
         <select name="ligandSelector" id="ligandSelector"></select>
         <select name="distanceSelector" id="distanceSelector"></select>
+        <select name="metricSelector" id="metricSelector"></select>
         <select name="colorSelector" id="colorSelector">
             <option value="None">None</option>
             <option value="Epoch">Epoch</option>
             <option value="Total Energy">Total Energy</option>
             <option value="Ligand SASA">Ligand SASA</option>
         </select>
-        <!-- <button id="plotButton">Enviar</button> -->
+        <label for="byMetric">By metric: </label>
+        <input type="checkbox" name="byMetric" id="byMetric">
+        <label for="colorByMetric">Color by metric: </label>
+        <input type="checkbox" name="colorByMetric" id="colorByMetric">
+        <label for="filterByMetric">Filter by metric: </label>
+        <input type="checkbox" name="filterByMetric" id="filterByMetric"> <br>
+
+        <label id="metric_SER-L-label" for="metric_SER-L-slider">metric_SER-L: </label>
+        <input type="range" min="0" max="30" value="10" name="metric_SER-L-slider" class="slider" id="metric_SER-L-slider"> 
+        <output id="metric_SER-L-output">10</output> <br>
+
+        <label id="metric_SER-HIS-label" for="metric_SER-HIS-slider">metric_SER-ASP: </label>
+        <input type="range" min="0" max="30" value="10" name="metric_SER-HIS-slider" class="slider" id="metric_SER-HIS-slider"> 
+        <output id="metric_SER-HIS-output">10</output> <br>
+
+        <label id="metric_HIS-ASP-label" for="metric_HIS-ASP-slider">metric_HIS-ASP: </label>
+        <input type="range" min="0" max="30" value="10" name="metric_HIS-ASP-slider" class="slider" id="metric_HIS-ASP-slider"> 
+        <output id="metric_HIS-ASP-output">10</output> <br>
     </form>
 
     <span id="loader" class="loader"></span>
    
-    <div id="pelePlot" style="width:600px;height:250px;"></div>
+    <div id="pelePlot"></div>
 
     <div id="myGrid" style="margin-top: 300px; height: 200px; width: 600px;" class="ag-theme-alpine"></div>
 </body>

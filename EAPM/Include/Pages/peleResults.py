@@ -179,9 +179,9 @@ def getPeleResults():
 
                 df_flat_index.fillna(0, inplace=True)
 
-                data_dict = df_flat_index.to_dict(orient='split')
+                data_dict = df_flat_index.to_dict(orient='index')
 
-                return jsonify({"ok": True, "distances": distances, "proteins": pele.proteins, "ligands": pele.ligands, "dict": data_dict})
+                return jsonify({"ok": True, "distances": distances, "proteins": pele.proteins, "ligands": pele.ligands, "dict": data_dict, "metrics": catalytic_names})
             else:
                 peleSimFolder = data['peleSimulationFolder']
 
@@ -237,8 +237,6 @@ def getPeleResults():
                         gettedDistances = pele.getDistances(protein, ligand)
                         if gettedDistances != []:
                             distances[protein][ligand] = gettedDistances
-
-                # TODO IndexOf and get the desired
                             
                 desiredProtein = data['desiredProtein']
                 desiredLigand = data['desiredLigand']
@@ -249,31 +247,40 @@ def getPeleResults():
 
                 df_flat_index = dict.reset_index()
 
-                data_dict = df_flat_index.to_dict(orient='split')
+                data_dict = df_flat_index.to_dict(orient='index')
 
-                return jsonify({"ok": True, "dict": data_dict, "distances": distances})
+                return jsonify({"ok": True, "dict": data_dict, "distances": distances, "metrics": catalytic_names})
 
         return jsonify({"ok": False, "msg": "No pele simulations folder provided"})
     except Exception as e:
             print(f'Error: {e}')
             return jsonify({"ok": False, "msg": str(e)})
 
-def getPlotlyCLick():
+def getPlotlyClick():
     import pele_analysis
+    import pandas as pd
+    import mdtraj
     from flask import jsonify
 
-    data = request.json
-
-    if "distance" and "bindingEnergy" in data:
-
-        distance = data['distance']
-        bindingEnergy = data['bindingEnergy']
-
-        print(f'{distance} - {bindingEnergy}')
-        return jsonify({"ok": True, "msg": f'{distance} - {bindingEnergy}'})
+    print(mdtraj.version.full_version)
 
     try:
-        pass
+        data = request.json
+
+        if "Protein" in data:
+
+            jsondf = data
+            df = pd.DataFrame([jsondf])
+            df.set_index(['Protein', 'Ligand', 'Epoch', 'Trajectory', 'Accepted Pele Steps', 'Step'], inplace=True)
+            print(df)
+
+            pele = pele_analysis.peleAnalysis('/home/christiangoac/Horus/PELE/pele_og', verbose=True, separator='-', trajectories=False, data_folder_name='/home/christiangoac/Horus/PELE/pele_data/', read_equilibration=True)
+
+            pele.extractPELEPoses(df, '/home/christiangoac/Horus/PELE/pele_og', '/home/christiangoac/Horus/PELE/pele_test')
+
+            print(f'{df}')
+            return jsonify({"ok": True, "msg": f'hola :)'})
+        
     except Exception as e:
         print(f'Error: {e}')
         return jsonify({"ok": False, "msg": str(e)})
@@ -285,12 +292,12 @@ peleResults = PluginEndpoint(
     function=getPeleResults,
 )
 
-plotlyCLick = PluginEndpoint(
+plotlyClick = PluginEndpoint(
     url="/plotlyClick",
     methods=["POST"],
-    function=getPlotlyCLick,
+    function=getPlotlyClick,
 )
 
 # Add the endpoint to the page
 peleResultsPage.addEndpoint(peleResults)
-peleResultsPage.addEndpoint(plotlyCLick)
+peleResultsPage.addEndpoint(plotlyClick)

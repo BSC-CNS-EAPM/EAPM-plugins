@@ -1,3 +1,25 @@
+#metric_SER-L-slider, #metric_SER-HIS-slider, #metric_HIS-ASP-slider, 
+#metric_SER-L-output, #metric_SER-HIS-output, #metric_HIS-ASP-output, 
+#metric_SER-L-label, #metric_SER-HIS-label, #metric_HIS-ASP-label, #metricSelector{
+  display: none;
+}
+
+/* #metric_SER-L-slider, #metric_SER-HIS-slider, #metric_HIS-ASP-slider {
+  display: inline-block;
+}
+
+#metric_SER-L-output, #metric_SER-HIS-output, #metric_HIS-ASP-output {
+  display: inline-block;
+  margin-left: 10px;
+} */
+
+#pelePlot{
+  /* width:600px;
+  height:250px; */
+  width: 100%;
+  height: 100%;
+}
+
 .loader {
     width: 16px;
     height: 16px;
