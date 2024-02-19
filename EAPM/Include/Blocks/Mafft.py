@@ -54,7 +54,7 @@ def calculateMSAAction(block: PluginBlock):
     if block.remote.name != "Local":
         raise Exception("This block only works on the local machine.")
 
-    mafftExecutable = block.config.get("mffa_path", "mffa")
+    mafftExecutable = block.config.get(mafft_path", "mafft")
 
     def hookSubprocessMafft(command, **kwargs):
         if command.startswith("mafft"):
@@ -65,13 +65,16 @@ def calculateMSAAction(block: PluginBlock):
         subprocess.run = hookSubprocessMafft
         msa = models.calculateMSA()
         
-        output = block.outputs.get("msa_file", "output.fasta")
-        with open(output, "w") as output_handle:
-            AlignIO.write(msa, output_handle, "fasta")
-            
-        block.setOutput("msaVariable", output)
-    finally:
-        subprocess.run = oldSubprocess
+        output = "output.fasta"
+        
+        import bioprospecting
+        bioprospecting.alignment.mafft.writeMsaToFastaFile(msa, output)
+        
+        block.setOutput(msaFile.id, output)
+    except Exception as e:
+        raise Exception(f"Error running Mafft: {e}")
+    # finally:
+    #     subprocess.run = oldSubprocess
 
 
 multipleSequenceAlignmentBlock = PluginBlock(

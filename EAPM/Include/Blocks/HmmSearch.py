@@ -1,10 +1,11 @@
 """
-Module containing the HmmSearch block for the EAPM plugin
+Module containing the HmmSearch block for the EAPM plugin as a local implementation
 """
 
+import datetime
 import os
 import pyhmmer
-from HorusAPI import PluginBlock, PluginVariable, VariableTypes, Extensions
+from HorusAPI import SlurmBlock, PluginVariable, VariableTypes, Extensions
 
 
 # ==========================#
@@ -22,9 +23,8 @@ sequenceDBVar = PluginVariable(
     id="sequence_db",
     name="Sequence DB",
     description="The sequence database to search",
-    type=VariableTypes.FILE,
-    defaultValue=None,
-    allowedValues=["fasta", "faa"],
+    type=VariableTypes.STRING,
+    defaultValue="/gpfs/projects/bsc72/ruite/enzyminer/data/reduced_data/uniref50.fasta",
 )
 
 # ==========================#
@@ -38,9 +38,38 @@ outputVariable = PluginVariable(
     allowedValues=["domtbl"],
 )
 
-def runHmmSearch(block: PluginBlock):
+# ==========================#
+# Variable 
+# ==========================#
+exeVar = PluginVariable(
+    id="hmmsearch_exe",
+    name="Hmmsearch executable",
+    description="The hmmsearch executable",
+    type=VariableTypes.STRING,
+    defaultValue="/gpfs/projects/bsc72/anarobles/HMM_proof/hmmer-3.3.2/src/hmmsearch", 
+)
+cpuVar = PluginVariable(
+    id="hmmsearch_cpu",
+    name="Hmmsearch CPU",
+    description="The number of CPUs to use",
+    type=VariableTypes.INTEGER,
+    defaultValue=10,
+)
+evalueVar = PluginVariable(
+    id="hmmsearch_evalue",
+    name="Hmmsearch evalue",
+    description="The evalue to use",
+    type=VariableTypes.FLOAT,
+    defaultValue=0.001,
+)
+
+
+def runHmmSearch(block: SlurmBlock):
     
     input = block.inputs.get("input_hmm", None)
+    
+    if "mn" not in block.remote.host:
+        raise Exception("This block only works on Marenostrum.")
     
     if input is None:
         raise Exception("No input hmm provided")
@@ -48,43 +77,37 @@ def runHmmSearch(block: PluginBlock):
     if not os.path.exists(input):
         raise Exception(f"The input hmm file does not exist: {input}")
     
-    try:
-        with pyhmmer.plan7.HMMFile(input) as hmm_file:
-            hmm = hmm_file.read()
-    except Exception as e:
-        raise Exception(f"Error reading the input hmm file: {e}")
+    savedID_and_date = block.flow.savedID + "_" + str(datetime.datetime.now().timestamp())
+    simRemoteDir = os.path.join(block.remote.workDir, savedID_and_date)
+    block.extraData["remoteDir"] = simRemoteDir
+    block.remote.remoteCommand(f"mkdir -p -v {simRemoteDir}")
     
-    alphabet = pyhmmer.plan7.Alphabet.amino()
-    background = pyhmmer.plan7.Background(alphabet)
-    pipeline = pyhmmer.plan7.Pipeline(alphabet, background=background)
+    print(f"Created simulation folder in the remote at {simRemoteDir}")
+    print("Sending data to the remote...")
     
-    sequenceDB = block.inputs.get("sequence_db", None)
+    exe = block.variables["hmmsearch_exe"]
+    cpu = block.variables["hmmsearch_cpu"]
+    evalue = block.variables["hmmsearch_evalue"]
     
-    if sequenceDB is None:
-        raise Exception("No sequence database provided")
+    command = f"{exe} --cpu {cpu} -E {evalue} {input} {sequenceDBVar}"
     
-    if not os.path.exists(sequenceDB):
-        raise Exception(f"The sequence database file does not exist: {sequenceDB}")
-    
-    try:
-        with pyhmmer.easel.SequenceFile(sequenceDB, digital=True, alphabet=alphabet) as seq_file:
-            hits = pipeline.search_hmm(hmm, seq_file)
-    except Exception as e:
-        raise Exception(f"Error searching the sequence database: {e}")
+    #! Finish the command execution in the remote (see if it's necessary to use a sbatch file)
     
     output = block.outputs.get("output", "output.domtbl")
     
-    with open(output, "wb") as f:
-        hits.write(f, format="domains")
         
     block.setOutput("outputVariable", output)
     
+def finalAction():
+    pass
 
-hmmsearchBlock = PluginBlock(
+
+hmmsearchBlock = SlurmBlock(
     name="HmmSearch",
+    initialAction=runHmmSearch,
+    finalAction=finalAction,
     description="Searches a sequence database with a given hmm",
     inputs=[hmmInput, sequenceDBVar],
     variables=[],
     outputs=[outputVariable],
-    action=runHmmSearch,
 )

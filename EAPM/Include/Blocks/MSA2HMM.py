@@ -17,7 +17,7 @@ inputFileMSA = PluginVariable(
     description="The input file MSA",
     type=VariableTypes.FILE,
     defaultValue=None,
-    allowedValues=["msa"],
+    allowedValues=["fasta"],
 )
 inputMSAVar = PluginVariable(
     id="input_msa",
@@ -62,13 +62,13 @@ def convertMSA2HMM(block: PluginBlock):
     
     with pyhmmer.easel.MSAFile(inputMSA, digital=True, alphabet=alphabet) as msa_file:
         msa = msa_file.read()
-        msa.name = "input_msa"
+        msa.name = b"input_msa"
     
     builder = pyhmmer.plan7.Builder(alphabet)
     background = pyhmmer.plan7.Background(alphabet)
     hmm, _, _ = builder.build_msa(msa, background)
     
-    output = block.outputs.get("output_hmm", "output.hmm")
+    output = "output.hmm"
     with open(output, "wb") as output_file:
         hmm.write(output_file)
         

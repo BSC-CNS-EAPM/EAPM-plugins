@@ -72,9 +72,9 @@ def createPlugin():
     eapmPlugin.addBlock(hmmsearchBlock)
 
     # Add the configs
-    from Configs.mffaConfig import mffaExecutableConfig
+    from Configs.mafftConfig import mafftExecutableConfig
 
-    eapmPlugin.addConfig(mffaExecutableConfig)
+    eapmPlugin.addConfig(mafftExecutableConfig)
 
     # Return the plugin
     return eapmPlugin
