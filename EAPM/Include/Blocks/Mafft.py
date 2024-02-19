@@ -54,7 +54,7 @@ def calculateMSAAction(block: PluginBlock):
     if block.remote.name != "Local":
         raise Exception("This block only works on the local machine.")
 
-    mafftExecutable = block.config.get(mafft_path", "mafft")
+    mafftExecutable = block.config.get("mafft_path", "mafft")
 
     def hookSubprocessMafft(command, **kwargs):
         if command.startswith("mafft"):
