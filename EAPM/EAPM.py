@@ -55,18 +55,30 @@ def createPlugin():
 
     eapmPlugin.addBlock(analysePELEBlock)
 
-    from Blocks.MultipleSequenceAlignment import multipleSequenceAlignmentBlock
+    from Blocks.ConservedResiduesMSA import conservedResiduesMSABlock
+
+    eapmPlugin.addBlock(conservedResiduesMSABlock)
+    
+    from Blocks.Mafft import multipleSequenceAlignmentBlock
 
     eapmPlugin.addBlock(multipleSequenceAlignmentBlock)
+    
+    from Blocks.MSA2HMM import convertMSAToHMMBlock
+
+    eapmPlugin.addBlock(convertMSAToHMMBlock)
+    
+    from Blocks.HmmSearch import hmmsearchBlock
+
+    eapmPlugin.addBlock(hmmsearchBlock)
     
     from Blocks.AsiteDesign import asiteDesignBlock
 
     eapmPlugin.addBlock(asiteDesignBlock)
 
     # Add the configs
-    from Configs.mffaConfig import mffaExecutableConfig
+    from Configs.mafftConfig import mafftExecutableConfig
 
-    eapmPlugin.addConfig(mffaExecutableConfig)
+    eapmPlugin.addConfig(mafftExecutableConfig)
 
     # Return the plugin
     return eapmPlugin
