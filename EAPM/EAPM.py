@@ -70,6 +70,10 @@ def createPlugin():
     from Blocks.HmmSearch import hmmsearchBlock
 
     eapmPlugin.addBlock(hmmsearchBlock)
+    
+    from Blocks.AsiteDesign import asiteDesignBlock
+
+    eapmPlugin.addBlock(asiteDesignBlock)
 
     # Add the configs
     from Configs.mafftConfig import mafftExecutableConfig
