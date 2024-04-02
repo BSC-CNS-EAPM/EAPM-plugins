@@ -38,7 +38,7 @@ glideOutputVariable = PluginVariable(
 folderVariableGroup = VariableGroup(
     id="folder_variable_group",
     name="Folder variable group",
-    description="Input the model and docking folders after a Dcoking Grid setup has been run",
+    description="Input the model and docking folders after a Docking Grid setup has been run",
     variables=[modelFolderVariable, dockingFolderVariable],
 )
 
@@ -231,10 +231,10 @@ def analyseDockingAction(block: PluginBlock):
             atom1 = selection["protein_atom"]
 
             protein_chain = atom1["chainID"]
-            prtoein_resnum = atom1["residue"]
+            protein_resnum = atom1["residue"]
             protein_atom = atom1["auth_atom_id"]
 
-            protein_tuple = (protein_chain, prtoein_resnum, protein_atom)
+            protein_tuple = (protein_chain, protein_resnum, protein_atom)
 
             atom2 = selection["ligand_atom"]
             ligandName = atom2["auth_comp_id"]
@@ -365,15 +365,15 @@ def analyseDocking(
     and as values a list of tuples, with each tuple representing a protein atom:
         {model1_name: [(chain1_id, residue1_id, atom1_name), (chain2_id, residue2_id, atom2_name), ...], model2_name:...}
 
-    The atom pairs must be given in a dicionary with each key representing the name
-    of a model and each value  a sub dicionary with the ligands as keys and a list of the atom pairs
+    The atom pairs must be given in a dictionary with each key representing the name
+    of a model and each value  a sub dictionary with the ligands as keys and a list of the atom pairs
     to calculate in the format:
         {model1_name: { ligand_name : [((chain1_id, residue1_id, atom1_name), (chain2_id, residue2_id, atom2_name)), ...],...} model2_name:...}
 
-    Paramaeters
+    Parameters
     ===========
     docking_folder : str
-        Path to the folder where the docking resuts are (the format comes from the setUpGlideDocking() function.
+        Path to the folder where the docking results are (the format comes from the setUpGlideDocking() function.
     protein_atoms : dict
         Protein atoms to use for the closest distance calculation.
     atom_pairs : dict
@@ -466,7 +466,7 @@ def analyseDocking(
     # Read the CSV file into pandas
     if not os.path.exists(docking_folder + "/.analysis/docking_data.csv"):
         raise ValueError(
-            "Docking analysis failed. Check the ouput of the analyse_docking.py script."
+            "Docking analysis failed. Check the output of the analyse_docking.py script."
         )
 
     models.docking_data = pd.read_csv(docking_folder + "/.analysis/docking_data.csv")

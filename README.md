@@ -39,4 +39,10 @@ All plugins in this repository are licensed under the GNU License. See the LICEN
 
 ---
 
+Based on the library developed in the EAPM group of the BSC
+[Github](https://github.com/Martin-Floor/prepare_proteins)
+
+
+...
+
 [More information](https://nbdsoftware.github.io/horus/)
