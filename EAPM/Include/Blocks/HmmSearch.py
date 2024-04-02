@@ -1,5 +1,5 @@
 """
-Module containing the HmmSearch block for the EAPM plugin as a local implementation
+Module containing the HmmSearch block for the EAPM plugin as a nord3 implementation
 """
 
 import datetime
@@ -19,13 +19,7 @@ hmmInput = PluginVariable(
     defaultValue=None,
     allowedValues=["hmm"],
 )
-sequenceDBVar = PluginVariable(
-    id="sequence_db",
-    name="Sequence DB",
-    description="The sequence database to search",
-    type=VariableTypes.STRING,
-    defaultValue="/gpfs/projects/bsc72/ruite/enzyminer/data/reduced_data/uniref50.fasta",
-)
+
 
 # ==========================#
 # Variable outputs
@@ -41,19 +35,12 @@ outputVariable = PluginVariable(
 # ==========================#
 # Variable 
 # ==========================#
-exeVar = PluginVariable(
-    id="hmmsearch_exe",
-    name="Hmmsearch executable",
-    description="The hmmsearch executable",
+sequenceDBVar = PluginVariable(
+    id="sequence_db",
+    name="Sequence DB",
+    description="The sequence database to search",
     type=VariableTypes.STRING,
-    defaultValue="/gpfs/projects/bsc72/anarobles/HMM_proof/hmmer-3.3.2/src/hmmsearch", 
-)
-cpuVar = PluginVariable(
-    id="hmmsearch_cpu",
-    name="Hmmsearch CPU",
-    description="The number of CPUs to use",
-    type=VariableTypes.INTEGER,
-    defaultValue=10,
+    defaultValue="/gpfs/projects/shared/public/AlphaFold/uniref90/uniref90.fa",
 )
 evalueVar = PluginVariable(
     id="hmmsearch_evalue",
@@ -68,12 +55,11 @@ def runHmmSearch(block: SlurmBlock):
     
     input = block.inputs.get("input_hmm", None)
     
-    if "mn" not in block.remote.host:
-        raise Exception("This block only works on Marenostrum.")
+    if "nord3" not in block.remote.host:
+        raise Exception("This block only works on Nord3.")
     
     if input is None:
         raise Exception("No input hmm provided")
-   
     if not os.path.exists(input):
         raise Exception(f"The input hmm file does not exist: {input}")
     
@@ -85,7 +71,7 @@ def runHmmSearch(block: SlurmBlock):
     print(f"Created simulation folder in the remote at {simRemoteDir}")
     print("Sending data to the remote...")
     
-    exe = block.variables["hmmsearch_exe"]
+    exe = block.config.get("hmmer_path", "hmmer")
     cpu = block.variables["hmmsearch_cpu"]
     evalue = block.variables["hmmsearch_evalue"]
     
@@ -101,13 +87,14 @@ def runHmmSearch(block: SlurmBlock):
 def finalAction():
     pass
 
+from utils import BSC_JOB_VARIABLES
 
 hmmsearchBlock = SlurmBlock(
     name="HmmSearch",
     initialAction=runHmmSearch,
     finalAction=finalAction,
     description="Searches a sequence database with a given hmm",
-    inputs=[hmmInput, sequenceDBVar],
-    variables=[],
+    inputs=[hmmInput],
+    variables=BSC_JOB_VARIABLES + [sequenceDBVar, evalueVar],
     outputs=[outputVariable],
 )
