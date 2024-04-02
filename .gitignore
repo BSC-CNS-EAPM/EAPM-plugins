@@ -162,6 +162,10 @@ cython_debug/
 # Plugin dependencies
 deps/
 
+# Include necesary dependencies
+!deps/!bioprospecting
+!deps/bioprospecting-0.0.1.dist-info
+
 # Built plugins
 *.hp
 

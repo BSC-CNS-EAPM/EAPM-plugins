@@ -1,3 +1,4 @@
 {
-    "mafft_path": "/opt/homebrew/Caskroom/miniconda/base/envs/prepare_proteins/bin/mafft"
+    "mafft_path": "/home/albertcs/miniconda3/bin/mafft",
+    "hmmer_path": "/gpfs/projects/bsc72/conda_envs/hmm/bin/hmmsearch"
 }
