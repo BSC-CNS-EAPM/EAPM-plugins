@@ -163,8 +163,8 @@ cython_debug/
 deps/
 
 # Include necesary dependencies
-!deps/!bioprospecting
-!deps/bioprospecting-0.0.1.dist-info
+# !deps/!bioprospecting
+# !deps/bioprospecting-0.0.1.dist-info
 
 # Built plugins
 *.hp
