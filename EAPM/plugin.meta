@@ -5,6 +5,7 @@
   "version": "0.0.1",
   "pluginFile": "EAPM.py",
   "dependencies": [
+    "pyhmmer",
     "pandas",
     "scipy",
     "pyyaml",
