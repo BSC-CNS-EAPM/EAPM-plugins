@@ -1,6 +1,6 @@
 import os
 
-from HorusAPI import InputBlock, SlurmBlock, VariableTypes, PluginVariable, VariableGroup
+from HorusAPI import InputBlock, PluginVariable, SlurmBlock, VariableGroup, VariableTypes
 
 # Input variables
 modelFolderVariable = PluginVariable(
@@ -70,21 +70,21 @@ def glideDocking(block: SlurmBlock):
                 "PDB files are not supported as ligands. Please convert to MAE using the 'PDB to MAE' block"
             )
 
-    for model in os.listdir(models_folder):
-        if model.endswith(".pdb"):
-            raise Exception(
-                "PDB files are not supported as models. Please convert to MAE using the 'PDB to MAE' block"
-            )
+    # for model in os.listdir(models_folder):
+    #     if model.endswith(".pdb"):
+    #         raise Exception(
+    #             "PDB files are not supported as models. Please convert to MAE using the 'PDB to MAE' block"
+    #         )
 
-    # Get the PDB models
-    pdb_models_folder = models_folder.replace("_mae", "")
+    # # Get the PDB models
+    # pdb_models_folder = models_folder.replace("_mae", "")
 
-    if not os.path.isdir(pdb_models_folder):
-        raise Exception(
-            f"PDB models folder ({pdb_models_folder}) not found. Please convert the models to PDB using the 'MAE to PDB' block and keep the original PDB models folder"
-        )
+    # if not os.path.isdir(pdb_models_folder):
+    #     raise Exception(
+    #         f"PDB models folder ({pdb_models_folder}) not found. Please convert the models to PDB using the 'MAE to PDB' block and keep the original PDB models folder"
+    #     )
 
-    models = prepare_proteins.proteinModels(pdb_models_folder)
+    models = prepare_proteins.proteinModels(models_folder)
 
     if block.selectedInputGroup != "single_model":
         # Get the common residues
@@ -108,7 +108,8 @@ def glideDocking(block: SlurmBlock):
         # Create a fake center_atoms variable for the library
         center_atoms = {}
         for model in os.listdir(models_folder):
-            if model.endswith(".mae"):
+            print(f"Model: {model} ends with '.pdb': {model.endswith('.pdb')}")
+            if model.endswith(".pdb"):
                 model_name = model.split(".")[0]
                 center_atoms[model_name] = [x, y, z]
 
@@ -117,7 +118,7 @@ def glideDocking(block: SlurmBlock):
         raise Exception("No valid models found in the models folder")
 
     # Create a box from the radius
-    radius = radius
+    radius = int(radius)
     outerbox = (radius, radius, radius)
 
     inner_box_size = block.inputs["inner_box"]["radius"]

@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from HorusAPI import SlurmBlock, VariableTypes, PluginVariable, VariableGroup
+from HorusAPI import PluginVariable, SlurmBlock, VariableGroup, VariableTypes
 
 # Input variables
 modelFolderVariable = PluginVariable(
