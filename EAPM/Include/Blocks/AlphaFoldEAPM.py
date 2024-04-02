@@ -83,7 +83,7 @@ def initialAlphafold(block: SlurmBlock):
 
     print("Setting up AlphaFold...")
 
-    jobs = sequences.setUpAlphaFold(folderName)
+    jobs = sequences.setUpAlphaFold(folderName, gpu_relax=False)
 
     from utils import launchCalculationAction
 

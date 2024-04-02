@@ -21,12 +21,11 @@ modelFolderVariable = PluginVariable(
     defaultValue="models",
 )
 
-bestDockingPosesVariable = PluginVariable(
-    id="best_docking_poses",
+posesFolderVariable = PluginVariable(
+    id="poses_folder",
     name="Best docking poses",
-    description="Number of best docking poses to analyse",
-    type=VariableTypes.INTEGER,
-    defaultValue=100,
+    description="Best docking poses to analyse",
+    type=VariableTypes.FOLDER
 )
 
 glideOutputVariable = PluginVariable(
@@ -42,7 +41,7 @@ folderInputGroup = VariableGroup(
     id="folder_input_group",
     name="Folder input group",
     description="Input the model and ligand folders after a Dcoking Grid setup has been run",
-    variables=[modelFolderVariable, bestDockingPosesVariable, yamlPELEFileVariable],
+    variables=[modelFolderVariable, posesFolderVariable, yamlPELEFileVariable]
 )
 
 glideOutputGroup = VariableGroup(
@@ -102,13 +101,6 @@ selectionsListVariable = VariableList(
 )
 
 # PELE variables
-boxCentersVariable = PluginVariable(
-    id="box_centers",
-    name="Box centers",
-    description="List of box centers",
-    type=VariableTypes.SPHERE,
-    category="PELE",
-)
 
 constraintsVariable = PluginVariable(
     id="constraints",
@@ -328,6 +320,60 @@ extendIterationsVariable = PluginVariable(
     category="PELE",
 )
 
+logFileVariable = PluginVariable(
+    id="log_file",
+    name="Log file",
+    description="Enable log file",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
+    category="PELE"
+)
+
+rescoringVariable = PluginVariable(
+    id="rescoring",
+    name="Rescoring",
+    description="Enable rescoring",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
+    category="PELE"
+)
+
+epsilonVariable = PluginVariable(
+    id="epsilon",
+    name="Epsilon",
+    description="TODO Epsilon description",
+    type=VariableTypes.FLOAT,
+    defaultValue=0.5,
+    category="PELE"
+)
+
+ligandEquilibrationCstVariable = PluginVariable(
+    id="ligand_equilibration_cst",
+    name="Ligand equilibration cst",
+    description="TODO Ligand equilibration cst description",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=True,
+    category="PELE"
+)
+
+covalentSetupVariable = PluginVariable(
+    id="covalent_setup",
+    name="Covalent setup",
+    description="Enable covalent setup",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
+    category="PELE"
+)
+
+nonbondedNewFlagVariable = PluginVariable(
+    id="nonbonded_new_flag",
+    name="Nonbonded new flag",
+    description="Enable nonbonded new flag",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
+    category="PELE"
+)
+
 onlyModelsVariable = PluginVariable(
     id="only_models",
     name="Only models",
@@ -352,6 +398,54 @@ onlyCombinationsVariable = PluginVariable(
     category="PELE",
 )
 
+nonbondedEnergyVariable = PluginVariable(
+    id="nonbonded_energy",
+    name="Nonbonded energy",
+    description="TODO nonbonded_energy description",
+    type=VariableTypes.LIST,
+    category="PELE",
+)
+
+covalentBaseAaVariable = PluginVariable(
+    id="covalent_base_aa",
+    name="Covalent base AA",
+    description="TODO covalent_base_aa description",
+    type=VariableTypes.LIST,
+    category="PELE",
+)
+
+membraneResiduesVariable= PluginVariable(
+    id="membrane_residues",
+    name="Membrane residues",
+    description="TODO membrane residues description",
+    type=VariableTypes.LIST,
+    category="PELE"
+)
+
+biasToPointVariable = PluginVariable(
+    id="bias_to_point",
+    name="Bias to point",
+    description="TODO bias_to_point description",
+    type=VariableTypes.LIST,
+    category="PELE"
+)
+
+comBias1Variable = PluginVariable(
+    id="com_bias1",
+    name="com bias1",
+    description="TODO com_bias1 description",
+    type=VariableTypes.LIST,
+    category="PELE"
+)
+
+comBias2Variable = PluginVariable(
+    id="com_bias2",
+    name="com bias2",
+    description="TODO com_bias2 description",
+    type=VariableTypes.LIST,
+    category="PELE"
+)
+
 ligandTemplateVariable = PluginVariable(
     id="ligand_template",
     name="Ligand template",
@@ -369,6 +463,67 @@ seedVariable = PluginVariable(
     category="PELE",
 )
 
+boxRadiusVariable = PluginVariable(
+    id="box_radius",
+    name="Box radius",
+    description="TODO box radius description",
+    type=VariableTypes.INTEGER,
+    defaultValue=10,
+    category="PELE",
+)
+
+
+# box_centers input
+modelVariable = PluginVariable(
+    id="model",
+    name="Model",
+    description="TODO model variable description",
+    type=VariableTypes.STRING
+)
+
+ligandVariable = PluginVariable(
+    id="ligand",
+    name="Ligand",
+    description="TODO ligand variable description",
+    type=VariableTypes.STRING
+)
+
+chainVariable = PluginVariable(
+    id="chain",
+    name="Chain",
+    description="TODO chain variable description",
+    type=VariableTypes.STRING
+)
+
+residueVariable = PluginVariable(
+    id="residue",
+    name="Residue number",
+    description="TODO residue number variable description",
+    type=VariableTypes.INTEGER
+)
+
+atomNameVariable = PluginVariable(
+    id="atom_name",
+    name="Atom name",
+    description="TODO atom name variable description",
+    type=VariableTypes.STRING
+)
+
+# box_centers VariableList
+boxCentersVariable = VariableList(
+    id="box_centers",
+    name="Box centers",
+    description="TODO Box center variable description",
+    category="PELE",
+    prototypes=[
+        modelVariable,
+        ligandVariable,
+        chainVariable,
+        residueVariable,
+        atomNameVariable
+    ],
+)
+
 # Outputs
 peleOutputFolderOutput = PluginVariable(
     id="pele_output_folder",
@@ -376,6 +531,7 @@ peleOutputFolderOutput = PluginVariable(
     description="Folder containing the PELE output",
     type=VariableTypes.FOLDER,
 )
+
 
 
 def peleAction(block: SlurmBlock):
@@ -389,11 +545,12 @@ def peleAction(block: SlurmBlock):
             raise Exception("Glide output does not contain the required folders")
     else:
         poses_folder = block.inputs.get("poses_folder")
-        models_folder = block.inputs.get("models_folder")
+        models_folder = block.inputs.get("model_folder")
         atom_pairs = {}
 
-    # Gert all the variables from the block
+    # Get all the variables from the block
     boxCentersValue = block.variables.get("box_centers", [])
+    boxRadiusValue = block.variables.get("box_radius", 10)
     constraintsValue = block.variables.get("constraints", [])
     ligandIndexValue = block.variables.get("ligand_index", 1)
     peleStepsValue = block.variables.get("pele_steps", 100)
@@ -422,21 +579,91 @@ def peleAction(block: SlurmBlock):
     onlyModelsValue = block.variables.get("only_models", [])
     onlyLigandsValue = block.variables.get("only_ligands", [])
     onlyCombinationsValue = block.variables.get("only_combinations", [])
+    nonbondedEnergyValue = block.variables.get('nonbonded_energy', {})
     ligandTemplateValue = block.variables.get("ligand_template", "")
     seedValue = block.variables.get("seed", -1)
+    logFileValue = block.variables.get("log_file", False)
+    rescoringValue = block.variables.get("rescoring", False)
+    epsilonValue = block.variables.get("epsilon", 0.5)
+    ligandEquilibrationCstValue = block.variables.get("ligand_equilibration_cst", True)
+    covalentSetupValue = block.variables.get("covalent_setup", False)
+    nonbondedNewFlagValue = block.variables.get("nonbonded_new_flag", False)
+    covalentBaseAaValue = block.variables.get("covalent_base_aa", {})
+    membraneResiduesValue = block.variables.get("membrane_residues", {})
+    biasToPointValue = block.variables.get("bias_to_point", {})
+    comBias1Value = block.variables.get("com_bias1", {})
+    comBias2Value = block.variables.get("com_bias2", {})
 
+    # Parse spawningValue
+    validSpawnings = ['independent', 'inverselyProportional', 'epsilon', 'variableEpsilon',
+                     'independentMetric', 'UCB', 'FAST', 'ProbabilityMSM', 'MetastabilityMSM',
+                     'IndependentMSM']
+    
+    if spawningValue != None and spawningValue not in validSpawnings:
+            message = 'Spawning method %s not found.' % spawningValue
+            message = 'Allowed options are: ' + str(validSpawnings)
+            raise ValueError(message)
+
+    # Parse energyByResidueValue
+    energy_by_residue_types = ['all', 'lennard_jones', 'sgb', 'electrostatic']
+    if energyByResidueTypeValue not in energy_by_residue_types:
+        raise ValueError('%s not found. Try: %s' % (energyByResidueTypeValue, energy_by_residue_types))
+
+    # Parse seedValue
     if seedValue == -1:
         seedValue = random.randint(0, 1000000)
 
+    # Parse ligandEnergyGroups
+    if not isinstance(ligandEnergyGroupsValue, type(None)):
+        if not isinstance(ligandEnergyGroupsValue, dict):
+            raise ValueError('Ligand energy groups, must be given as a dictionary')
+        
+    # Parse box_centers
+
+    box_centers = {}
+    for model in boxCentersValue:
+        box_centers[(model['model'], model['ligand'])] = (model['chain'], model['residue'], model['atom_name'])
+
+    # Parse skip_models
+    if not isinstance(skipModelsValue, type(None)):
+        if not isinstance(skipModelsValue, list):
+            raise ValueError('skip_models must be a list.')
+
+    
+    # Parse skip_ligands
+    if not isinstance(skipLigandsValue, type(None)):
+        if not isinstance(skipLigandsValue, list):
+            raise ValueError('skip_ligands must be a list.')
+
+    # Parse nonbonded_energy
+    if not isinstance(nonbondedEnergyValue, type(None)):
+        if not isinstance(nonbondedEnergyValue, dict):
+            raise ValueError('nonbonded_energy, must be given as a dictionary')
+
+    # Parse only_ligands
+    if not isinstance(onlyLigandsValue, type(None)):
+        if not isinstance(onlyLigandsValue, list):
+            raise ValueError('only_ligands must be a list.')
+    
+    # Parse only_models
+    if not isinstance(onlyModelsValue, type(None)):
+        if not isinstance(onlyModelsValue, list):
+            raise ValueError('only_models must be a list.')
+
+    # Parse only_combinations
+    if not isinstance(onlyCombinationsValue, type(None)):
+        if not isinstance(onlyCombinationsValue, list):
+            raise ValueError('only_combinations must be a list.')
+
     import prepare_proteins
 
-    print("Using models folder: ", models_folder)
+    print("Using models folder: ", str(models_folder))
     models = prepare_proteins.proteinModels(models_folder)
 
     selections = block.variables.get("selections_list", [])
     if atom_pairs == {}:
         groups = []
-        for model in models:
+        for model in models:  
             atom_pairs[model] = {}
             for selection in selections:
                 current_group = selection["group"]
@@ -464,16 +691,54 @@ def peleAction(block: SlurmBlock):
     cpus = block.variables.get("cpus", 48)
     peleFolderName = block.variables.get("pele_folder_name", "pele")
 
-    # Setup pele
     jobs = models.setUpPELECalculation(
         peleFolderName,
         poses_folder,
         cst_yaml,
+        box_radius=boxRadiusValue,
         iterations=peleIterationsValue,
         cpus=cpus,
         distances=atom_pairs,
         separator=peleSeparatorValue,
-        # Implement all the variables...
+        steps=peleStepsValue,
+        seed=seedValue,
+        energy_by_residue=energyByResidueValue,
+        debug=peleDebugValue,
+        equilibration_steps=equilibrationStepsValue,
+        ligand_index=ligandIndexValue,
+        use_peleffy=usePeleffyValue,
+        usesrun=useSrunValue,
+        ebr_new_flag=ebrNewFlagValue,
+        ninety_degrees_version=ninetyDegreesVersionValue,
+        extend_iterations=extendIterationsValue,
+        continuation=continuationValue,
+        equilibration=equilibrationValue,
+        peptide=peptideValue,
+        analysis=analysisValue,
+        energy_by_residue_type=energyByResidueTypeValue,
+        equilibration_mode=equilibrationModeValue,
+        spawning=spawningValue,
+        log_file=logFileValue,
+        rescoring=rescoringValue,
+        epsilon=epsilonValue,
+        ligand_equilibration_cst=ligandEquilibrationCstValue,
+        covalent_setup=covalentSetupValue,
+        nonbonded_new_flag=nonbondedNewFlagValue,
+        box_centers=box_centers,
+        constraints=constraintsValue,
+        skip_models=skipModelsValue,
+        skip_ligands=skipLigandsValue,
+        only_ligands=onlyLigandsValue,
+        only_models=onlyModelsValue,
+        only_combinations=onlyCombinationsValue,
+        ligand_templates=ligandTemplateValue,
+        nonbonded_energy=nonbondedEnergyValue,
+        covalent_base_aa=covalentBaseAaValue,
+        membrane_residues=membraneResiduesValue,
+        bias_to_point=biasToPointValue,
+        com_bias1=comBias1Value,
+        com_bias2=comBias2Value,
+        ligand_energy_groups=ligandEnergyGroupsValue
     )
 
     from utils import launchCalculationAction
@@ -489,7 +754,7 @@ def peleAction(block: SlurmBlock):
     )
 
 
-def peleFinalAction(block: SlurmBlock):
+def peleFinalAction(block: SlurmBlock):#
     print("Pele finished")
 
     from utils import downloadResultsAction
@@ -501,12 +766,14 @@ def peleFinalAction(block: SlurmBlock):
     block.setOutput("pele_output_folder", peleFolderName)
 
 
+
 from utils import BSC_JOB_VARIABLES
 
 blockVariables = BSC_JOB_VARIABLES + [
     peleFolderNameVariable,
     selectionsListVariable,
     boxCentersVariable,
+    boxRadiusVariable,
     constraintsVariable,
     ligandIndexVariable,
     peleStepsVariable,
@@ -535,12 +802,33 @@ blockVariables = BSC_JOB_VARIABLES + [
     onlyCombinationsVariable,
     ligandTemplateVariable,
     seedVariable,
+    logFileVariable,
+    rescoringVariable,
+    epsilonVariable,
+    ligandEquilibrationCstVariable,
+    covalentSetupVariable,
+    nonbondedNewFlagVariable,
+    nonbondedEnergyVariable,
+    covalentBaseAaVariable,
+    membraneResiduesVariable,
+    biasToPointVariable,
+    comBias1Variable,
+    comBias2Variable
+
 ]
+
+def wrappedFunction(block: SlurmBlock):
+    try:
+        peleAction(block)
+    except Exception as e:
+        import traceback
+        print("Exception:", e)
+        traceback.print_exc()
 
 peleBlock = SlurmBlock(
     name="PELE",
     description="Run PELE",
-    initialAction=peleAction,
+    initialAction=wrappedFunction,
     finalAction=peleFinalAction,
     inputGroups=[folderInputGroup, glideOutputGroup],
     variables=blockVariables,

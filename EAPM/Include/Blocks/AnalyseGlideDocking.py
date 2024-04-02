@@ -1,13 +1,13 @@
-import os
 import datetime
+import os
 
 from HorusAPI import (
-    PluginBlock,
-    VariableTypes,
-    PluginVariable,
-    VariableList,
-    VariableGroup,
     Extensions,
+    PluginBlock,
+    PluginVariable,
+    VariableGroup,
+    VariableList,
+    VariableTypes,
 )
 
 # Input variables
@@ -129,6 +129,7 @@ analyseGlideOutputVariable = PluginVariable(
     type=VariableTypes.CUSTOM,
     allowedValues=["glide_output"],
 )
+# {'protein_atom': {'name': 'CYS:35 - GPX_Bacillus.pdb', 'residue': 35, 'chainID': 'A', 'atom_index': 557, 'auth_comp_id': 'CYS', 'auth_atom_id': 'SG', 'type': 'S', 'x': 1.809000015258789, 'y': -4.008999824523926, 'z': -11.57699966430664, 'strucutre_label': 'GPX_Bacillus.pdb', 'structure': {...}}, 'ligand_atom': {'name': 'GSH:0 - GSH.pdb', 'residue': 0, 'chainID': ' ', 'atom_index': 13, 'auth_comp_id': 'GSH', 'auth_atom_id': 'S1', 'type': 'S', 'x': 3.740000009536743, 'y': -0.7070000171661377, 'z': 1.225000023841858, 'strucutre_label': 'GSH.pdb', 'structure': {...}}, 'group': 'SG_S', 'override_ligand_name': None}
 
 
 def analyseDockingAction(block: PluginBlock):
@@ -389,9 +390,10 @@ def analyseDocking(
         Rerun analysis.
     """
 
-    import prepare_proteins
     import json
+
     import pandas as pd
+    import prepare_proteins
 
     # Create analysis folder
     if not os.path.exists(docking_folder + "/.analysis"):
@@ -645,8 +647,9 @@ def _copyScriptFile(output_folder, script_name, no_py=False, subfolder=None, hid
     ==========
 
     """
-    from pkg_resources import resource_stream, Requirement
     import io
+
+    from pkg_resources import Requirement, resource_stream
 
     # Get script
     path = "prepare_proteins/scripts"

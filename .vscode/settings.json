@@ -4,7 +4,7 @@
     },
     "black-formatter.args": [
         "--line-length",
-        "98"
+        "150"
     ],
     "python.analysis.typeCheckingMode": "off",
     "python.analysis.extraPaths": [

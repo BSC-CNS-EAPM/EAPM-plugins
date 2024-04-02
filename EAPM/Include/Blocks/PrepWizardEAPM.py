@@ -137,6 +137,11 @@ def prepWizardAction(block: SlurmBlock):
     print("Setting up PrepWizard Optimitzations...")
 
     folderNameWizard = folderName + "_wizard"
+    
+    if block.remote.name.lower() == "local":
+        prime = False
+    else:
+        prime = True
 
     try:
         jobs = models.setUpPrepwizardOptimization(
@@ -150,6 +155,7 @@ def prepWizardAction(block: SlurmBlock):
             protonation_states=protonationStates,
             noepik=noepik,
             noprotassign=noProtAssign,
+            prime=prime,
         )
     except Exception as exc:
         import traceback
