@@ -66,7 +66,9 @@ def setupGlideDocking(block: SlurmBlock):
             raise Exception("No valid grid output selected")
 
         models_folder = grid_output.get("model_folder")
+        print(f"Models folder: {models_folder}")
         ligand_folder = grid_output.get("ligand_folder")
+        print(f"Ligand folder: {grid_output.get('ligand_folder')}")
 
         if models_folder is None or not os.path.isdir(models_folder):
             raise Exception("No valid input")
@@ -89,6 +91,12 @@ def setupGlideDocking(block: SlurmBlock):
 
     # Get the original pdb models
     original_pdb_folder = os.path.basename(models_folder).replace("_mae", "")
+    # If the models folder is not in the current directory, copy it
+    if models_folder != os.path.join(os.getcwd(), original_pdb_folder) and not os.path.isdir(
+        original_pdb_folder
+    ):
+        print(f"Copying models folder {models_folder} to flow directory")
+        shutil.copytree(models_folder, os.path.join(os.getcwd(), original_pdb_folder))
 
     if not os.path.isdir(original_pdb_folder):
         raise Exception(
@@ -107,9 +115,11 @@ def setupGlideDocking(block: SlurmBlock):
     relative_ligand_folder = os.path.basename(ligand_folder)
 
     # If the ligand folder is not in the current directory, copy it
-    if ligand_folder != os.path.join(os.getcwd(), relative_ligand_folder):
+    if ligand_folder != os.path.join(os.getcwd(), relative_ligand_folder) and not os.path.isdir(
+        relative_ligand_folder
+    ):
         print(f"Copying ligand folder {ligand_folder} to flow directory")
-        shutil.copytree(ligand_folder, os.path.join(os.getcwd(), ligand_folder))
+        shutil.copytree(ligand_folder, os.path.join(os.getcwd(), relative_ligand_folder))
 
     jobs = models.setUpGlideDocking(
         "docking", "grid", relative_ligand_folder, poses_per_lig=poses_per_lig

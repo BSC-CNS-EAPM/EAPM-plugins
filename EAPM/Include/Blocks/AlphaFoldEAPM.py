@@ -3,6 +3,7 @@ Module containing the AlphaFold block for the EAPM plugin
 """
 
 import os
+
 from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 
 # ==========================#
@@ -106,7 +107,7 @@ from utils import BSC_JOB_VARIABLES
 
 alphafoldBlock = SlurmBlock(
     name="Alphafold",
-    description="Run Alphafold. (For cte_power, marenostrum and minotauro clusters or local)",
+    description="Run Alphafold. (For cte_power, marenostrum, nord3 and minotauro clusters or local)",
     initialAction=initialAlphafold,
     finalAction=finalAlhafoldAction,
     variables=BSC_JOB_VARIABLES + [outputAF, removeExistingResults],

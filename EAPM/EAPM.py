@@ -58,19 +58,19 @@ def createPlugin():
     from Blocks.ConservedResiduesMSA import conservedResiduesMSABlock
 
     eapmPlugin.addBlock(conservedResiduesMSABlock)
-    
+
     from Blocks.Mafft import multipleSequenceAlignmentBlock
 
     eapmPlugin.addBlock(multipleSequenceAlignmentBlock)
-    
+
     from Blocks.MSA2HMM import convertMSAToHMMBlock
 
     eapmPlugin.addBlock(convertMSAToHMMBlock)
-    
+
     from Blocks.HmmSearch import hmmsearchBlock
 
     eapmPlugin.addBlock(hmmsearchBlock)
-    
+
     from Blocks.AsiteDesign import asiteDesignBlock
 
     eapmPlugin.addBlock(asiteDesignBlock)
@@ -79,6 +79,10 @@ def createPlugin():
     from Configs.mafftConfig import mafftExecutableConfig
 
     eapmPlugin.addConfig(mafftExecutableConfig)
+
+    from Configs.hmmerConfig import hmmerExecutableConfig
+
+    eapmPlugin.addConfig(hmmerExecutableConfig)
 
     # Return the plugin
     return eapmPlugin

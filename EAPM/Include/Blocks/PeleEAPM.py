@@ -1,7 +1,7 @@
 import random
 
-from HorusAPI import SlurmBlock, PluginVariable, VariableTypes, VariableGroup, VariableList
-
+from HorusAPI import (PluginVariable, SlurmBlock, VariableGroup, VariableList,
+                      VariableTypes)
 
 # Input variables
 yamlPELEFileVariable = PluginVariable(
@@ -596,8 +596,8 @@ def peleAction(block: SlurmBlock):
 
     # Parse spawningValue
     validSpawnings = ['independent', 'inverselyProportional', 'epsilon', 'variableEpsilon',
-                     'independentMetric', 'UCB', 'FAST', 'ProbabilityMSM', 'MetastabilityMSM',
-                     'IndependentMSM']
+                    'independentMetric', 'UCB', 'FAST', 'ProbabilityMSM', 'MetastabilityMSM',
+                    'IndependentMSM']
     
     if spawningValue != None and spawningValue not in validSpawnings:
             message = 'Spawning method %s not found.' % spawningValue

@@ -3,6 +3,7 @@ Module containing the PrepWizard block for the EAPM plugin
 """
 
 import os
+
 from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 
 # ==========================#
@@ -137,7 +138,7 @@ def prepWizardAction(block: SlurmBlock):
     print("Setting up PrepWizard Optimitzations...")
 
     folderNameWizard = folderName + "_wizard"
-    
+
     if block.remote.name.lower() == "local":
         prime = False
     else:
@@ -155,7 +156,7 @@ def prepWizardAction(block: SlurmBlock):
             protonation_states=protonationStates,
             noepik=noepik,
             noprotassign=noProtAssign,
-            prime=prime,
+            # prime=prime,
         )
     except Exception as exc:
         import traceback
