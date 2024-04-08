@@ -2,7 +2,7 @@
 Module containing the Align block for the EAPM plugin (mafft needed)
 """
 
-from HorusAPI import PluginVariable, VariableTypes, PluginBlock, VariableList
+from HorusAPI import PluginBlock, PluginVariable, VariableList, VariableTypes
 
 # ==========================#
 # Variable inputs
@@ -71,14 +71,6 @@ trajectoryChainIndexesAlign = VariableList(
     prototypes=[trajectoryChainIndexVariable],
 )
 
-mafftExecutableAlign = PluginVariable(
-    name="MAFFT executable",
-    id="mafft_executable",
-    description="The path to the MAFFT executable.",
-    type=VariableTypes.FILE,
-    defaultValue="mafft",
-)
-
 
 alignmentModeAlign = PluginVariable(
     name="Alignment mode",
@@ -112,7 +104,6 @@ def initialAlign(block: PluginBlock):
     Args:
         block (SlurmBlock): The block to run the action on.
     """
-
 
     if block.remote.name != "Local":
         raise Exception("This block is only available for local execution.")
@@ -200,7 +191,6 @@ alignBlock = PluginBlock(
         trajectoryChainIndexesAlign,
         alignmentModeAlign,
         referenceResiduesAlign,
-        mafftExecutableAlign,
     ],
     inputs=[pdbReferenceAlign, inputFolderAlign],
     outputs=[outputAlign],

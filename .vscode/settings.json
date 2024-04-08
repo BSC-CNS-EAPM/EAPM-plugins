@@ -11,5 +11,6 @@
         "EAPM/deps/",
         "EAPM/Include/",
     ],
-    "python.envFile": "${workspaceFolder}/.env"
+    "python.envFile": "${workspaceFolder}/.env",
+    "esbonio.sphinx.confDir": ""
 }
