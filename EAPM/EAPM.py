@@ -75,6 +75,11 @@ def createPlugin():
 
     eapmPlugin.addBlock(asiteDesignBlock)
 
+    # Add extensions
+    from Pages.peleResults import peleResultsPage
+
+    eapmPlugin.addPage(peleResultsPage)
+
     # Add the configs
     from Configs.mafftConfig import mafftExecutableConfig
 
