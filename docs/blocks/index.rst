@@ -184,7 +184,11 @@ Analyse Glide Docking
 .. warning::
     Need a Schrödinger Glide license to run this block.
 
-Analyse Glide Docking is a tool for analysing the results of the Glide docking. It is used to analyse the results of the docking of the ligands.
+Analyse Glide Docking is a tool for analysing the results of the Glide docking. The function allows to calculation of ligand 
+distances with the options protein_atoms or protein_pairs. With the first option, the analysis will calculate the closest distance 
+between the protein atoms given and any ligand atom (or heavy atom if ignore_hydrogens=True). The analysis will also return which ligand 
+atom is the closest for each pose. On the other hand, with the atom_pairs option only distances for the specific atom pairs between 
+the protein and the ligand will be calculated.
 
 .. image:: imgs/analysisDocking.png
     :width: 350
@@ -300,3 +304,70 @@ Trim Alphafold models is a tool for trimming the Alphafold models. It is used to
 *Parameters*:
 
 - ``Confidence threshold``: Threshold confidence indicates the maximum confidence score at which to stop the trimming of terminal regions.
+
+PELE
+----
+
+PELE is a tool for running PELE simulations. 
+
+.. image:: imgs/pele.png
+    :width: 350
+    :align: center
+    :alt: Horus PELE block
+
+*Input*:
+
+- ``Model folder``: Folder with the PDBs files for the PELE simulation.
+- ``PELE folder``: Folder with the PDBs models with the docked ligand.
+- ``PELE yaml``: PELE yaml file with the configuration of the simulation.
+
+*Output*:
+
+- ``PELE output``: Folder with the PELE output.
+
+*Parameters*:
+
+- ``PELE folder name``: Name of the folder where the PELE output will be saved.
+- ``Selections``: List of selections to analyse.
+- ``Box centers``: Box centers for the PELE simulation.
+- ``Box radius``: Box radius for the PELE simulation.
+- ``Constraints``: List of the constraints for the PELE simulation. **WIP**.
+- ``Ligand index``: Index of the ligand in the PDB file.
+- ``PELE steps``: Number of steps for the PELE simulation.
+- ``PELE debug``: Debug mode for the PELE simulation.
+- ``PELE iterations``: Number of iterations for the PELE simulation.
+- ``Equilibration steps``: Number of equilibration steps for the PELE simulation.
+- ``Ligand energy groups``: Energy groups for the ligand in the PELE simulation. **WIP**.
+- ``PELE separator``: Separator used to separate the ligand name from the docking pose.
+- ``Use PELEffy``: Use PELEffy to generate the ligand parameters.
+- ``Use srun``: Use srun to launch the PELE simulation.
+- ``Energy by residue``: Calculate the energy by residue in the PELE simulation.
+- ``EBR new flag``: New flag for the energy by residue calculation.
+- ``90 degrees version``: Use the 90 degrees version of the PELE simulation.
+- ``Analysis``: Analysis to perform in the PELE simulation.
+- ``Energy by residue type``: Type of energy by residue calculation.
+- ``Peptide``: Peptide to use in the PELE simulation.
+- ``Equilibration mode``: Equilibration mode to use in the PELE simulation.
+- ``Spawning``: Spawning to use in the PELE simulation.
+- ``Continuation``: If is a continuation of a previous simulation.
+- ``Equilibration``: If is an equilibration simulation.
+- ``Skip models``: Write which models names to skip.
+- ``Skip ligands``: Write which ligands names to skip.
+- ``Extend iterations``: Extend the number of iterations in the PELE simulation.
+- ``Only models``: Only run the PELE simulation for the models in the list.
+- ``Only ligands``: Only run the PELE simulation for the ligands in the list.
+- ``Only combinations``: Only run the PELE simulation for the combinations in the list.
+- ``Ligand template``: Template to use for the ligand in the PELE simulation. **WIP**.
+- ``Seed``: Seed to use in the PELE simulation.
+- ``Log file``: Enable log file in the PELE simulation.
+- ``Rescoring``: Rescoring to use in the PELE simulation.
+- ``Epsilon``: Epsilon to use in the PELE simulation.
+- ``Ligand equilibration cst``: Ligand equilibration constraints to use in the PELE simulation.
+- ``Covalent setup``: Covalent setup to use in the PELE simulation.
+- ``Nonbonded new flag``: Nonbonded new flag to use in the PELE simulation.
+- ``Nonbonded energy``: Nonbonded energy to use in the PELE simulation.
+- ``Covalent base AA``: Covalent base aminoacid to use in the PELE simulation.
+- ``Membrane residues``: Membrane residues to use in the PELE simulation.
+- ``Bias to point``: Bias to point to use in the PELE simulation.
+- ``com bias1``: Bias to point to use in the PELE simulation.
+- ``com bias2``: Bias to point to use in the PELE simulation.

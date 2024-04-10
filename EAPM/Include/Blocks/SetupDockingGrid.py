@@ -121,7 +121,7 @@ def glideDocking(block: SlurmBlock):
     radius = int(radius)
     outerbox = (radius, radius, radius)
 
-    inner_box_size = block.inputs["inner_box"]["radius"]
+    inner_box_size = int(block.inputs["inner_box"]["radius"])
     innerbox = (inner_box_size, inner_box_size, inner_box_size)
 
     jobs = models.setUpDockingGrid(

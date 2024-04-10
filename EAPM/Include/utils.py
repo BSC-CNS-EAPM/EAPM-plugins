@@ -1,16 +1,24 @@
+import datetime
 import os
 import shutil
-import datetime
 import subprocess
 import typing
 
-from HorusAPI import SlurmBlock, PluginBlock, VariableList, PluginVariable, VariableTypes
+from HorusAPI import PluginBlock, PluginVariable, SlurmBlock, VariableList, VariableTypes
 
 localIPs = {"cactus": "84.88.51.217", "blossom": "84.88.51.250", "bubbles": "84.88.51.219"}
 
 
 def setup_bsc_calculations_based_on_horus_remote(
-    remote_name, remote_host: str, jobs, partition, scriptName, cpus, job_name, program, modulePurge
+    remote_name,
+    remote_host: str,
+    jobs,
+    partition,
+    scriptName,
+    cpus,
+    job_name,
+    program,
+    modulePurge,
 ):
     import bsc_calculations
 
@@ -60,6 +68,7 @@ def setup_bsc_calculations_based_on_horus_remote(
         )
     # marenostrum
     elif "mn" in cluster:
+        print("Generating Marenostrum jobs...")
         bsc_calculations.marenostrum.jobArrays(
             jobs,
             job_name=job_name,
@@ -71,7 +80,20 @@ def setup_bsc_calculations_based_on_horus_remote(
         )
     # minotauro
     elif cluster == "mt1.bsc.es":
+        print("Generating minotauro jobs...")
         bsc_calculations.minotauro.jobArrays(
+            jobs,
+            job_name=job_name,
+            partition=partition,
+            program=program,
+            script_name=scriptName,
+            gpus=cpus,
+            module_purge=modulePurge,
+        )
+    # nord3
+    elif cluster == "nord3.bsc.es":
+        print("Generating nord3 jobs...")
+        bsc_calculations.nord3.jobArrays(
             jobs,
             job_name=job_name,
             partition=partition,
@@ -161,7 +183,7 @@ def launchCalculationAction(
         cpus,
         simulationName,
         program,
-        modulePurge
+        modulePurge,
     )
 
     # Read the environment variables
