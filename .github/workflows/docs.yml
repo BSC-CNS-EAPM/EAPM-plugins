@@ -31,6 +31,5 @@ jobs:
         with:
           publish_branch: gh-pages
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/build/html
           user_name: "Albert Cañellas"
           user_email: "acanella@bsc.es"
