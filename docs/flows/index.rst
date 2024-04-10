@@ -24,7 +24,7 @@ Alphafold, PrepWizard, Glide and PELE
 
 Flow for generating the 3D structure of a protein with Alphafold, followed by a protein preparation with PrepWizard, a Glide docking and a PELE simulation.
 
-.. image:: imgs/alphafold_prepwizard_glide_pele.png
+.. image:: imgs/af_prepWizard_glide_pele.png
     :width: 350
     :align: center
     :alt: Horus Alphafold, PrepWizard, Glide and PELE flow
