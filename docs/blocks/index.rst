@@ -48,21 +48,23 @@ List of the blocks
 
 There is the list of the blocks available in this repository:
 
-- Alphafold
-- PrepWizard
-- Align PDBs
-- Setup Docking Grid (with glide)
-- Analyse Glide Docking
-- PDB to MAE
-- Trim Alphafold models
-- Run Glide Docking
-- PELE
-- Analyse PELE
-- Conserved Residues from MSA
-- Multiple Sequence Alignment with Mafft
-- MSA to HMM
-- HmmSearch
-- AsiteDesign
+- :ref:`Alphafold <alphafold>`
+- :ref:`PrepWizard <prepwizard>`
+- :ref:`Align PDBs <align_pdbs>`
+- :ref:`Setup Docking Grid (with glide) <setup_docking_grid>`
+- :ref:`Run Glide Docking <run_glide_docking>`
+- :ref:`Analyse Glide Docking <analyse_glide_docking>`
+- :ref:`PDB to MAE <pdb_to_mae>`
+- :ref:`Trim Alphafold models <trim_alphafold_models>`
+- :ref:`PELE <pele>`
+- :ref:`Analyse PELE <analyse_pele>`
+- :ref:`Conserved Residues from MSA <conserved_residues_msa>`
+- :ref:`Multiple Sequence Alignment with Mafft <msa_mafft>`
+- :ref:`MSA to HMM <msa_hmm>`
+- :ref:`HmmSearch <hmmsearch>`
+- :ref:`AsiteDesign <asite_design>`
+
+.. _alphafold:
 
 Alphafold
 ---------
@@ -86,6 +88,8 @@ Flow for executing the alphafold block, can run locally and in the clusters cte_
 
 - ``folder name``: Name of the folder where the output will be saved.
 - ``remove``: Remove the folder with the output of the Alphafold model. For restarting porpoises.
+
+.. _prepwizard:
 
 PrepWizard
 ----------
@@ -121,6 +125,8 @@ PrepWizard is a tool for preparing protein structures for molecular simulations.
 - ``No Epik``: Do not use Epik in the preparation.
 - ``No Prot Assign``: Do not use ProtAssign in the preparation.
 
+.. _align_pdbs:
+
 Align PDBs
 ----------
 
@@ -150,6 +156,8 @@ Align PDBs is a tool for aligning protein structures. It is used to align the st
 - ``Alignment mode``: The mode defines how sequences are aligned. 'exact' for structurally aligning positions with exactly the same aminoacids after the sequence alignment or 'aligned' for structurally aligning sequences using all positions aligned in the sequence alignment.
 - ``Reference residues``: Reference residues to use in the alignment.
 
+.. _setup_docking_grid:
+
 Setup Docking Grid
 ------------------
 
@@ -177,6 +185,43 @@ Setup Docking Grid is a tool for setting up the docking grid for Glide. It is us
 *Parameters*:
 
 - None
+
+.. _run_glide_docking:
+
+Run Glide
+---------
+
+.. warning::
+    Need a Schrödinger Glide license to run this block.
+
+Run Glide is a tool for running the Glide docking. It is used to dock the ligands to the protein.
+
+.. note::
+    This block is intended to be used after the Setup Docking Grid block.
+
+.. image:: imgs/glide.png
+    :width: 350
+    :align: center
+    :alt: Horus Run Glide block
+
+*Input*:
+
+- ``Model folder``: Folder with the models to be used in the docking.
+- ``Ligand folder``: Folder with the ligands to be docked.
+
+or
+
+- ``Grid``: Folder with the grid files.
+
+*Output*:
+
+- ``Output poses``: Folder with the poses of the model and ligand.
+
+*Parameters*:
+
+- ``Poses per ligand``: Number of poses to generate per ligand.
+
+.. _analyse_glide_docking:
 
 Analyse Glide Docking
 ---------------------
@@ -216,38 +261,7 @@ or
 - ``Poses folder name``: Name of the folder where the poses will be saved.
 - ``Selections``: List of selections to analyse.
 
-Run Glide
----------
-
-.. warning::
-    Need a Schrödinger Glide license to run this block.
-
-Run Glide is a tool for running the Glide docking. It is used to dock the ligands to the protein.
-
-.. note::
-    This block is intended to be used after the Setup Docking Grid block.
-
-.. image:: imgs/glide.png
-    :width: 350
-    :align: center
-    :alt: Horus Run Glide block
-
-*Input*:
-
-- ``Model folder``: Folder with the models to be used in the docking.
-- ``Ligand folder``: Folder with the ligands to be docked.
-
-or
-
-- ``Grid``: Folder with the grid files.
-
-*Output*:
-
-- ``Output poses``: Folder with the poses of the model and ligand.
-
-*Parameters*:
-
-- ``Poses per ligand``: Number of poses to generate per ligand.
+.. _pdb_to_mae:
 
 PDB to MAE
 ----------
@@ -282,6 +296,8 @@ or
 
 - ``Change ligand name``: Change the ligand name inside the PDB. This will replace the chain, residue and atom names with the ligand name (L).
 
+.. _trim_alphafold_models:
+
 Trim Alphafold models
 ---------------------
 
@@ -304,6 +320,8 @@ Trim Alphafold models is a tool for trimming the Alphafold models. It is used to
 *Parameters*:
 
 - ``Confidence threshold``: Threshold confidence indicates the maximum confidence score at which to stop the trimming of terminal regions.
+
+.. _pele:
 
 PELE
 ----
@@ -371,3 +389,154 @@ PELE is a tool for running PELE simulations.
 - ``Bias to point``: Bias to point to use in the PELE simulation.
 - ``com bias1``: Bias to point to use in the PELE simulation.
 - ``com bias2``: Bias to point to use in the PELE simulation.
+
+.. _analyse_pele:
+
+Analyse PELE
+------------
+
+Analyse PELE is a tool for analysing the results of the PELE simulations. 
+
+.. image:: imgs/peleAnalysis.png
+    :width: 350
+    :align: center
+    :alt: Horus Analyse PELE block
+
+*Input*:
+
+- ``PELE folder``: Folder with the PELE simulation.
+
+*Output*:
+
+- None
+
+*Parameters*:
+
+- None
+
+.. _conserved_residues_msa:
+
+Conserved Residues from MSA
+---------------------------
+
+Conserved Residues from MSA is a tool for calculating the conserved residues from a Multiple Sequence Alignment.
+
+.. image:: imgs/conserved.png
+    :width: 350
+    :align: center
+    :alt: Horus Conserved Residues from MSA block
+
+*Input*:
+
+- ``Protein folder``: Folder with the models PDBs.
+
+*Output*:
+
+- ``Conserved residues``: Dictionary with the conserved residues between the residues.
+
+*Parameters*:
+
+- ``Residue index``: Index of the residues to get. If not set all the residues will be returned.
+
+.. _msa_mafft:
+
+Multiple Sequence Alignment with Mafft
+--------------------------------------
+
+Multiple Sequence Alignment with Mafft is a tool for aligning multiple sequences.
+
+.. image:: imgs/msa.png
+    :width: 350
+    :align: center
+    :alt: Horus MSA block
+
+*Input*:
+
+- ``Protein folder``: Folder with the models PDBs.
+
+*Output*:
+
+- ``MSA File``: File with the multiple sequence alignment.
+
+*Parameters*:
+
+- None
+
+.. _msa_hmm:
+
+MSA to HMM
+----------
+
+MSA to HMM is a tool for converting a Multiple Sequence Alignment to a Hidden Markov Model.
+
+.. image:: imgs/msa2hmm.png
+    :width: 350
+    :align: center
+    :alt: Horus MSA to HMM block
+
+*Input*:
+
+- ``MSA File``: File with the multiple sequence alignment.
+
+or
+
+- ``MSA object``: MSA object from biopython.
+
+*Output*:
+
+- ``Output HMM``: File with the Hidden Markov Model.
+
+*Parameters*:
+
+- None
+
+.. _Hmmsearch:
+
+HmmSearch
+---------
+
+HmmSearch is a tool for searching a Hidden Markov Model in a database.
+
+.. image:: imgs/hmmSearch.png
+    :width: 350
+    :align: center
+    :alt: Horus HmmSearch block
+
+*Input*:
+
+- ``HMM Input``: File with the Hidden Markov Model.
+
+*Output*:
+
+- ``Output``: Folder with the output of the search.
+
+*Parameters*:
+
+- ``Sequence DB``: Database to search the HMM.
+- ``Hmmsearch evalue``: E-value to use in the search.
+
+.. _asite_design:
+
+AsiteDesign
+-----------
+
+AsiteDesign is a tool for designing the active site of a protein.
+
+.. image:: imgs/asiteDesign.png
+    :width: 350
+    :align: center
+    :alt: Horus AsiteDesign block
+
+*Input*:
+
+- ``Input yaml``: File with the configuration of the design.
+- ``Input PDB``: PDB file with the protein to design.
+- ``Parameters``: Folder with the parameters files.
+
+*Output*:
+
+- ``Asite simulation folder``: Folder with the output of the design.
+
+*Parameters*:
+
+- ``Container``: If you are launching the block in a container. The container to use.

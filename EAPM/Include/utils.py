@@ -99,7 +99,7 @@ def setup_bsc_calculations_based_on_horus_remote(
             partition=partition,
             program=program,
             script_name=scriptName,
-            gpus=cpus,
+            cpus=cpus,
             module_purge=modulePurge,
         )
     # powerpuff
