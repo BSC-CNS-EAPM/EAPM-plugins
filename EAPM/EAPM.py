@@ -80,6 +80,10 @@ def createPlugin():
 
     eapmPlugin.addPage(peleResultsPage)
 
+    from Pages.dockingAnalysis import docking_page
+
+    eapmPlugin.addPage(docking_page)
+
     # Add the configs
     from Configs.mafftConfig import mafftExecutableConfig
 

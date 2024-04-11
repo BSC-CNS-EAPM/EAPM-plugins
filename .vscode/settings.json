@@ -6,11 +6,16 @@
         "--line-length",
         "98"
     ],
-    "python.analysis.typeCheckingMode": "off",
     "python.analysis.extraPaths": [
         "EAPM/deps/",
         "EAPM/Include/",
     ],
-    "python.envFile": "${workspaceFolder}/.env",
-    "esbonio.sphinx.confDir": ""
+    "python.analysis.typeCheckingMode": "basic",
+    "pylint.args": [
+        "--rcfile=${workspaceFolder}/.pylintrc"
+    ],
+    "css.customData": [
+        ".vscode/tailwind.json"
+    ],
+    "typescript.tsdk": "node_modules/typescript/lib"
 }
