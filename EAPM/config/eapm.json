@@ -1,4 +1,0 @@
-{
-    "mafft_path": "/home/albertcs/miniconda3/bin/mafft",
-    "hmmer_path": "/gpfs/projects/bsc72/conda_envs/hmm/bin/hmmsearch"
-}
