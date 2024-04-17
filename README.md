@@ -16,6 +16,7 @@ Once a plugin is installed, it will appear in the left with all the available bl
 You need to install:
 ```bash
 sudo apt install python3.x-dev
+sudo apt install zlib1g-dev
 ```
 
 If the error is "x86_64-linux-gnu-gcc: fatal error: cannot execute ‘cc1plus’: execvp: No such file or directory compilation terminated." run this command:
