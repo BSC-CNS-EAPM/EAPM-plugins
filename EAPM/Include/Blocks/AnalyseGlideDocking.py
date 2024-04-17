@@ -149,6 +149,8 @@ def analyseDockingAction(block: PluginBlock):
 
     import prepare_proteins
 
+    Extensions().open(pluginID="EAPM", pageID="docking_analysis", data={"data": "pepe test"})
+
     # Get the docking results
     models = prepare_proteins.proteinModels(model_folder)
 
@@ -329,12 +331,12 @@ analyseGlideDocking = PluginBlock(
     name="Analyse Glide Docking",
     description="Analyse the docking results from Glide",
     inputGroups=[folderVariableGroup, glideOutputVariableGroup],
-    variables=[
-        ligandSeparatorVariable,
-        maxThresholdVariable,
-        posesFolderNameVariable,
-        selectionsListVariable,
-    ],
+    # variables=[
+    #     ligandSeparatorVariable,
+    #     maxThresholdVariable,
+    #     posesFolderNameVariable,
+    #     selectionsListVariable,
+    # ],
     outputs=[outputPosesVariable, analyseGlideOutputVariable],
     action=analyseDockingAction,
 )

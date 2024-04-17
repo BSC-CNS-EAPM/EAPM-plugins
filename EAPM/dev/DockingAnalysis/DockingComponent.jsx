@@ -11,6 +11,7 @@ export default function DockingAnalysisView() {
       <button
         onClick={() => {
           setCount(count + 1);
+          console.log(window.parent.extensionData)
         }}
       >
         Increase count

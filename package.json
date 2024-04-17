@@ -36,7 +36,6 @@
     "react-dom": "^18.2.0",
     "sass-loader": "^14.1.1",
     "style-loader": "^4.0.0",
-    "ts-loader": "^9.5.1",
-    "typescript": "^5.4.4"
+    "ts-loader": "^9.5.1"
   }
 }
