@@ -293,7 +293,7 @@ def readBLASTResults(job_folder, only_codes=False):
     return sequences
 
 def readPSIBLASTResults(job_folder, as_one_bundle=False, only_codes=False, remove_missing_folders=False,
-                        verbose=True, outfmt=6):
+                        verbose=True):
     """
     Read the resuts from the PSIBlast() function over the TREMBL database.
 
@@ -314,15 +314,7 @@ def readPSIBLASTResults(job_folder, as_one_bundle=False, only_codes=False, remov
         The results from the PSIBLAST calculation.
     """
 
-    implemented_outfmt = [6]
-
-    if outfmt not in implemented_outfmt:
-        raise ValueError('This output format has not been implemented yet.')
-
-    if outfmt == 6:
-        header = ['qseqid','sseqid','pident','length','mismatch','gapopen','qstart','qend','sstart','send','evalue','bitscore']
-
-    frames = []
+    sequences = {}
     for model in os.listdir(job_folder):
 
         model_out = job_folder+'/'+model+'/'+model+'.out'
@@ -334,13 +326,31 @@ def readPSIBLASTResults(job_folder, as_one_bundle=False, only_codes=False, remov
                 shutil.rmtree(job_folder+'/'+model)
             continue
         else:
-            df = pd.read_csv(model_out,sep='\t',header=None)
-            df.columns = header
-            frames.append(df.set_index(['qseqid','sseqid'])[:-1])
+            psiblast_results = alignment.blast._parsePSIBlastOutput(model_out)
+            if as_one_bundle:
+                sequences[model] = {}
+                for c in psiblast_results:
+                    for s in psiblast_results[c]:
+                        if only_codes:
+                            sequences[model][s.split()[0]] = psiblast_results[c][s]['e-value']
+                        else:
+                            sequences[model][s] = psiblast_results[c][s]['e-value']
+            else:
+                sequences.setdefault(model, {})
+                #sequences[model] = {}
 
-    df = pd.concat(frames)
+                for c in psiblast_results:
+                    sequences[model][c] = {}
+                    for s in psiblast_results[c]:
+                        if only_codes:
+                            sequences[model][c][s.split()[0]] = psiblast_results[c][s]['e-value']
+                        else:
+                            sequences[model][c][s] = psiblast_results[c][s]['e-value']
 
-    return df
+        if as_one_bundle:
+            sequences[model] = list(set(sequences[model]))
+
+    return sequences
 
 def readPSIBLASTSequences(job_folder, verbose=True):
     """
