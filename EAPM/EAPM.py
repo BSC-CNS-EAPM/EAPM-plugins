@@ -63,13 +63,13 @@ def createPlugin():
 
     eapmPlugin.addBlock(multipleSequenceAlignmentBlock)
 
-    from Blocks.MmmBuild hmmBuildBlock
+    from Blocks.HmmBuild import hmmBuildBlock
 
     eapmPlugin.addBlock(hmmBuildBlock)
 
-    from Blocks.HmmSearch import hmmsearchBlock
+    from Blocks.HmmSearch import hmmSearchBlock
 
-    eapmPlugin.addBlock(hmmsearchBlock)
+    eapmPlugin.addBlock(hmmSearchBlock)
 
     from Blocks.AsiteDesign import asiteDesignBlock
 

@@ -10,7 +10,7 @@ from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 # Variable inputs
 # ==========================#
 hmmInput = PluginVariable(
-    id="input_msa",
+    id="input_hmm",
     name="Hmm input",
     description="The input hmm",
     type=VariableTypes.FILE,
@@ -108,7 +108,7 @@ def runHmmSearch(block: SlurmBlock):
         jobs,
         program="hmmer",
         uploadFolders=[
-            "folderName",
+            folderName,
         ],
     )
 

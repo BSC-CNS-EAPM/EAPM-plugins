@@ -27,6 +27,8 @@ outputVariable = PluginVariable(
     name="Output File",
     description="Output of the HmmBuild block",
     type=VariableTypes.FILE,
+    defaultValue="output.hmm",
+    allowedValues=["hmm"],
 )
 
 # ==========================#
@@ -50,7 +52,7 @@ outputHB = PluginVariable(
 
 def runHmmBuild(block: SlurmBlock):
 
-    input = block.inputs.get("input_hmm", None)
+    input = block.inputs.get("input_msa", None)
 
     if "nord3" not in block.remote.host:
         raise Exception("This block only works on Nord3.")
@@ -81,7 +83,7 @@ def runHmmBuild(block: SlurmBlock):
 
     output = block.outputs.get("output", "output.hmm")
 
-    jobs = [f"hmmbuild {output} {input}"]
+    jobs = [f"hmmbuild {folderName}/{output} {folderName}/{input}"]
 
     from utils import launchCalculationAction
 
@@ -90,7 +92,7 @@ def runHmmBuild(block: SlurmBlock):
         jobs,
         program="hmmer",
         uploadFolders=[
-            "folderName",
+            folderName,
         ],
     )
 

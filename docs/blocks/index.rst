@@ -60,7 +60,7 @@ There is the list of the blocks available in this repository:
 - :ref:`Analyse PELE <analyse_pele>`
 - :ref:`Conserved Residues from MSA <conserved_residues_msa>`
 - :ref:`Multiple Sequence Alignment with Mafft <msa_mafft>`
-- :ref:`MSA to HMM <msa_hmm>`
+- :ref:`HmmBuild <hmmbuild>`
 - :ref:`HmmSearch <hmmsearch>`
 - :ref:`AsiteDesign <asite_design>`
 
@@ -462,25 +462,22 @@ Multiple Sequence Alignment with Mafft is a tool for aligning multiple sequences
 
 - None
 
-.. _msa_hmm:
+.. _hmmbuild:
 
-MSA to HMM
-----------
+HmmBuild
+--------
 
-MSA to HMM is a tool for converting a Multiple Sequence Alignment to a Hidden Markov Model.
+HmmerBuild creates a position-specific scoring table, called a profile hidden Markov model (HMM), that is a statistical model of 
+the consensus of a multiple sequence alignment.
 
-.. image:: imgs/msa2hmm.png
+.. image:: imgs/hmmBuild.png
     :width: 350
     :align: center
-    :alt: Horus MSA to HMM block
+    :alt: Horus HmmBuild block
 
 *Input*:
 
 - ``MSA File``: File with the multiple sequence alignment.
-
-or
-
-- ``MSA object``: MSA object from biopython.
 
 *Output*:
 
@@ -490,7 +487,7 @@ or
 
 - None
 
-.. _Hmmsearch:
+.. _hmmsearch:
 
 HmmSearch
 ---------
