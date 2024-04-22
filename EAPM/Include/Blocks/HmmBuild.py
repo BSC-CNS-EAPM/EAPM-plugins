@@ -1,5 +1,5 @@
 """
-Module containing the HmmSearch block for the EAPM plugin as a nord3 implementation
+Module containing the HmmBuild block for the EAPM plugin as a nord3 implementation
 """
 
 import os
@@ -9,7 +9,7 @@ from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 # ==========================#
 # Variable inputs
 # ==========================#
-hmmInput = PluginVariable(
+msaInput = PluginVariable(
     id="input_msa",
     name="Input MSA",
     description="The input msa",
@@ -40,13 +40,6 @@ removeExistingResults = PluginVariable(
     description="Remove existing results",
     type=VariableTypes.BOOLEAN,
     defaultValue=False,
-)
-outputHB = PluginVariable(
-    name="HmmBuild simulation folder",
-    id="folder_name",
-    description="The name of the folder where the simulation will be stored.",
-    type=VariableTypes.STRING,
-    defaultValue="hmmBuild",
 )
 
 
@@ -116,7 +109,7 @@ hmmBuildBlock = SlurmBlock(
     initialAction=runHmmBuild,
     finalAction=finalAction,
     description="Creates a hmm from a msa.",
-    inputs=[hmmInput],
-    variables=BSC_JOB_VARIABLES + [outputHB, removeExistingResults],
+    inputs=[msaInput],
+    variables=BSC_JOB_VARIABLES + [removeExistingResults],
     outputs=[outputVariable],
 )
