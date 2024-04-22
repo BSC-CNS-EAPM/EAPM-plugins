@@ -430,7 +430,7 @@ option (highlighted in blue) and then clicking on “New Remote” located in th
 <li><p><a class="reference internal" href="#analyse-pele"><span class="std std-ref">Analyse PELE</span></a></p></li>
 <li><p><a class="reference internal" href="#conserved-residues-msa"><span class="std std-ref">Conserved Residues from MSA</span></a></p></li>
 <li><p><a class="reference internal" href="#msa-mafft"><span class="std std-ref">Multiple Sequence Alignment with Mafft</span></a></p></li>
-<li><p><a class="reference internal" href="#msa-hmm"><span class="std std-ref">MSA to HMM</span></a></p></li>
+<li><p><a class="reference internal" href="#hmmbuild"><span class="std std-ref">HmmBuild</span></a></p></li>
 <li><p><a class="reference internal" href="#hmmsearch"><span class="std std-ref">HmmSearch</span></a></p></li>
 <li><p><a class="reference internal" href="#asite-design"><span class="std std-ref">AsiteDesign</span></a></p></li>
 </ul>
@@ -755,17 +755,14 @@ the protein and the ligand will be calculated.</p>
 <li><p>None</p></li>
 </ul>
 </section>
-<section id="msa-to-hmm">
-<span id="msa-hmm"></span><h3>MSA to HMM<a class="headerlink" href="#msa-to-hmm" title="Link to this heading">#</a></h3>
-<p>MSA to HMM is a tool for converting a Multiple Sequence Alignment to a Hidden Markov Model.</p>
-<a class="reference internal image-reference" href="../_images/msa2hmm.png"><img alt="Horus MSA to HMM block" class="align-center" src="../_images/msa2hmm.png" style="width: 350px;" /></a>
+<section id="hmmbuild">
+<span id="id10"></span><h3>HmmBuild<a class="headerlink" href="#hmmbuild" title="Link to this heading">#</a></h3>
+<p>HmmerBuild creates a position-specific scoring table, called a profile hidden Markov model (HMM), that is a statistical model of
+the consensus of a multiple sequence alignment.</p>
+<a class="reference internal image-reference" href="blocks/imgs/hmmBuild.png"><img alt="Horus HmmBuild block" class="align-center" src="blocks/imgs/hmmBuild.png" style="width: 350px;" /></a>
 <p><em>Input</em>:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">MSA</span> <span class="pre">File</span></code>: File with the multiple sequence alignment.</p></li>
-</ul>
-<p>or</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">MSA</span> <span class="pre">object</span></code>: MSA object from biopython.</p></li>
 </ul>
 <p><em>Output</em>:</p>
 <ul class="simple">
@@ -777,7 +774,7 @@ the protein and the ligand will be calculated.</p>
 </ul>
 </section>
 <section id="hmmsearch">
-<span id="id10"></span><h3>HmmSearch<a class="headerlink" href="#hmmsearch" title="Link to this heading">#</a></h3>
+<span id="id11"></span><h3>HmmSearch<a class="headerlink" href="#hmmsearch" title="Link to this heading">#</a></h3>
 <p>HmmSearch is a tool for searching a Hidden Markov Model in a database.</p>
 <a class="reference internal image-reference" href="../_images/hmmSearch.png"><img alt="Horus HmmSearch block" class="align-center" src="../_images/hmmSearch.png" style="width: 350px;" /></a>
 <p><em>Input</em>:</p>
@@ -880,7 +877,7 @@ the protein and the ligand will be calculated.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#analyse-pele">Analyse PELE</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conserved-residues-from-msa">Conserved Residues from MSA</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-sequence-alignment-with-mafft">Multiple Sequence Alignment with Mafft</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#msa-to-hmm">MSA to HMM</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hmmbuild">HmmBuild</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hmmsearch">HmmSearch</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#asitedesign">AsiteDesign</a></li>
 </ul>
