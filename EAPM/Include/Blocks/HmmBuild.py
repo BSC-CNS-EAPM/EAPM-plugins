@@ -10,12 +10,12 @@ from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 # Variable inputs
 # ==========================#
 hmmInput = PluginVariable(
-    id="input_hmm",
-    name="Hmm input",
-    description="The input hmm",
+    id="input_msa",
+    name="Input MSA",
+    description="The input msa",
     type=VariableTypes.FILE,
     defaultValue=None,
-    allowedValues=["hmm"],
+    allowedValues=["fasta"],
 )
 
 
@@ -25,8 +25,10 @@ hmmInput = PluginVariable(
 outputVariable = PluginVariable(
     id="output",
     name="Output File",
-    description="Output of the HmmSearch block",
+    description="Output of the HmmBuild block",
     type=VariableTypes.FILE,
+    defaultValue="output.hmm",
+    allowedValues=["hmm"],
 )
 
 # ==========================#
@@ -39,42 +41,28 @@ removeExistingResults = PluginVariable(
     type=VariableTypes.BOOLEAN,
     defaultValue=False,
 )
-outputHS = PluginVariable(
-    name="HmmSearch simulation folder",
+outputHB = PluginVariable(
+    name="HmmBuild simulation folder",
     id="folder_name",
     description="The name of the folder where the simulation will be stored.",
     type=VariableTypes.STRING,
-    defaultValue="hmmSearch",
-)
-sequenceDBVar = PluginVariable(
-    id="sequence_db",
-    name="Sequence DB",
-    description="The sequence database to search",
-    type=VariableTypes.STRING,
-    defaultValue="/gpfs/projects/shared/public/AlphaFold/uniref90/uniref90.fa",
-)
-evalueVar = PluginVariable(
-    id="hmmsearch_evalue",
-    name="HmmSearch evalue",
-    description="The evalue to use",
-    type=VariableTypes.FLOAT,
-    defaultValue=0.001,
+    defaultValue="hmmBuild",
 )
 
 
-def runHmmSearch(block: SlurmBlock):
+def runHmmBuild(block: SlurmBlock):
 
-    input = block.inputs.get("input_hmm", None)
+    input = block.inputs.get("input_msa", None)
 
     if "nord3" not in block.remote.host:
         raise Exception("This block only works on Nord3.")
 
     if input is None:
-        raise Exception("No input hmm provided")
+        raise Exception("No input msa provided")
     if not os.path.exists(input):
-        raise Exception(f"The input hmm file does not exist: {input}")
+        raise Exception(f"The input msa file does not exist: {input}")
 
-    folderName = block.variables.get("folder_name", "hmmSearch")
+    folderName = block.variables.get("folder_name", "hmmBuild")
     block.extraData["folder_name"] = folderName
     removeExisting = block.variables.get("remove_existing_results", False)
 
@@ -93,13 +81,9 @@ def runHmmSearch(block: SlurmBlock):
     os.makedirs(folderName, exist_ok=True)
     os.system(f"cp {input} {folderName}")
 
-    cpus = block.variables.get("cpus")
-    evalue = block.variables.get("hmmsearch_evalue", 0.001)
-    sequenceDBVar = block.variables.get(
-        "sequence_db", "/gpfs/projects/shared/public/AlphaFold/uniref90/uniref90.fa"
-    )
+    output = block.outputs.get("output", "output.hmm")
 
-    jobs = [f"hmmsearch --cpu {cpus} -E {evalue} {input} {sequenceDBVar}"]
+    jobs = [f"hmmbuild {folderName}/{output} {folderName}/{input}"]
 
     from utils import launchCalculationAction
 
@@ -120,19 +104,19 @@ def finalAction(block: SlurmBlock):
 
     resultsFolder = block.extraData["folder_name"]
 
-    output_search = os.path.join(downloaded_path, resultsFolder, "output_models")
+    output_hmm = os.path.join(downloaded_path, resultsFolder, "output.hmm")
 
-    block.setOutput(outputVariable.id, output_search)
+    block.setOutput(outputVariable.id, output_hmm)
 
 
 from utils import BSC_JOB_VARIABLES
 
-hmmSearchBlock = SlurmBlock(
-    name="HmmSearch",
-    initialAction=runHmmSearch,
+hmmBuildBlock = SlurmBlock(
+    name="HmmBuild",
+    initialAction=runHmmBuild,
     finalAction=finalAction,
-    description="Searches a sequence database with a given hmm",
+    description="Creates a hmm from a msa.",
     inputs=[hmmInput],
-    variables=BSC_JOB_VARIABLES + [outputHS, removeExistingResults],
+    variables=BSC_JOB_VARIABLES + [outputHB, removeExistingResults],
     outputs=[outputVariable],
 )

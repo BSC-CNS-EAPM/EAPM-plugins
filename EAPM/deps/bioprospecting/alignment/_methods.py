@@ -78,7 +78,6 @@ def writeMsaToFastaFile(msa, output_file,exclude=None, plain_sequences=False):
                 else:
                     of.write(str(s.seq)+'\n')
 
-
 def readMsaFromFastaFile(alignment_file):
     """
     Read an MSA from a fasta file.
@@ -137,7 +136,7 @@ def readPSIBlastFromJson(json_file):
     return psi_blast_result
 
 
-def msaIndexesFromSequencePositions(msa, sequence_id, sequence_positions):
+def getMsaIndexesFromSequencePositions(msa, sequence_id, sequence_positions):
     """
     Get the multiple sequence alignment position indexes matching those positions (zero-based) of a specific target sequence.
 
@@ -310,7 +309,7 @@ def _checkMotifParalell(arguments):
     motif = _checkMotif(target_sequence, reference_sequence, indexes, skip_failed)
     return code, motif
 
-def trimSequences(refence_sequence, sequences):
+def trimSequences(refence_sequence, sequences, method='auto'):
     """
     Cut sequence terminal regions that do not align with the reference sequence
 
@@ -334,7 +333,7 @@ def trimSequences(refence_sequence, sequences):
         seqs = {}
         seqs['reference'] = refence_sequence
         seqs['target'] = sequences[m]
-        msa = bioprospecting.alignment.mafft.multipleSequenceAlignment(seqs, stderr=False)
+        msa = bioprospecting.alignment.mafft.multipleSequenceAlignment(seqs, stderr=False, method=method)
         for e in msa:
             if e.id == 'reference':
                 # Get msa index fo first reference position

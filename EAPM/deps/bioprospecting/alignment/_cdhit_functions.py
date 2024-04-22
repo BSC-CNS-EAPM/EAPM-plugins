@@ -7,7 +7,7 @@ from ._methods import *
 class cdhit:
 
     def clusterSequences(sequences, pid_threshold=0.9, return_identities=False,
-                         keep_sequence_file=None):
+                         keep_sequence_file=None, T=1):
         """
         Cluster sequences by PID using CD-HIT program.
 
@@ -43,9 +43,19 @@ class cdhit:
             temp_fasta_file = sequences
             delete_temp = False
 
+        # set word_length
+        if pid_threshold >= 0.63:
+            word_length = 5
+        elif pid_threshold >= 0.5:
+            word_length = 3
+        elif pid_threshold >= 0.4:
+            word_length = 2
+
         # Set command to calculate clusters
         command = 'cd-hit -i '+temp_fasta_file
         command += ' -c '+str(pid_threshold)
+        command += ' -n '+str(word_length)
+        command += ' -T '+str(T)
         command += ' -o cdhit_clusters.tmp'
 
         # Run CD-HIT
