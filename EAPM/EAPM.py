@@ -79,6 +79,10 @@ def createPlugin():
 
     eapmPlugin.addBlock(hmmAlignBlock)
 
+    from Blocks.JackHmmer import jackHmmerBlock  # type: ignore
+
+    eapmPlugin.addBlock(jackHmmerBlock)
+
     from Blocks.AsiteDesign import asiteDesignBlock  # type: ignore
 
     eapmPlugin.addBlock(asiteDesignBlock)

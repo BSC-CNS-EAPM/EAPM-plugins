@@ -84,8 +84,11 @@ def runJackHmmer(block: SlurmBlock):
     sequenceDB = block.variables.get(
         "sequence_db", "/gpfs/projects/shared/public/AlphaFold/uniref90/uniref90.fa"
     )
+    cpus = block.variables.get("cpus", 1)
 
-    jobs = [f"jackhmmer -o {folderName}/{output} {folderName}/{inputfasta} {sequenceDB}"]
+    jobs = [
+        f"jackhmmer -o {folderName}/{output} --cpu {cpus} {folderName}/{inputfasta} {sequenceDB}"
+    ]
 
     from utils import launchCalculationAction
 
@@ -114,10 +117,10 @@ def finalAction(block: SlurmBlock):
 from utils import BSC_JOB_VARIABLES
 
 jackHmmerBlock = SlurmBlock(
-    name="HmmAlign",
+    name="JackHmmer",
     initialAction=runJackHmmer,
     finalAction=finalAction,
-    description="Align sequences to a profile HMM",
+    description="Iteratively search a protein sequence against a protein database",
     inputs=[fastaInput],
     variables=BSC_JOB_VARIABLES + [sequenceDBVar, removeExistingResults],
     outputs=[outputVariable],
