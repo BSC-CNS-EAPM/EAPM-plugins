@@ -149,7 +149,10 @@ def analyseDockingAction(block: PluginBlock):
 
     import prepare_proteins
 
-    Extensions().open(pluginID="EAPM", pageID="docking_analysis", data={"data": "pepe test"})
+    Extensions().storeExtensionResults(pluginID="eapm", pageID="docking_analysis", data={"modelsFolder": model_folder, "dockingFolder": folder_to_analyse})
+    Extensions().open(pluginID="eapm", pageID="docking_analysis", data={"data": "pepe test"})
+
+    return
 
     # Get the docking results
     models = prepare_proteins.proteinModels(model_folder)
@@ -160,17 +163,18 @@ def analyseDockingAction(block: PluginBlock):
 
     # If the folder to analyse is not on the current working directory, we need to
     # copy it to the curret working directory
-    current_folder = os.getcwd()
+    # cÇurrent_folder = os.getcwd()
 
     # If the folder starts with a different path, we need to copy it to the current dir
     # If its a relative path (under the current dir) pass
     if (
         not folder_to_analyse.startswith(current_folder)
-        and not os.path.basename(folder_to_analyse) == folder_to_analyse
+        and os.path.basename(folder_to_analyse) != folder_to_analyse
     ):
         # Copy the folder to the current working directory
         import shutil
 
+        
         shutil.copytree(
             folder_to_analyse, os.path.join(current_folder, folder_to_analyse), dirs_exist_ok=True
         )
