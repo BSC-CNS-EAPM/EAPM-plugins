@@ -1,5 +1,3 @@
-# TODO include the ahatool module
-
 import datetime
 import os
 import subprocess

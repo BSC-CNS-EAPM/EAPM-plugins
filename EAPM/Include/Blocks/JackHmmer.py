@@ -1,5 +1,5 @@
 """
-Module containing the HmmSearch block for the EAPM plugin as a nord3 implementation
+Module containing the JackHmmer block for the EAPM plugin as a nord3 implementation
 """
 
 import os
@@ -9,13 +9,13 @@ from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 # ==========================#
 # Variable inputs
 # ==========================#
-hmmInput = PluginVariable(
-    id="input_hmm",
-    name="Hmm input",
-    description="The input hmm",
+fastaInput = PluginVariable(
+    id="input_fasta",
+    name="Fasta input",
+    description="The input fast",
     type=VariableTypes.FILE,
     defaultValue=None,
-    allowedValues=["hmm"],
+    allowedValues=["fasta"],
 )
 
 
@@ -25,7 +25,7 @@ hmmInput = PluginVariable(
 outputVariable = PluginVariable(
     id="output",
     name="Output File",
-    description="Output of the HmmSearch block",
+    description="Output of the JackHmmer block",
     type=VariableTypes.FILE,
     defaultValue="output.hmm",
 )
@@ -47,28 +47,21 @@ sequenceDBVar = PluginVariable(
     type=VariableTypes.STRING,
     defaultValue="/gpfs/projects/shared/public/AlphaFold/uniref90/uniref90.fa",
 )
-evalueVar = PluginVariable(
-    id="hmmsearch_evalue",
-    name="HmmSearch evalue",
-    description="The evalue to use",
-    type=VariableTypes.FLOAT,
-    defaultValue=0.001,
-)
 
 
-def runHmmSearch(block: SlurmBlock):
+def runJackHmmer(block: SlurmBlock):
 
-    input = block.inputs.get("input_hmm", None)
+    inputfasta = block.inputs.get("input_fasta", None)
 
     if "nord3" not in block.remote.host:
         raise Exception("This block only works on Nord3.")
 
-    if input is None:
-        raise Exception("No input hmm provided")
-    if not os.path.exists(input):
-        raise Exception(f"The input hmm file does not exist: {input}")
+    if inputfasta is None:
+        raise Exception("No input fasta provided")
+    if not os.path.exists(inputfasta):
+        raise Exception(f"The input fasta file does not exist: {inputfasta}")
 
-    folderName = block.variables.get("folder_name", "hmmSearch")
+    folderName = block.variables.get("folder_name", "jackHmmer")
     block.extraData["folder_name"] = folderName
     removeExisting = block.variables.get("remove_existing_results", False)
 
@@ -85,17 +78,16 @@ def runHmmSearch(block: SlurmBlock):
 
     # Create an copy the inputs
     os.makedirs(folderName, exist_ok=True)
-    os.system(f"cp {input} {folderName}")
+    os.system(f"cp {inputfasta} {folderName}")
 
-    cpus = block.variables.get("cpus")
-    evalue = block.variables.get("hmmsearch_evalue", 0.001)
     output = block.outputs.get("output", "output.hmm")
     sequenceDB = block.variables.get(
         "sequence_db", "/gpfs/projects/shared/public/AlphaFold/uniref90/uniref90.fa"
     )
+    cpus = block.variables.get("cpus", 1)
 
     jobs = [
-        f"hmmsearch --cpu {cpus} -E {evalue} {folderName}/{input} {sequenceDB} -o {folderName}/{output}"
+        f"jackhmmer -o {folderName}/{output} --cpu {cpus} {folderName}/{inputfasta} {sequenceDB}"
     ]
 
     from utils import launchCalculationAction
@@ -124,12 +116,12 @@ def finalAction(block: SlurmBlock):
 
 from utils import BSC_JOB_VARIABLES
 
-hmmSearchBlock = SlurmBlock(
-    name="HmmSearch",
-    initialAction=runHmmSearch,
+jackHmmerBlock = SlurmBlock(
+    name="JackHmmer",
+    initialAction=runJackHmmer,
     finalAction=finalAction,
-    description="Searches a sequence database with a given hmm",
-    inputs=[hmmInput],
+    description="Iteratively search a protein sequence against a protein database",
+    inputs=[fastaInput],
     variables=BSC_JOB_VARIABLES + [sequenceDBVar, removeExistingResults],
     outputs=[outputVariable],
 )

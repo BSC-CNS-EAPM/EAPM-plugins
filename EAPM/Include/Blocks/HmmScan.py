@@ -1,5 +1,5 @@
 """
-Module containing the HmmSearch block for the EAPM plugin as a nord3 implementation
+Module containing the HmmScan block for the EAPM plugin as a nord3 implementation
 """
 
 import os
@@ -9,13 +9,13 @@ from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 # ==========================#
 # Variable inputs
 # ==========================#
-hmmInput = PluginVariable(
-    id="input_hmm",
-    name="Hmm input",
-    description="The input hmm",
+fastaInput = PluginVariable(
+    id="input_fasta",
+    name="Fasta input",
+    description="The input fast",
     type=VariableTypes.FILE,
     defaultValue=None,
-    allowedValues=["hmm"],
+    allowedValues=["fasta"],
 )
 
 
@@ -25,7 +25,7 @@ hmmInput = PluginVariable(
 outputVariable = PluginVariable(
     id="output",
     name="Output File",
-    description="Output of the HmmSearch block",
+    description="Output of the HmmScan block",
     type=VariableTypes.FILE,
     defaultValue="output.hmm",
 )
@@ -40,35 +40,28 @@ removeExistingResults = PluginVariable(
     type=VariableTypes.BOOLEAN,
     defaultValue=False,
 )
-sequenceDBVar = PluginVariable(
-    id="sequence_db",
-    name="Sequence DB",
+hmmDBVar = PluginVariable(
+    id="hmm_db",
+    name="Hmm DB",
     description="The sequence database to search",
     type=VariableTypes.STRING,
-    defaultValue="/gpfs/projects/shared/public/AlphaFold/uniref90/uniref90.fa",
-)
-evalueVar = PluginVariable(
-    id="hmmsearch_evalue",
-    name="HmmSearch evalue",
-    description="The evalue to use",
-    type=VariableTypes.FLOAT,
-    defaultValue=0.001,
+    defaultValue=" ",
 )
 
 
-def runHmmSearch(block: SlurmBlock):
+def runHmmScan(block: SlurmBlock):
 
-    input = block.inputs.get("input_hmm", None)
+    input = block.inputs.get("input_fasta", None)
 
     if "nord3" not in block.remote.host:
         raise Exception("This block only works on Nord3.")
 
     if input is None:
-        raise Exception("No input hmm provided")
+        raise Exception("No input fasta provided")
     if not os.path.exists(input):
-        raise Exception(f"The input hmm file does not exist: {input}")
+        raise Exception(f"The input fasta file does not exist: {input}")
 
-    folderName = block.variables.get("folder_name", "hmmSearch")
+    folderName = block.variables.get("folder_name", "hmmScan")
     block.extraData["folder_name"] = folderName
     removeExisting = block.variables.get("remove_existing_results", False)
 
@@ -87,16 +80,10 @@ def runHmmSearch(block: SlurmBlock):
     os.makedirs(folderName, exist_ok=True)
     os.system(f"cp {input} {folderName}")
 
-    cpus = block.variables.get("cpus")
-    evalue = block.variables.get("hmmsearch_evalue", 0.001)
+    hmmDB = block.variables.get("hmm_db", None)
     output = block.outputs.get("output", "output.hmm")
-    sequenceDB = block.variables.get(
-        "sequence_db", "/gpfs/projects/shared/public/AlphaFold/uniref90/uniref90.fa"
-    )
 
-    jobs = [
-        f"hmmsearch --cpu {cpus} -E {evalue} {folderName}/{input} {sequenceDB} -o {folderName}/{output}"
-    ]
+    jobs = [f"hmmscan {hmmDB} {folderName}/{input} -o {folderName}/{output}"]
 
     from utils import launchCalculationAction
 
@@ -117,19 +104,19 @@ def finalAction(block: SlurmBlock):
 
     resultsFolder = block.extraData["folder_name"]
 
-    output_hmm = os.path.join(downloaded_path, resultsFolder, "output.hmm")
+    output_search = os.path.join(downloaded_path, resultsFolder, "output_models")
 
-    block.setOutput(outputVariable.id, output_hmm)
+    block.setOutput(outputVariable.id, output_search)
 
 
 from utils import BSC_JOB_VARIABLES
 
-hmmSearchBlock = SlurmBlock(
-    name="HmmSearch",
-    initialAction=runHmmSearch,
+hmmScanBlock = SlurmBlock(
+    name="HmmScan",
+    initialAction=runHmmScan,
     finalAction=finalAction,
-    description="Searches a sequence database with a given hmm",
-    inputs=[hmmInput],
-    variables=BSC_JOB_VARIABLES + [sequenceDBVar, removeExistingResults],
+    description="Search sequence(s) against a profile database",
+    inputs=[fastaInput],
+    variables=BSC_JOB_VARIABLES + [hmmDBVar, removeExistingResults],
     outputs=[outputVariable],
 )
