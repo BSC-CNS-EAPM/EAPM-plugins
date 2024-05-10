@@ -87,6 +87,10 @@ def createPlugin():
 
     eapmPlugin.addBlock(asiteDesignBlock)
 
+    from Blocks.Ahatool import ahatoolBlock  # type: ignore
+
+    eapmPlugin.addBlock(ahatoolBlock)
+
     # Add the configs
     from Configs.mafftConfig import mafftExecutableConfig  # type: ignore
 
