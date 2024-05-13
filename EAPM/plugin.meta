@@ -21,6 +21,7 @@
     "git+https://github.com/Martin-Floor/bsc_calculations.git",
     "git+https://github.com/Martin-Floor/prepare_proteins.git",
     "git+https://github.com/Martin-Floor/PELE_scripts.git",
-    "biopython==1.81"
+    "biopython==1.81",
+    "git+https://github.com/etiur/EP-pred"
   ]
 }
