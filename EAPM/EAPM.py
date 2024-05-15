@@ -91,6 +91,10 @@ def createPlugin():
 
     eapmPlugin.addBlock(ahatoolBlock)
 
+    from Blocks.EpPred import epPredBlock  # type: ignore
+
+    eapmPlugin.addBlock(epPredBlock)
+
     # Add the configs
     from Configs.mafftConfig import mafftExecutableConfig  # type: ignore
 

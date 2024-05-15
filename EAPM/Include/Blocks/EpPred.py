@@ -5,6 +5,7 @@ import subprocess
 from HorusAPI import PluginVariable, SlurmBlock, VariableList, VariableTypes
 
 # TODO Making the block to work in marenostrum, if not, will work in local.
+# TODO Add to documentation
 # For the mn execution set default paths
 
 # ==========================#
@@ -120,7 +121,7 @@ restart = PluginVariable(
     name="Restart",
     id="restart",
     description="From which part of the process to restart with. (-re)",
-    type=VariableTypes.STRING,
+    type=VariableTypes.STRING_LIST,
     allowedValues=["feature", "predict"],
 )
 filterOnly = PluginVariable(
@@ -176,7 +177,7 @@ value = PluginVariable(
     name="Value",
     id="value",
     description="The voting threshold to be considered positive. (-v)",
-    type=VariableTypes.FLOAT,
+    type=VariableTypes.NUMBER_LIST,
     defaultValue=None,
     allowedValues=[1, 0.8, 0.5],
 )
@@ -236,7 +237,7 @@ def runEppred(block: SlurmBlock):
     num_similar_samples = block.variables.get("num_similar_samples", None)
     if num_similar_samples is not None:
         command += f"-nss {num_similar_samples} "
-    restart = block.variables.get("restart", None)
+    restart = block.variables.get("restart", "feature")
     if restart is not None:
         command += f"-re {restart} "
     filter_only = block.variables.get("filter_only", None)
