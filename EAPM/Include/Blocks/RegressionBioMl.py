@@ -1,10 +1,6 @@
 """
-Bioml Classification
-    | Wrapper class for the bioml Classification module.
-    | Train classification models.
+A module that performs regression analysis on a dataset.
 """
-
-# TODO Add to the documentation
 
 import os
 
@@ -53,9 +49,9 @@ stringGroup = VariableGroup(
 # Variable outputs
 # ==========================#
 outputClassification = PluginVariable(
-    name="Classification output",
+    name="Regression output",
     id="out_zip",
-    description="The zip file to the output for the classification models",
+    description="The zip file to the output for the regression models",
     type=VariableTypes.FILE,
 )
 
@@ -357,11 +353,11 @@ def finalAction(block: SlurmBlock):
 
 from utils import BSC_JOB_VARIABLES
 
-classificationBioMLBlock = SlurmBlock(
-    name="Classification BioML",
+regressionBioMLBlock = SlurmBlock(
+    name="Regression BioMl",
     initialAction=runClassificationBioml,
     finalAction=finalAction,
-    description="Train classification models.",
+    description="Train Regression models.",
     inputGroups=[fileGroup, stringGroup],
     variables=BSC_JOB_VARIABLES
     + [

@@ -1,10 +1,6 @@
 """
-Bioml Classification
-    | Wrapper class for the bioml Classification module.
-    | Train classification models.
+A module that performs regression analysis on a dataset.
 """
-
-# TODO Add to the documentation
 
 import os
 
@@ -13,20 +9,28 @@ from HorusAPI import PluginVariable, SlurmBlock, VariableGroup, VariableList, Va
 # ==========================#
 # Variable inputs
 # ==========================#
-inputLabelFile = PluginVariable(
-    name="Input Label",
-    id="input_label",
-    description="The path to the labels of the training set in a csv format or string if it is inside training features.",
+fastaFile = PluginVariable(
+    name="Fasta file",
+    id="fasta_file",
+    description="The fasta file path.",
     type=VariableTypes.FILE,
     defaultValue=None,
-    allowedValues=["csv"],
+    allowedValues=["fasta"],
 )
-inputLabelString = PluginVariable(
-    name="Input Label",
-    id="input_label",
-    description="The labels of the training set in a string format.",
-    type=VariableTypes.STRING,
+modelPath = PluginVariable(
+    name="Model Path",
+    id="model_path",
+    description="The path to the model.",
+    type=VariableTypes.FILE,
     defaultValue=None,
+)
+testFeatures = PluginVariable(
+    name="Test Features",
+    id="test_features",
+    description="The file to where the test features are saved in excel or csv format.",
+    type=VariableTypes.FILE,
+    defaultValue=None,
+    allowedValues=["csv", "xlsx"],
 )
 trainingFeatures = PluginVariable(
     name="Training Features",
@@ -36,26 +40,14 @@ trainingFeatures = PluginVariable(
     defaultValue=None,
     allowedValues=["csv", "xlsx"],
 )
-fileGroup = VariableGroup(
-    id="fileType_input",
-    name="Input File",
-    description="The input is a file",
-    variables=[inputLabelFile, trainingFeatures],
-)
-stringGroup = VariableGroup(
-    id="stringType_input",
-    name="Input String",
-    description="The input is a string",
-    variables=[inputLabelString, trainingFeatures],
-)
 
 # ==========================#
 # Variable outputs
 # ==========================#
-outputClassification = PluginVariable(
-    name="Classification output",
+outputPrediction = PluginVariable(
+    name="Prediction output",
     id="out_zip",
-    description="The zip file to the output for the classification models",
+    description="The zip file to the output for the prediction results",
     type=VariableTypes.FILE,
 )
 
@@ -357,39 +349,12 @@ def finalAction(block: SlurmBlock):
 
 from utils import BSC_JOB_VARIABLES
 
-classificationBioMLBlock = SlurmBlock(
-    name="Classification BioML",
+PredictBioMLBlock = SlurmBlock(
+    name="Predict BioMl",
     initialAction=runClassificationBioml,
     finalAction=finalAction,
-    description="Train classification models.",
-    inputGroups=[fileGroup, stringGroup],
-    variables=BSC_JOB_VARIABLES
-    + [
-        selectedVar,
-        dropVar,
-        trainingOutput,
-        scalerVar,
-        kfoldParameters,
-        outliersVar,
-        budgetTime,
-        precisionWeight,
-        recallWeight,
-        reportWeight,
-        differenceWeight,
-        bestModels,
-        seedVar,
-        tuneVar,
-        plotVar,
-        optimizeVar,
-        sheetName,
-        numIter,
-        splitStrategy,
-        clusterVar,
-        mutationsVar,
-        testNumMutations,
-        greaterVar,
-        shuffleVar,
-        crossValidation,
-    ],
-    outputs=[outputClassification],
+    description="Predict using the models and average the votations.",
+    inputs=[fastaFile, modelPath, testFeatures, trainingFeatures],
+    variables=BSC_JOB_VARIABLES + [],
+    outputs=[outputPrediction],
 )
