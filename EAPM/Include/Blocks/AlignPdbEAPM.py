@@ -45,7 +45,6 @@ integerChainIndexVariable = PluginVariable(
     type=VariableTypes.INTEGER,
     defaultValue=0,
 )
-
 chainIndexesAlign = VariableList(
     name="Chain indexes",
     id="chain_indexes",
@@ -63,15 +62,12 @@ trajectoryChainIndexVariable = PluginVariable(
     type=VariableTypes.INTEGER,
     defaultValue=0,
 )
-
 trajectoryChainIndexesAlign = VariableList(
     name="Trajectory chain indexes",
     id="trajectory_chain_indexes",
     description="Chain indexes of the target trajectories to use in the alignment.",
     prototypes=[trajectoryChainIndexVariable],
 )
-
-
 alignmentModeAlign = PluginVariable(
     name="Alignment mode",
     id="alignment_mode",
@@ -80,7 +76,6 @@ alignmentModeAlign = PluginVariable(
     defaultValue="aligned",
     allowedValues=["aligned", "exact"],
 )
-
 referenceResiduesAlign = PluginVariable(
     name="Reference residue index",
     id="reference_residues",

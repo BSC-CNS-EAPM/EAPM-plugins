@@ -28,7 +28,6 @@ outputAF = PluginVariable(
     type=VariableTypes.STRING,
     defaultValue="alphafold",
 )
-
 removeExistingResults = PluginVariable(
     name="Remove existing results",
     id="remove_existing_results",
