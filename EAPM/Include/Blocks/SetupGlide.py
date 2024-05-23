@@ -133,7 +133,7 @@ def setupGlideDocking(block: SlurmBlock):
     from utils import launchCalculationAction
 
     launchCalculationAction(
-        block, jobs, "glide", uploadFolders=["docking", "grid", relative_ligand_folder]
+        block, jobs, "schrodinger", uploadFolders=["docking", "grid", relative_ligand_folder]
     )
 
 

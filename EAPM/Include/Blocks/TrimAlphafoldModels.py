@@ -81,7 +81,7 @@ def trimAlphaFoldModels(block: PluginBlock):
     trimmed_folder = os.path.join(os.getcwd(), "trimmed_models")
 
     # Set the output
-    block.setOutput("trimmed_models", trimmed_folder)
+    block.setOutput(trimmedModelsOutputAF.id, trimmed_folder)
 
     outPdb = None
     for file in os.listdir(trimmed_folder):
@@ -89,7 +89,7 @@ def trimAlphaFoldModels(block: PluginBlock):
             outPdb = os.path.join(trimmed_folder, file)
             break
 
-    block.setOutput("out_pdb", outPdb)
+    block.setOutput(outputPDBAF.id, outPdb)
 
 
 trimAlphaFoldModelsBlock = PluginBlock(

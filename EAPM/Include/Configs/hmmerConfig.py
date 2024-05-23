@@ -15,7 +15,7 @@ def checkHmmerInstallation(block: PluginConfig):
     print("verifying HMMER installation")
 
     # Get the path to the mafft executable
-    hmmerPath = block.variables.get("HMMER_path")
+    hmmerPath = block.variables.get(hmmerPathVariable.id)
 
     # Check if the path is valid
     if not os.path.isfile(hmmerPath):

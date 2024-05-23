@@ -33,6 +33,13 @@ outputEppred = PluginVariable(
 ##############################
 #       Other variables      #
 ##############################
+removeExistingResults = PluginVariable(
+    name="Remove existing results",
+    id="remove_existing_results",
+    description="Remove existing results",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
+)
 pssmDir = PluginVariable(
     name="PSSM directory",
     id="pssm_dir",
@@ -315,6 +322,7 @@ epPredBlock = SlurmBlock(
     inputs=[inputFasta],
     variables=BSC_JOB_VARIABLES
     + [
+        removeExistingResults,
         pssmDir,
         fastadir,
         ifeatureDir,

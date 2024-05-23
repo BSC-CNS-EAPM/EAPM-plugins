@@ -46,6 +46,13 @@ outputAhatool = PluginVariable(
 ##############################
 #       Other variables      #
 ##############################
+removeExistingResults = PluginVariable(
+    name="Remove existing results",
+    id="remove_existing_results",
+    description="Remove existing results",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
+)
 prefixVar = PluginVariable(
     name="Prefix",
     id="prefix",
@@ -147,6 +154,6 @@ ahatoolBlock = PluginBlock(
     action=initialAction,
     description="Iteratively search a protein sequence against a protein database",
     inputs=[inputFasta, dbPath, containerName],
-    variables=[prefixVar, startVar, evalVar, threadsVar],
+    variables=[removeExistingResults, prefixVar, startVar, evalVar, threadsVar],
     outputs=[outputAhatool],
 )

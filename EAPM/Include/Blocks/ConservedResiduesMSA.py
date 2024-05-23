@@ -1,4 +1,4 @@
-from HorusAPI import PluginBlock, PluginVariable, VariableTypes, Extensions
+from HorusAPI import Extensions, PluginBlock, PluginVariable, VariableTypes
 
 proteinFolderVariable = PluginVariable(
     id="protein_folder",
@@ -27,10 +27,10 @@ commonResiduesOutputVariable = PluginVariable(
 def getConservedMSAPositions(block: PluginBlock):
     proteinFolder = block.inputs.get("protein_folder", "proteins")
 
-    import prepare_proteins
-
     # Check that there is at least one pdb file in the folder
     import os
+
+    import prepare_proteins
 
     hasPDB = False
     for file in os.listdir(proteinFolder):

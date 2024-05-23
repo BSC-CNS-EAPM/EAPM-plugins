@@ -6,10 +6,10 @@
   "pluginFile": "EAPM.py",
   "dependencies": [
     "pyhmmer",
+    "numpy",
     "pandas",
     "scipy",
     "pyyaml",
-    "numpy",
     "matplotlib",
     "seaborn",
     "mdtraj",
@@ -21,6 +21,20 @@
     "git+https://github.com/Martin-Floor/bsc_calculations.git",
     "git+https://github.com/Martin-Floor/prepare_proteins.git",
     "git+https://github.com/Martin-Floor/PELE_scripts.git",
-    "biopython==1.81"
+    "biopython==1.81",
+    "scikit_learn",
+    "biopython",
+    "shap",
+    "matplotlib",
+    "openpyxl",
+    "pyod",
+    "combo",
+    "mlflow",
+    "optuna",
+    "transformers",
+    "optuna_integration",
+    "lightning",
+    "peft",
+    "datasets"  
   ]
 }

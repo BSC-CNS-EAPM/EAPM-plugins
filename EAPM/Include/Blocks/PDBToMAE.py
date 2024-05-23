@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from HorusAPI import PluginBlock, VariableTypes, PluginVariable, VariableGroup
+from HorusAPI import PluginBlock, PluginVariable, VariableGroup, VariableTypes
 
 # Input variables
 pdbFolderVariable = PluginVariable(
@@ -48,12 +48,13 @@ def convertPDBToMAE(block: PluginBlock):
     # Test if we have valid glide installation
     command = "echo $SCHRODINGER"
     output = block.remote.remoteCommand(command)
+
     if output is None or output == "":
         raise Exception(f"No valid Schrodinger installation found on remote {block.remote.name}")
     else:
         print(f"Schrodinger installation found on remote {block.remote.name}: {output}")
 
-    run_command = output + "/run"
+    run_command = str(output) + "/run"
 
     import prepare_proteins
 
@@ -144,6 +145,12 @@ def convertPDBToMAE(block: PluginBlock):
         for model in os.listdir(downloaded_path):
             if model.endswith(".mae"):
                 os.rename(os.path.join(pdb_folder, model), os.path.join(mae_folder, model))
+
+    elif block.remote.name == "Local":
+        for model in os.listdir(pdb_folder):
+            if model.endswith(".mae"):
+                # Move the MAE files to the output folder
+                shutil.move(os.path.join(pdb_folder, model), os.path.join(mae_folder, model))
 
     print(
         f"Sucessfully converted PDB files to MAE. Files converted: {len(os.listdir(mae_folder))}"

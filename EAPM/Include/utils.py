@@ -4,7 +4,8 @@ import shutil
 import subprocess
 import typing
 
-from HorusAPI import PluginBlock, PluginVariable, SlurmBlock, VariableList, VariableTypes
+from HorusAPI import (PluginBlock, PluginVariable, SlurmBlock, VariableList,
+                      VariableTypes)
 
 localIPs = {"cactus": "84.88.51.217", "blossom": "84.88.51.250", "bubbles": "84.88.51.219"}
 
@@ -19,6 +20,7 @@ def setup_bsc_calculations_based_on_horus_remote(
     job_name,
     program,
     modulePurge,
+    cpus_per_task,
 ):
     import bsc_calculations
 
@@ -32,7 +34,13 @@ def setup_bsc_calculations_based_on_horus_remote(
 
     # If we are working with pele, only marenostrum and nord3 are allowed
     if program == "pele":
-        if cluster not in ["mn1.bsc.es", "mn2.bsc.es", "mn3.bsc.es", "nord3.bsc.es"]:
+        if cluster not in [
+            "glogin1.bsc.es",
+            "glogin4.bsc.es",
+            "glogin3.bsc.es",
+            "glogin4.bsc.es",
+            "nord3.bsc.es",
+        ]:
             raise Exception("Pele can only be run on Marenostrum or Nord3")
 
         if cluster == "nord3.bsc.es":
@@ -43,8 +51,8 @@ def setup_bsc_calculations_based_on_horus_remote(
                 general_script=scriptName,
                 scripts_folder=scriptName + "_scripts",
             )
-        elif "mn" in cluster:
-            bsc_calculations.marenostrum.setUpPELEForMarenostrum(
+        elif "glogin" in cluster:
+            bsc_calculations.mn5.setUpPELEForMarenostrum(
                 jobs,
                 partition=partition,
                 cpus=cpus,
@@ -56,26 +64,27 @@ def setup_bsc_calculations_based_on_horus_remote(
 
     ## Define cluster
     # cte_power
-    if cluster == "plogin1.bsc.es":
-        bsc_calculations.cte_power.jobArrays(
-            jobs,
-            job_name=job_name,
-            partition=partition,
-            program=program,
-            script_name=scriptName,
-            gpus=cpus,
-            module_purge=modulePurge,
-        )
+    # if cluster == "plogin1.bsc.es":
+    #     bsc_calculations.cte_power.jobArrays(
+    #         jobs,
+    #         job_name=job_name,
+    #         partition=partition,
+    #         program=program,
+    #         script_name=scriptName,
+    #         gpus=cpus,
+    #         module_purge=modulePurge,
+    #     )
     # marenostrum
-    elif "mn" in cluster:
+    elif "glogin" in cluster or "alogin" in cluster:
         print("Generating Marenostrum jobs...")
-        bsc_calculations.marenostrum.jobArrays(
+        bsc_calculations.mn5.jobArrays(
             jobs,
             job_name=job_name,
             partition=partition,
             program=program,
             script_name=scriptName,
-            cpus=cpus,
+            ntasks=cpus,
+            cpus_per_task=cpus_per_task,
             module_purge=modulePurge,
         )
     # minotauro
@@ -91,7 +100,7 @@ def setup_bsc_calculations_based_on_horus_remote(
             module_purge=modulePurge,
         )
     # nord3
-    elif cluster == "nord3.bsc.es":
+    elif "nord" in cluster:
         print("Generating nord3 jobs...")
         bsc_calculations.nord3.jobArrays(
             jobs,
@@ -101,6 +110,18 @@ def setup_bsc_calculations_based_on_horus_remote(
             script_name=scriptName,
             cpus=cpus,
             module_purge=modulePurge,
+        )
+    # cte-amd
+    elif "amdlogin" in cluster:
+        print("Generating cte-amd jobs...")
+        bsc_calculations.amd.jobArrays(
+            jobs,
+            job_name=job_name,
+            partition=partition,
+            program=program,
+            script_name=scriptName,
+            cpus=cpus,
+            #module_purge=modulePurge,
         )
     # powerpuff
     elif cluster == "powerpuff":
@@ -164,6 +185,7 @@ def launchCalculationAction(
 
     partition = block.variables.get("partition")
     cpus = block.variables.get("cpus")
+    cpus_per_task = block.variables.get("cpus_per_task")
     simulationName = block.variables.get("folder_name")
     scriptName = block.variables.get("script_name", "calculation_script.sh")
 
@@ -184,6 +206,7 @@ def launchCalculationAction(
         simulationName,
         program,
         modulePurge,
+        cpus_per_task,
     )
 
     # Read the environment variables
@@ -406,8 +429,8 @@ partitionVariable = PluginVariable(
     id="partition",
     description="Partition where to lunch.",
     type=VariableTypes.STRING_LIST,
-    defaultValue="bsc_ls",
-    allowedValues=["bsc_ls", "debug"],
+    defaultValue="gp_bscls",
+    allowedValues=["gp_bscls", "gp_debug", "acc_bscls", "acc_debug", "debug", "bsc_ls"],
     category="Slurm configuration",
 )
 
@@ -415,6 +438,15 @@ cpusVariable = PluginVariable(
     name="CPUs",
     id="cpus",
     description="Number of CPUs to use.",
+    type=VariableTypes.INTEGER,
+    defaultValue=1,
+    category="Slurm configuration",
+)
+
+cpusPerTaskVariable = PluginVariable(
+    name="CPUs per task",
+    id="cpus_per_task",
+    description="Number of CPUs per task to use.",
     type=VariableTypes.INTEGER,
     defaultValue=1,
     category="Slurm configuration",
@@ -461,4 +493,5 @@ BSC_JOB_VARIABLES = [
     cpusVariable,
     environmentList,
     removeFolderOnFinishVariable,
+    cpusPerTaskVariable,
 ]

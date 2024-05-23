@@ -146,7 +146,7 @@ def glideDocking(block: SlurmBlock):
 
     from utils import launchCalculationAction
 
-    launchCalculationAction(block, jobs, "glide", ["grid"])
+    launchCalculationAction(block, jobs, "schrodinger", ["grid"])
 
 
 def downloadGridResults(block: SlurmBlock):

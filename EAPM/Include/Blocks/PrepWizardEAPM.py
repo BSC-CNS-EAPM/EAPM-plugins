@@ -177,7 +177,7 @@ def downloadPrepWizardResults(block: SlurmBlock):
 
     downloadResultsAction(block)
 
-    folderName = block.variables.get("folder_name")
+    folderName = block.variables.get("folder_name", "prepared_proteins")
 
     # Create the output folder containing the prepared proteins
     if not os.path.exists(folderName):
