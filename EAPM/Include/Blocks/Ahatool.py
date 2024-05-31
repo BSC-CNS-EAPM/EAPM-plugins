@@ -1,7 +1,3 @@
-import datetime
-import os
-import subprocess
-
 from HorusAPI import PluginBlock, PluginVariable, VariableList, VariableTypes
 
 # TODO Add to the documentation
@@ -46,6 +42,13 @@ outputAhatool = PluginVariable(
 ##############################
 #       Other variables      #
 ##############################
+removeExistingResults = PluginVariable(
+    name="Remove existing results",
+    id="remove_existing_results",
+    description="Remove existing results",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
+)
 prefixVar = PluginVariable(
     name="Prefix",
     id="prefix",
@@ -77,6 +80,10 @@ threadsVar = PluginVariable(
 
 
 def initialAction(block: PluginBlock):
+
+    import datetime
+    import os
+    import subprocess
 
     container_name = block.inputs.get("container_name", "bsceapm/ahatool:2.2")
     input_fasta = block.inputs.get("input_fasta", None)
@@ -147,6 +154,6 @@ ahatoolBlock = PluginBlock(
     action=initialAction,
     description="Iteratively search a protein sequence against a protein database",
     inputs=[inputFasta, dbPath, containerName],
-    variables=[prefixVar, startVar, evalVar, threadsVar],
+    variables=[removeExistingResults, prefixVar, startVar, evalVar, threadsVar],
     outputs=[outputAhatool],
 )

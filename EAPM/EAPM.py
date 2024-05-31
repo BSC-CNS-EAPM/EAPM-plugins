@@ -95,21 +95,21 @@ def createPlugin():
 
     eapmPlugin.addBlock(epPredBlock)
 
-    from Blocks.ClassificationBioMl import classificationBioMLBlock  # type: ignore
+    # from Blocks.testBlock import testBlock  # type: ignore
 
-    eapmPlugin.addBlock(classificationBioMLBlock)
+    # eapmPlugin.addBlock(testBlock)
 
-    from Blocks.RegressionBioMl import regressionBioMLBlock  # type: ignore
+    from Blocks.AnalyseGlide import AnalyseGBlock  # type: ignore
 
-    eapmPlugin.addBlock(regressionBioMLBlock)
+    eapmPlugin.addBlock(AnalyseGBlock)
 
-    from Blocks.PredictBioML import PredictBioMLBlock  # type: ignore
+    # from Blocks.Rbcavity import rbCavityBlock  # type: ignore
 
-    eapmPlugin.addBlock(PredictBioMLBlock)
+    # eapmPlugin.addBlock(rbCavityBlock)
 
-    from Blocks.outliersBioMl import outliersBioMLBlock  # type: ignore
+    # from Blocks.Rbdock import rbDockBlock  # type: ignore
 
-    eapmPlugin.addBlock(outliersBioMLBlock)
+    # eapmPlugin.addBlock(rbDockBlock)
 
     # Add the configs
     from Configs.mafftConfig import mafftExecutableConfig  # type: ignore

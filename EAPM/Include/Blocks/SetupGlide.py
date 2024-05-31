@@ -1,6 +1,3 @@
-import os
-import shutil
-
 from HorusAPI import PluginVariable, SlurmBlock, VariableGroup, VariableTypes
 
 # Input variables
@@ -54,6 +51,9 @@ outputDockingResultsVariable = PluginVariable(
 
 
 def setupGlideDocking(block: SlurmBlock):
+    import os
+    import shutil
+
     import prepare_proteins
 
     if block.selectedInputGroup == "folder_input_group":
@@ -133,11 +133,13 @@ def setupGlideDocking(block: SlurmBlock):
     from utils import launchCalculationAction
 
     launchCalculationAction(
-        block, jobs, "glide", uploadFolders=["docking", "grid", relative_ligand_folder]
+        block, jobs, "schrodinger", uploadFolders=["docking", "grid", relative_ligand_folder]
     )
 
 
 def downloadGlideDocking(block: SlurmBlock):
+    import os
+
     from utils import downloadResultsAction
 
     downloadResultsAction(block)

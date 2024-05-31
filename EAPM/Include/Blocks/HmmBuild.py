@@ -2,8 +2,6 @@
 Module containing the HmmBuild block for the EAPM plugin as a nord3 implementation
 """
 
-import os
-
 from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 
 # ==========================#
@@ -45,6 +43,8 @@ removeExistingResults = PluginVariable(
 
 def runHmmBuild(block: SlurmBlock):
 
+    import os
+
     input = block.inputs.get("input_msa", None)
 
     if "nord3" not in block.remote.host:
@@ -76,7 +76,12 @@ def runHmmBuild(block: SlurmBlock):
 
     output = block.outputs.get("output", "output.hmm")
 
-    jobs = [f"hmmbuild {folderName}/{output} {folderName}/{input}"]
+    if block.remote.isLocal:
+        hmmerExecutable = block.config.get("hmmer_path", "hmmer") + "/hmmbuild"
+    else:
+        hmmerExecutable = "hmmbuild"
+
+    jobs = [f"{hmmerExecutable} {folderName}/{output} {folderName}/{input}"]
 
     from utils import launchCalculationAction
 
@@ -91,6 +96,8 @@ def runHmmBuild(block: SlurmBlock):
 
 
 def finalAction(block: SlurmBlock):
+    import os
+
     from utils import downloadResultsAction
 
     downloaded_path = downloadResultsAction(block)

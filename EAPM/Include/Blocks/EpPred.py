@@ -1,8 +1,4 @@
-import datetime
-import os
-import subprocess
-
-from HorusAPI import PluginVariable, SlurmBlock, VariableList, VariableTypes
+from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 
 # TODO Making the block to work in marenostrum, if not, will work in local.
 # TODO Add to documentation
@@ -33,6 +29,13 @@ outputEppred = PluginVariable(
 ##############################
 #       Other variables      #
 ##############################
+removeExistingResults = PluginVariable(
+    name="Remove existing results",
+    id="remove_existing_results",
+    description="Remove existing results",
+    type=VariableTypes.BOOLEAN,
+    defaultValue=False,
+)
 pssmDir = PluginVariable(
     name="PSSM directory",
     id="pssm_dir",
@@ -192,6 +195,8 @@ iterations = PluginVariable(
 
 def runEppred(block: SlurmBlock):
 
+    import os
+
     inputfasta = block.inputs.get("input_fasta", None)
 
     if inputfasta is None:
@@ -315,6 +320,7 @@ epPredBlock = SlurmBlock(
     inputs=[inputFasta],
     variables=BSC_JOB_VARIABLES
     + [
+        removeExistingResults,
         pssmDir,
         fastadir,
         ifeatureDir,

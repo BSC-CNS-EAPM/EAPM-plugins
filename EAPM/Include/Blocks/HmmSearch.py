@@ -2,8 +2,6 @@
 Module containing the HmmSearch block for the EAPM plugin as a nord3 implementation
 """
 
-import os
-
 from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 
 # ==========================#
@@ -58,6 +56,8 @@ evalueVar = PluginVariable(
 
 def runHmmSearch(block: SlurmBlock):
 
+    import os
+
     input = block.inputs.get("input_hmm", None)
 
     if "nord3" not in block.remote.host:
@@ -94,8 +94,13 @@ def runHmmSearch(block: SlurmBlock):
         "sequence_db", "/gpfs/projects/shared/public/AlphaFold/uniref90/uniref90.fa"
     )
 
+    if block.remote.isLocal:
+        hmmerExecutable = block.config.get("hmmer_path", "hmmer") + "/hmmsearch"
+    else:
+        hmmerExecutable = "hmmsearch"
+
     jobs = [
-        f"hmmsearch --cpu {cpus} -E {evalue} {folderName}/{input} {sequenceDB} -o {folderName}/{output}"
+        f"{hmmerExecutable} --cpu {cpus} -E {evalue} {folderName}/{input} {sequenceDB} -o {folderName}/{output}"
     ]
 
     from utils import launchCalculationAction
@@ -111,6 +116,8 @@ def runHmmSearch(block: SlurmBlock):
 
 
 def finalAction(block: SlurmBlock):
+    import os
+
     from utils import downloadResultsAction
 
     downloaded_path = downloadResultsAction(block)

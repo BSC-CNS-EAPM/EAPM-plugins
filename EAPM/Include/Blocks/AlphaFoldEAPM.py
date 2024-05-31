@@ -2,8 +2,6 @@
 Module containing the AlphaFold block for the EAPM plugin
 """
 
-import os
-
 from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 
 # ==========================#
@@ -62,6 +60,18 @@ def initialAlphafold(block: SlurmBlock):
     folderName = block.variables.get("folder_name", "alphafold")
     removeExisting = block.variables.get("remove_existing_results", False)
 
+    cpus_per_task = block.variables.get("cpus_per_task")
+    if cpus_per_task is 1:
+        print("Alphafold requires at least 20 cpus per task. Changing to 20 cpus per task.")
+        block.variables["cpus_per_task"] = 20
+
+    partiton = block.variables.get("partition")
+    if partiton is None:
+        print("Alphafold requires an accelerated partition. Changing to acc_bscls.")
+        block.variables["partition"] = "acc_bscls"
+
+    import os
+
     # If folder already exists, raise exception
     if removeExisting and os.path.exists(folderName):
         os.system("rm -rf " + folderName)
@@ -97,6 +107,8 @@ def finalAlhafoldAction(block: SlurmBlock):
 
     resultsFolder = block.extraData["folder_name"]
 
+    import os
+
     output_models_folder = os.path.join(downloaded_path, resultsFolder, "output_models")
 
     block.setOutput(outputModelsVariable.id, output_models_folder)
@@ -106,7 +118,7 @@ from utils import BSC_JOB_VARIABLES
 
 alphafoldBlock = SlurmBlock(
     name="Alphafold",
-    description="Run Alphafold. (For cte_power, marenostrum, nord3 and minotauro clusters or local)",
+    description="Run Alphafold. (For marenostrum, nord3 clusters or local)",
     initialAction=initialAlphafold,
     finalAction=finalAlhafoldAction,
     variables=BSC_JOB_VARIABLES + [outputAF, removeExistingResults],

@@ -2,9 +2,7 @@
 Module containing the PrepWizard block for the EAPM plugin
 """
 
-import os
-
-from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
+from HorusAPI import PluginVariable, SlurmBlock, VariableGroup, VariableTypes
 
 # ==========================#
 # Variable inputs
@@ -16,6 +14,26 @@ inputFolderPW = PluginVariable(
     type=VariableTypes.FOLDER,
     defaultValue=None,
 )
+inputFilePW = PluginVariable(
+    name="Input File",
+    id="input_file",
+    description="File of the pdb to prepare.",
+    type=VariableTypes.FILE,
+    allowedValues=["pdb"],
+)
+folderVariableGroup = VariableGroup(
+    id="folder_variable_group",
+    name="Folder variable group",
+    description="Input folder with the models.",
+    variables=[inputFolderPW],
+)
+fileVariableGroup = VariableGroup(
+    id="file_output_variable_group",
+    name="PDB file group",
+    description="Input PDB file.",
+    variables=[inputFilePW],
+)
+
 
 # ==========================#
 # Variable outputs
@@ -25,6 +43,13 @@ outputPW = PluginVariable(
     id="prepared_proteins",
     description="Folder containing the prepared proteins.",
     type=VariableTypes.FOLDER,
+)
+outputPDB = PluginVariable(
+    name="Output PDB",
+    id="out_pdb",
+    description="Last PDB of the Prepwizard.",
+    type=VariableTypes.FILE,
+    allowedValues=["pdb"],
 )
 
 ##############################
@@ -39,6 +64,7 @@ folderNameVariable = PluginVariable(
 )
 
 
+# Variables
 phPW = PluginVariable(
     name="PH",
     id="ph",
@@ -112,28 +138,36 @@ def prepWizardAction(block: SlurmBlock):
     Args:
         block (SlurmBlock): The block to run the action on.
     """
-    # Loading plugin variables
-    inputFolder = block.inputs.get("input_folder", None)
-    if inputFolder is None:
-        raise Exception("No input folder provided.")
+
+    import os
+
+    if block.selectedInputGroup == fileVariableGroup.id:
+        input_file = block.inputs.get(inputFilePW.id, None)
+        input_folder = "models"
+        os.makedirs(input_folder, exist_ok=True)
+        os.system(f"cp {input_file} {input_folder}")
+    elif block.selectedInputGroup == folderVariableGroup.id:
+        input_folder = block.inputs.get(inputFolderPW.id, None)
+    else:
+        raise Exception("No input selected")
 
     # Get prepWizard variables
-    folderName = block.variables.get("folder_name", "prepared_proteins")
-    ph = int(block.variables.get("ph", 7))
-    epikPH = block.variables.get("epik_ph", False)
-    sampleWater = block.variables.get("sample_water", False)
-    removeHydrogens = block.variables.get("remove_hydrogens", False)
-    delWaterHbondCutOff = block.variables.get("del_water_hbond_cut_off", False)
-    fillLoops = block.variables.get("fill_loops", False)
-    protonationStates = block.variables.get("protonation_states", None)
-    noepik = block.variables.get("no_epik", False)
-    noProtAssign = block.variables.get("no_prot_assign", False)
+    folderName = block.variables.get(folderNameVariable.id, "prepared_proteins")
+    ph = int(block.variables.get(phPW.id, 7))
+    epikPH = block.variables.get(epikPHPW.id, False)
+    sampleWater = block.variables.get(sampleWaterPW.id, False)
+    removeHydrogens = block.variables.get(removeHydrogensPW.id, False)
+    delWaterHbondCutOff = block.variables.get(delWaterHbondCutOffPW.id, False)
+    fillLoops = block.variables.get(fillLoopsPW.id, False)
+    protonationStates = block.variables.get(protonationStatesPW.id, None)
+    noepik = block.variables.get(noepikPW.id, False)
+    noProtAssign = block.variables.get(noProtAssignPW.id, False)
 
     import prepare_proteins
 
     print("Loading pdbs files...")
 
-    models = prepare_proteins.proteinModels(inputFolder)
+    models = prepare_proteins.proteinModels(input_folder)
 
     print("Setting up PrepWizard Optimitzations...")
 
@@ -173,11 +207,13 @@ def prepWizardAction(block: SlurmBlock):
 
 
 def downloadPrepWizardResults(block: SlurmBlock):
+    import os
+
     from utils import downloadResultsAction
 
     downloadResultsAction(block)
 
-    folderName = block.variables.get("folder_name")
+    folderName = block.variables.get(folderNameVariable.id, "prepared_proteins")
 
     # Create the output folder containing the prepared proteins
     if not os.path.exists(folderName):
@@ -193,7 +229,8 @@ def downloadPrepWizardResults(block: SlurmBlock):
                 pdbPath = os.path.join(folderName + "_wizard", "output_models", model, file)
                 shutil.copyfile(pdbPath, finalPath)
 
-    block.setOutput("prepared_proteins", folderName)
+    block.setOutput(outputPDB.id, finalPath)
+    block.setOutput(outputPW.id, folderName)
 
 
 from utils import BSC_JOB_VARIABLES
@@ -218,6 +255,6 @@ prepWizardBlock = SlurmBlock(
     initialAction=prepWizardAction,
     finalAction=downloadPrepWizardResults,
     variables=block_variables,
-    inputs=[inputFolderPW],
-    outputs=[outputPW],
+    inputGroups=[folderVariableGroup, fileVariableGroup],
+    outputs=[outputPDB, outputPW],
 )

@@ -1,4 +1,4 @@
-from HorusAPI import PluginBlock, PluginVariable, VariableTypes, Extensions
+from HorusAPI import Extensions, PluginBlock, PluginVariable, VariableTypes
 
 proteinFolderVariable = PluginVariable(
     id="protein_folder",
@@ -25,12 +25,12 @@ commonResiduesOutputVariable = PluginVariable(
 
 
 def getConservedMSAPositions(block: PluginBlock):
-    proteinFolder = block.inputs.get("protein_folder", "proteins")
-
-    import prepare_proteins
+    proteinFolder = block.inputs.get(proteinFolderVariable.id, "proteins")
 
     # Check that there is at least one pdb file in the folder
     import os
+
+    import prepare_proteins
 
     hasPDB = False
     for file in os.listdir(proteinFolder):
@@ -73,7 +73,7 @@ def getConservedMSAPositions(block: PluginBlock):
         Extensions().loadHTML(html, title="Conserved residues")
 
         # Get the residue index to get
-        residueIndexes = block.variables.get("residue_index", [])
+        residueIndexes = block.variables.get(residueIndexToGetVariable.id, [])
 
         if residueIndexes is None or len(residueIndexes) == 0:
             # Get all the indexes
@@ -90,7 +90,7 @@ def getConservedMSAPositions(block: PluginBlock):
             if len(conservedResidues[model]) == 0:
                 raise Exception(
                     "There are no conserved residues for the selected indexes: "
-                    + " ".join(residueIndexes)
+                    + " ".join(str(residueIndexes))
                 )
             break
 
