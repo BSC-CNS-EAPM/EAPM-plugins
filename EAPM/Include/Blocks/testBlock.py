@@ -1,6 +1,3 @@
-import os
-import shutil
-
 from HorusAPI import PluginBlock, PluginVariable, VariableTypes
 
 # ==========================#
@@ -43,6 +40,8 @@ outputModelsVariable = PluginVariable(
 
 
 def finalAlhafoldAction(block: PluginBlock):
+    import os
+    import shutil
 
     resultsFolder = "alphafold"
     downloaded_path = "/home/perry/data/acanella/testHorus/all_test/alphafold"

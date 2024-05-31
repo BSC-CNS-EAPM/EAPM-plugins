@@ -2,8 +2,6 @@
 Module containing the AlphaFold block for the EAPM plugin
 """
 
-import os
-
 from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 
 # ==========================#
@@ -72,6 +70,8 @@ def initialAlphafold(block: SlurmBlock):
         print("Alphafold requires an accelerated partition. Changing to acc_bscls.")
         block.variables["partition"] = "acc_bscls"
 
+    import os
+
     # If folder already exists, raise exception
     if removeExisting and os.path.exists(folderName):
         os.system("rm -rf " + folderName)
@@ -106,6 +106,8 @@ def finalAlhafoldAction(block: SlurmBlock):
     downloaded_path = downloadResultsAction(block)
 
     resultsFolder = block.extraData["folder_name"]
+
+    import os
 
     output_models_folder = os.path.join(downloaded_path, resultsFolder, "output_models")
 

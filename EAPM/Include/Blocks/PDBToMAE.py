@@ -1,6 +1,3 @@
-import os
-import shutil
-
 from HorusAPI import PluginBlock, PluginVariable, VariableGroup, VariableTypes
 
 # Input variables
@@ -45,6 +42,9 @@ outputVariable = PluginVariable(
 
 
 def convertPDBToMAE(block: PluginBlock):
+    import os
+    import shutil
+
     # Test if we have valid glide installation
     command = "echo $SCHRODINGER"
     output = block.remote.remoteCommand(command)
@@ -58,7 +58,23 @@ def convertPDBToMAE(block: PluginBlock):
 
     import prepare_proteins
 
-    pdb_folder = block.inputs.get("pdb_folder", None)
+    if block.selectedInputGroup == singlePDBVariable.id:
+        pdb_file = block.inputs.get("single_pdb", None)
+
+        if pdb_file is None:
+            raise Exception("No PDB file selected")
+
+        if not os.path.isfile(pdb_file):
+            raise Exception(f"Invalid PDB file: {pdb_file}")
+
+        if os.path.exists("tmp_ligand"):
+            shutil.rmtree("tmp_ligand")
+        os.mkdir("tmp_ligand")
+        shutil.copy(pdb_file, "tmp_ligand")
+
+        pdb_folder = os.path.join(os.getcwd(), "tmp_ligand")
+    else:
+        pdb_folder = block.inputs.get("pdb_folder", None)
 
     if pdb_folder is None:
         raise Exception("No PDB folder selected")
@@ -164,12 +180,6 @@ convertPDBToMAEBlock = PluginBlock(
     description="Convert PDB files to MAE for Glide",
     inputGroups=[
         VariableGroup(
-            id=structureVariable.id,
-            name=structureVariable.name,
-            description=structureVariable.description,
-            variables=[structureVariable],
-        ),
-        VariableGroup(
             id=singlePDBVariable.id,
             name=singlePDBVariable.name,
             description=singlePDBVariable.description,
@@ -180,6 +190,12 @@ convertPDBToMAEBlock = PluginBlock(
             name=pdbFolderVariable.name,
             description=pdbFolderVariable.description,
             variables=[pdbFolderVariable],
+        ),
+        VariableGroup(
+            id=structureVariable.id,
+            name=structureVariable.name,
+            description=structureVariable.description,
+            variables=[structureVariable],
         ),
     ],
     variables=[changeLigandNameVariable],

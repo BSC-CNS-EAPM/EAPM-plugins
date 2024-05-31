@@ -18,7 +18,7 @@ def checkHmmerInstallation(block: PluginConfig):
     hmmerPath = block.variables.get(hmmerPathVariable.id)
 
     # Check if the path is valid
-    if not os.path.isfile(hmmerPath):
+    if not os.path.isdir(hmmerPath):
         raise Exception("The HMMER executable path is not valid")
 
 

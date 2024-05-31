@@ -95,13 +95,21 @@ def createPlugin():
 
     eapmPlugin.addBlock(epPredBlock)
 
-    from Blocks.testBlock import testBlock  # type: ignore
+    # from Blocks.testBlock import testBlock  # type: ignore
 
-    eapmPlugin.addBlock(testBlock)
+    # eapmPlugin.addBlock(testBlock)
 
-    from Blocks.AnalyseGlideGPX import AnalyseGPXBlock  # type: ignore
+    from Blocks.AnalyseGlide import AnalyseGBlock  # type: ignore
 
-    eapmPlugin.addBlock(AnalyseGPXBlock)
+    eapmPlugin.addBlock(AnalyseGBlock)
+
+    # from Blocks.Rbcavity import rbCavityBlock  # type: ignore
+
+    # eapmPlugin.addBlock(rbCavityBlock)
+
+    # from Blocks.Rbdock import rbDockBlock  # type: ignore
+
+    # eapmPlugin.addBlock(rbDockBlock)
 
     # Add the configs
     from Configs.mafftConfig import mafftExecutableConfig  # type: ignore

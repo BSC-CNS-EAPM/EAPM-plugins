@@ -1,8 +1,4 @@
-import datetime
-import os
-import subprocess
-
-from HorusAPI import PluginVariable, SlurmBlock, VariableList, VariableTypes
+from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 
 # TODO Making the block to work in marenostrum, if not, will work in local.
 # TODO Add to documentation
@@ -198,6 +194,8 @@ iterations = PluginVariable(
 
 
 def runEppred(block: SlurmBlock):
+
+    import os
 
     inputfasta = block.inputs.get("input_fasta", None)
 

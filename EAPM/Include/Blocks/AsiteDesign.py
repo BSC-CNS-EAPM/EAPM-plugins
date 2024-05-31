@@ -2,10 +2,7 @@
 Module containing the Asitedesign block for the EAPM plugin
 """
 
-import os
-import subprocess
-
-from HorusAPI import PluginVariable, SlurmBlock, VariableList, VariableTypes
+from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 
 # ==========================#
 # Variable inputs
@@ -72,6 +69,9 @@ containerAsite = PluginVariable(
 
 
 def initialAsite(block: SlurmBlock):
+    import os
+    import subprocess
+
     # Get the input variables
     input_yaml = block.inputs.get("input_yaml", None)
     input_params = block.inputs.get("input_params", None)
@@ -110,6 +110,9 @@ def initialAsite(block: SlurmBlock):
 
 
 def finalAsiteAction(block: SlurmBlock):
+
+    import os
+
     from utils import downloadResultsAction
 
     downloaded_path = downloadResultsAction(block)

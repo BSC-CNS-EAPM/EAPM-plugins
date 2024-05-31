@@ -124,25 +124,29 @@ def initialAlign(block: PluginBlock):
     alignmentMode = block.variables.get("alignment_mode", "aligned")
     referenceResidues = block.variables.get("reference_residues", [])
 
+    import prepare_proteins
+
+    print("Loading PDB files...")
+
+    models = prepare_proteins.proteinModels(inputFolder)
+
     # Parse the chain indexes
     if chainIndexes is not None:
         chainIndexes = [x["chain_index"] for x in chainIndexes]
     else:
         chainIndexes = [0]
 
+    trajectory_chain_indexes = None
     # Parse the trajectory chain indexes
     if trajectoryChainIndexes is not None:
         trajectoryChainIndexes = [x["trajectory_chain_index"] for x in trajectoryChainIndexes]
+        trajectory_chain_indexes = {}
+        for i, model in enumerate(models.models_names):
+            trajectory_chain_indexes[model] = trajectoryChainIndexes[i]
 
     # Parse the reference residues
     if referenceResidues is not None:
         referenceResidues = [x["reference_residues"] for x in referenceResidues]
-
-    import prepare_proteins
-
-    print("Loading PDB files...")
-
-    models = prepare_proteins.proteinModels(inputFolder)
 
     print("Aligning models...")
 
@@ -163,7 +167,7 @@ def initialAlign(block: PluginBlock):
             pdbReference,
             outputFolder,
             chain_indexes=chainIndexes,
-            trajectory_chain_indexes=trajectoryChainIndexes,
+            trajectory_chain_indexes=trajectory_chain_indexes,
             aligment_mode=alignmentMode,
             reference_residues=referenceResidues,
             verbose=True,

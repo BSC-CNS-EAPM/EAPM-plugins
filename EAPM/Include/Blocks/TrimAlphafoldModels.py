@@ -1,6 +1,3 @@
-import os
-import shutil
-
 from HorusAPI import PluginBlock, PluginVariable, VariableTypes
 
 resultsFolderAF = PluginVariable(
@@ -37,6 +34,8 @@ trimmedModelsOutputAF = PluginVariable(
 
 
 def trimAlphaFoldModels(block: PluginBlock):
+    import os
+    import shutil
 
     # Get the models folder
     models_folder = block.inputs.get("results_folder", None)

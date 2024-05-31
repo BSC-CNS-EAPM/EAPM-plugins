@@ -1,7 +1,3 @@
-import datetime
-import os
-import subprocess
-
 from HorusAPI import PluginBlock, PluginVariable, VariableList, VariableTypes
 
 # TODO Add to the documentation
@@ -84,6 +80,10 @@ threadsVar = PluginVariable(
 
 
 def initialAction(block: PluginBlock):
+
+    import datetime
+    import os
+    import subprocess
 
     container_name = block.inputs.get("container_name", "bsceapm/ahatool:2.2")
     input_fasta = block.inputs.get("input_fasta", None)

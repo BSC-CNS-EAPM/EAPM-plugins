@@ -4,8 +4,7 @@ import shutil
 import subprocess
 import typing
 
-from HorusAPI import (PluginBlock, PluginVariable, SlurmBlock, VariableList,
-                      VariableTypes)
+from HorusAPI import PluginBlock, PluginVariable, SlurmBlock, VariableList, VariableTypes
 
 localIPs = {"cactus": "84.88.51.217", "blossom": "84.88.51.250", "bubbles": "84.88.51.219"}
 
@@ -36,7 +35,7 @@ def setup_bsc_calculations_based_on_horus_remote(
     if program == "pele":
         if cluster not in [
             "glogin1.bsc.es",
-            "glogin4.bsc.es",
+            "glogin2.bsc.es",
             "glogin3.bsc.es",
             "glogin4.bsc.es",
             "nord3.bsc.es",
@@ -121,7 +120,7 @@ def setup_bsc_calculations_based_on_horus_remote(
             program=program,
             script_name=scriptName,
             cpus=cpus,
-            #module_purge=modulePurge,
+            # module_purge=modulePurge,
         )
     # powerpuff
     elif cluster == "powerpuff":

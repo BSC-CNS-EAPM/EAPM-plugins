@@ -1,6 +1,3 @@
-import datetime
-import os
-
 from HorusAPI import (
     Extensions,
     PluginBlock,
@@ -133,6 +130,10 @@ analyseGlideOutputVariable = PluginVariable(
 
 
 def analyseDockingAction(block: PluginBlock):
+
+    import datetime
+    import os
+
     if block.selectedInputGroup == "folder_variable_group":
         folder_to_analyse = block.inputs.get("docking_folder", "docking")
         model_folder = block.inputs.get("model_folder", "models")
@@ -391,6 +392,7 @@ def analyseDocking(
     """
 
     import json
+    import os
 
     import pandas as pd
     import prepare_proteins
@@ -529,6 +531,7 @@ def extractDockingPoses(
         Remove all content in the output folder
     """
 
+    import os
     import shutil
 
     # Check the separator is not in model or ligand names
