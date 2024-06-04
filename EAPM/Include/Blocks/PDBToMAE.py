@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from HorusAPI import PluginBlock, VariableTypes, PluginVariable, VariableGroup
+from HorusAPI import PluginBlock, PluginVariable, VariableGroup, VariableTypes
 
 # Input variables
 pdbFolderVariable = PluginVariable(
@@ -107,6 +107,11 @@ def convertPDBToMAE(block: PluginBlock):
 
     # Move the MAE files to the output folder
     os.makedirs(mae_folder, exist_ok=True)
+
+    for model in os.listdir(pdb_folder):
+        if model.endswith(".mae"):
+            # Move the MAE files to the output folder
+            shutil.move(os.path.join(pdb_folder, model), os.path.join(mae_folder, model))
 
     if block.remote.name != "Local":
         # Upload the folder to the remote
