@@ -1,6 +1,4 @@
-import os
-
-from HorusAPI import InputBlock, PluginVariable, SlurmBlock, VariableGroup, VariableTypes
+from HorusAPI import PluginVariable, SlurmBlock, VariableGroup, VariableTypes
 
 # Input variables
 modelFolderVariable = PluginVariable(
@@ -45,6 +43,8 @@ gridOutputVariable = PluginVariable(
 
 # Action
 def glideDocking(block: SlurmBlock):
+    import os
+
     import prepare_proteins
 
     models_folder = block.inputs.get("model_folder")
@@ -146,7 +146,7 @@ def glideDocking(block: SlurmBlock):
 
     from utils import launchCalculationAction
 
-    launchCalculationAction(block, jobs, "glide", ["grid"])
+    launchCalculationAction(block, jobs, "schrodinger", ["grid"])
 
 
 def downloadGridResults(block: SlurmBlock):

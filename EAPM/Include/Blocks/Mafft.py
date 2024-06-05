@@ -2,10 +2,7 @@
 Module containing the Mafft block for the EAPM plugin
 """
 
-import Bio.AlignIO
-import Bio.SeqIO
-
-from HorusAPI import Extensions, PluginBlock, PluginVariable, VariableTypes
+from HorusAPI import PluginBlock, PluginVariable, VariableTypes
 
 # ==========================#
 # Variable inputs

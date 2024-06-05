@@ -2,8 +2,6 @@
 Module containing the HmmScan block for the EAPM plugin as a nord3 implementation
 """
 
-import os
-
 from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 
 # ==========================#
@@ -50,6 +48,7 @@ hmmDBVar = PluginVariable(
 
 
 def runHmmScan(block: SlurmBlock):
+    import os
 
     input = block.inputs.get("input_fasta", None)
 
@@ -83,7 +82,12 @@ def runHmmScan(block: SlurmBlock):
     hmmDB = block.variables.get("hmm_db", None)
     output = block.outputs.get("output", "output.hmm")
 
-    jobs = [f"hmmscan {hmmDB} {folderName}/{input} -o {folderName}/{output}"]
+    if block.remote.isLocal:
+        hmmerExecutable = block.config.get("hmmer_path", "hmmer") + "/hmmscan"
+    else:
+        hmmerExecutable = "hmmscan"
+
+    jobs = [f"{hmmerExecutable} {hmmDB} {folderName}/{input} -o {folderName}/{output}"]
 
     from utils import launchCalculationAction
 
@@ -98,6 +102,8 @@ def runHmmScan(block: SlurmBlock):
 
 
 def finalAction(block: SlurmBlock):
+    import os
+
     from utils import downloadResultsAction
 
     downloaded_path = downloadResultsAction(block)

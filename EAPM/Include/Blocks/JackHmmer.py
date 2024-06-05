@@ -2,8 +2,6 @@
 Module containing the JackHmmer block for the EAPM plugin as a nord3 implementation
 """
 
-import os
-
 from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 
 # ==========================#
@@ -44,17 +42,25 @@ sequenceDBVar = PluginVariable(
     id="sequence_db",
     name="Sequence DB",
     description="The sequence database to search",
-    type=VariableTypes.STRING,
-    defaultValue="/gpfs/projects/shared/public/AlphaFold/uniref90/uniref90.fa",
+    type=VariableTypes.FILE,
+    defaultValue="/apps/ACC/ALPHAFOLD/SRC/database/Alphafold/uniref90/uniref90.fasta",
+)
+folderNameVar = PluginVariable(
+    id="folder_name",
+    name="Folder name",
+    description="The folder name",
+    type=VariableTypes.FOLDER,
+    defaultValue="jackHmmer",
 )
 
 
 def runJackHmmer(block: SlurmBlock):
+    import os
 
     inputfasta = block.inputs.get("input_fasta", None)
 
-    if "nord3" not in block.remote.host:
-        raise Exception("This block only works on Nord3.")
+    # if "nord3" not in block.remote.host or "glogin" not in block.remote.host:
+    #     raise Exception("This block only works on Nord3 or mn.")
 
     if inputfasta is None:
         raise Exception("No input fasta provided")
@@ -71,7 +77,7 @@ def runJackHmmer(block: SlurmBlock):
 
     if not removeExisting and os.path.exists(folderName):
         raise Exception(
-            "The folder {} already exists. Please, choose another name or remove it.".format(
+            "The folder {} already exists. Please, choose another name or remove it with the RemoveExistingFolder option.".format(
                 folderName
             )
         )
@@ -80,15 +86,19 @@ def runJackHmmer(block: SlurmBlock):
     os.makedirs(folderName, exist_ok=True)
     os.system(f"cp {inputfasta} {folderName}")
 
+    inputfasta = os.path.join(folderName, os.path.basename(inputfasta))
+
     output = block.outputs.get("output", "output.hmm")
     sequenceDB = block.variables.get(
-        "sequence_db", "/gpfs/projects/shared/public/AlphaFold/uniref90/uniref90.fa"
+        "sequence_db", "/apps/ACC/ALPHAFOLD/SRC/database/Alphafold/uniref90/uniref90.fasta"
     )
     cpus = block.variables.get("cpus", 1)
 
-    jobs = [
-        f"jackhmmer -o {folderName}/{output} --cpu {cpus} {folderName}/{inputfasta} {sequenceDB}"
-    ]
+    if block.remote.isLocal:
+        hmmerExecutable = block.config.get("hmmer_path", "hmmer") + "/jackhmmer"
+    else:
+        hmmerExecutable = "jackhmmer"
+    jobs = [f"{hmmerExecutable} -o {folderName}/{output} --cpu {cpus} {inputfasta} {sequenceDB}"]
 
     from utils import launchCalculationAction
 
@@ -103,6 +113,8 @@ def runJackHmmer(block: SlurmBlock):
 
 
 def finalAction(block: SlurmBlock):
+    import os
+
     from utils import downloadResultsAction
 
     downloaded_path = downloadResultsAction(block)
@@ -122,6 +134,6 @@ jackHmmerBlock = SlurmBlock(
     finalAction=finalAction,
     description="Iteratively search a protein sequence against a protein database",
     inputs=[fastaInput],
-    variables=BSC_JOB_VARIABLES + [sequenceDBVar, removeExistingResults],
+    variables=BSC_JOB_VARIABLES + [sequenceDBVar, removeExistingResults, folderNameVar],
     outputs=[outputVariable],
 )

@@ -2,8 +2,6 @@
 Module containing the HmmAlign block for the EAPM plugin as a nord3 implementation
 """
 
-import os
-
 from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 
 # ==========================#
@@ -52,6 +50,8 @@ removeExistingResults = PluginVariable(
 
 def runHmmAlign(block: SlurmBlock):
 
+    import os
+
     inputfasta = block.inputs.get("input_fasta", None)
     inputhmm = block.inputs.get("input_hmm", None)
 
@@ -88,7 +88,12 @@ def runHmmAlign(block: SlurmBlock):
     os.system(f"cp {inputfasta} {folderName}")
     os.system(f"cp {inputhmm} {folderName}")
 
-    jobs = [f"hmmalign {folderName}/{inputhmm} {folderName}/{inputfasta}"]
+    if block.remote.isLocal:
+        hmmerExecutable = block.config.get("hmmer_path", "hmmer") + "/hmmalign"
+    else:
+        hmmerExecutable = "hmmalign"
+
+    jobs = [f"{hmmerExecutable} {folderName}/{inputhmm} {folderName}/{inputfasta}"]
 
     from utils import launchCalculationAction
 
@@ -103,6 +108,8 @@ def runHmmAlign(block: SlurmBlock):
 
 
 def finalAction(block: SlurmBlock):
+    import os
+
     from utils import downloadResultsAction
 
     downloaded_path = downloadResultsAction(block)
