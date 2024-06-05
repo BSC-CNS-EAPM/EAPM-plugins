@@ -140,10 +140,13 @@ def prepWizardAction(block: SlurmBlock):
     """
 
     import os
+    import time
 
     if block.selectedInputGroup == fileVariableGroup.id:
         input_file = block.inputs.get(inputFilePW.id, None)
         input_folder = "models"
+        if os.path.exists(input_folder):
+            input_folder = input_folder + "_" + str(time.time())
         os.makedirs(input_folder, exist_ok=True)
         os.system(f"cp {input_file} {input_folder}")
     elif block.selectedInputGroup == folderVariableGroup.id:
@@ -153,6 +156,8 @@ def prepWizardAction(block: SlurmBlock):
 
     # Get prepWizard variables
     folderName = block.variables.get(folderNameVariable.id, "prepared_proteins")
+    if os.path.exists(folderName):
+        folderName = folderName + "_" + str(time.time())
     ph = int(block.variables.get(phPW.id, 7))
     epikPH = block.variables.get(epikPHPW.id, False)
     sampleWater = block.variables.get(sampleWaterPW.id, False)

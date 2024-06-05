@@ -78,7 +78,7 @@ def initialAlphafold(block: SlurmBlock):
 
     if not removeExisting and os.path.exists(folderName):
         raise Exception(
-            "The folder {} already exists. Please, choose another name or remove it.".format(
+            "The folder {} already exists. Please, choose another name or remove it with the remove existing folder option.".format(
                 folderName
             )
         )
@@ -97,7 +97,7 @@ def initialAlphafold(block: SlurmBlock):
 
     from utils import launchCalculationAction
 
-    launchCalculationAction(block, jobs, folderName)
+    launchCalculationAction(block, jobs, "alphafold", [folderName])
 
 
 def finalAlhafoldAction(block: SlurmBlock):
