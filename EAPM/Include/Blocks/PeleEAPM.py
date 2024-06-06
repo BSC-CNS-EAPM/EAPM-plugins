@@ -1,7 +1,4 @@
-
-
-from HorusAPI import (PluginVariable, SlurmBlock, VariableGroup, VariableList,
-                      VariableTypes)
+from HorusAPI import PluginVariable, SlurmBlock, VariableGroup, VariableList, VariableTypes
 
 # Input variables
 yamlPELEFileVariable = PluginVariable(
@@ -843,6 +840,7 @@ def wrappedFunction(block: SlurmBlock):
 
 peleBlock = SlurmBlock(
     name="PELE",
+    id="PELE",
     description="Run PELE",
     initialAction=wrappedFunction,
     finalAction=peleFinalAction,

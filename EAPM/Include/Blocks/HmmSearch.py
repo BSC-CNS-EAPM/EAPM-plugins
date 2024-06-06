@@ -133,6 +133,7 @@ from utils import BSC_JOB_VARIABLES
 
 hmmSearchBlock = SlurmBlock(
     name="HmmSearch",
+    id="HmmSearch",
     initialAction=runHmmSearch,
     finalAction=finalAction,
     description="Searches a sequence database with a given hmm",

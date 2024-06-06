@@ -116,6 +116,7 @@ def initialRbdock(block: PluginBlock):
 
 rbDockBlock = PluginBlock(
     name="Rbdock",
+    id="rbdock",
     description="Calculate the docking. (For local)",
     action=initialRbdock,
     variables=[

@@ -103,6 +103,7 @@ def getConservedMSAPositions(block: PluginBlock):
 
 conservedResiduesMSABlock = PluginBlock(
     name="Conserved Residues from MSA",
+    id="conserved_residues_msa",
     description="Get the conserved residues from a set of proteins",
     inputs=[proteinFolderVariable],
     variables=[residueIndexToGetVariable],

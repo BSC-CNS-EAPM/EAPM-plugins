@@ -159,6 +159,7 @@ from utils import BSC_JOB_VARIABLES
 
 asiteDesignBlock = SlurmBlock(
     name="AsiteDesign",
+    id="AsiteDesign",
     description="Run AsiteDesign. (For local or nord3)",
     initialAction=initialAsite,
     finalAction=finalAsiteAction,

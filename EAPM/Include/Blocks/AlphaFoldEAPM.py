@@ -118,6 +118,7 @@ from utils import BSC_JOB_VARIABLES
 
 alphafoldBlock = SlurmBlock(
     name="Alphafold",
+    id="Alphafold",
     description="Run Alphafold. (For marenostrum, nord3 clusters or local)",
     initialAction=initialAlphafold,
     finalAction=finalAlhafoldAction,

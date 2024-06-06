@@ -93,6 +93,7 @@ def trimAlphaFoldModels(block: PluginBlock):
 
 trimAlphaFoldModelsBlock = PluginBlock(
     name="Trim Alphafold models",
+    id="trim_alphafold_models",
     description="Trim the Alphafold models",
     inputs=[resultsFolderAF],
     variables=[

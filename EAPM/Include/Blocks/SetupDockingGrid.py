@@ -167,6 +167,7 @@ from utils import BSC_JOB_VARIABLES
 
 setupDockingGrid = SlurmBlock(
     name="Setup Docking Grid",
+    id="setup_docking_grid",
     description="Prepare the files for a GLIDE docking calculation",
     initialAction=glideDocking,
     finalAction=downloadGridResults,

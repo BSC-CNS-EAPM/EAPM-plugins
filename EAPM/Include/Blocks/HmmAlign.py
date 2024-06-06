@@ -125,6 +125,7 @@ from utils import BSC_JOB_VARIABLES
 
 hmmAlignBlock = SlurmBlock(
     name="HmmAlign",
+    id="hmmAlign",
     initialAction=runHmmAlign,
     finalAction=finalAction,
     description="Align sequences to a profile HMM",

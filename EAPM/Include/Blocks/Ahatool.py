@@ -151,6 +151,7 @@ def initialAction(block: PluginBlock):
 
 ahatoolBlock = PluginBlock(
     name="AHATool",
+    id="AHATool",
     action=initialAction,
     description="Iteratively search a protein sequence against a protein database",
     inputs=[inputFasta, dbPath, containerName],

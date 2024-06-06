@@ -119,6 +119,7 @@ from utils import BSC_JOB_VARIABLES
 
 hmmScanBlock = SlurmBlock(
     name="HmmScan",
+    id="HmmScan",
     initialAction=runHmmScan,
     finalAction=finalAction,
     description="Search sequence(s) against a profile database",

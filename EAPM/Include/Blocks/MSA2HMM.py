@@ -75,6 +75,7 @@ def convertMSA2HMM(block: PluginBlock):
 
 convertMSAToHMMBlock = PluginBlock(
     name="MSA to HMM",
+    id="msa_to_hmm",
     description="Convert MSA files to HMM",
     inputGroups=[
         VariableGroup(

@@ -186,6 +186,7 @@ block_variables = BSC_JOB_VARIABLES + [posesPerLigandVariable]
 
 setupGlideBlock = SlurmBlock(
     name="Run Glide",
+    id="run_glide",
     description="Run a glide docking calculation.",
     inputGroups=[
         folderInputGroup,

@@ -130,6 +130,7 @@ from utils import BSC_JOB_VARIABLES
 
 jackHmmerBlock = SlurmBlock(
     name="JackHmmer",
+    id="JackHmmer",
     initialAction=runJackHmmer,
     finalAction=finalAction,
     description="Iteratively search a protein sequence against a protein database",

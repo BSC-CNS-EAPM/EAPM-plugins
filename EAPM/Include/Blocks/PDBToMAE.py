@@ -182,6 +182,7 @@ def convertPDBToMAE(block: PluginBlock):
 
 convertPDBToMAEBlock = PluginBlock(
     name="PDB to MAE",
+    id="PDBToMAE",
     description="Convert PDB files to MAE for Glide",
     inputGroups=[
         VariableGroup(

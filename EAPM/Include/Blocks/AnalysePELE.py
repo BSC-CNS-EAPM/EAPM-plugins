@@ -65,6 +65,7 @@ def analysePELE(block: PluginBlock):
 
 analysePELEBlock = PluginBlock(
     name="Analyse PELE",
+    id="analyse_pele",
     description="Analyse PELE output",
     action=analysePELE,
     inputs=[peleOutputFolderInput],

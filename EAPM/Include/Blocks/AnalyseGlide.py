@@ -222,6 +222,7 @@ def finalAction(block: PluginBlock):
 
 AnalyseGBlock = PluginBlock(
     name="Analyse Glide",
+    id="Analyse_Glide",
     description="To analyse Glide results",
     action=finalAction,
     variables=[metricsVar, removePreviousVar, separatorVar],

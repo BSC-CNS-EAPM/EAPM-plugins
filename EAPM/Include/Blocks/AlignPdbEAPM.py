@@ -183,6 +183,7 @@ def initialAlign(block: PluginBlock):
 
 alignBlock = PluginBlock(
     name="Align PDBs",
+    id="align_PDBs",
     description="Align all models to a reference PDB based on a sequence alignment. (For local)",
     action=initialAlign,
     variables=[

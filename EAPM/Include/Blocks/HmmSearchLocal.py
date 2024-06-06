@@ -83,6 +83,7 @@ def runHmmSearch(block: PluginBlock):
 
 hmmsearchLocalBlock = PluginBlock(
     name="HmmSearch Local",
+    id="hmmsearch_local",
     description="Searches a sequence database with a given hmm",
     inputs=[hmmInput, sequenceDBVar],
     variables=[],

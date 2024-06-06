@@ -113,6 +113,7 @@ from utils import BSC_JOB_VARIABLES
 
 hmmBuildBlock = SlurmBlock(
     name="HmmBuild",
+    id="HmmBuild",
     initialAction=runHmmBuild,
     finalAction=finalAction,
     description="Creates a hmm from a msa.",

@@ -79,6 +79,7 @@ def calculateMSAAction(block: PluginBlock):
 
 multipleSequenceAlignmentBlock = PluginBlock(
     name="Multiple Sequence Alignment with Mafft",
+    id="Mafft",
     description="Get the MSA from Mafft",
     inputs=[proteinFolderVariable],
     variables=[],

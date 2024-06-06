@@ -314,6 +314,7 @@ from utils import BSC_JOB_VARIABLES
 
 epPredBlock = SlurmBlock(
     name="Ep-pred",
+    id="ep_pred",
     initialAction=runEppred,
     finalAction=finalAction,
     description="A machine learning program to predict promiscuity of esterases.",
