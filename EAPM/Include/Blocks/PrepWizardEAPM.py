@@ -158,6 +158,7 @@ def prepWizardAction(block: SlurmBlock):
     folderName = block.variables.get(folderNameVariable.id, "prepared_proteins")
     if os.path.exists(folderName):
         folderName = folderName + "_" + str(time.time())
+        block.extraData[folderNameVariable.id] = folderName
     ph = int(block.variables.get(phPW.id, 7))
     epikPH = block.variables.get(epikPHPW.id, False)
     sampleWater = block.variables.get(sampleWaterPW.id, False)
@@ -218,7 +219,7 @@ def downloadPrepWizardResults(block: SlurmBlock):
 
     downloadResultsAction(block)
 
-    folderName = block.variables.get(folderNameVariable.id, "prepared_proteins")
+    folderName = block.extraData[folderNameVariable.id]
 
     # Create the output folder containing the prepared proteins
     if not os.path.exists(folderName):
