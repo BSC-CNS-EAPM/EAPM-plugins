@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Blocks &#8212; EAPM-plugins 0.1 documentation</title>
+    <title>Blocks &#8212; EAPM-plugins 0.2 documentation</title>
   
   
   
@@ -36,7 +36,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script src="../_static/documentation_options.js?v=1b390748"></script>
+    <script src="../_static/documentation_options.js?v=3b889da3"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -433,6 +433,7 @@ option (highlighted in blue) and then clicking on “New Remote” located in th
 <li><p><a class="reference internal" href="#hmmbuild"><span class="std std-ref">HmmBuild</span></a></p></li>
 <li><p><a class="reference internal" href="#hmmsearch"><span class="std std-ref">HmmSearch</span></a></p></li>
 <li><p><a class="reference internal" href="#asite-design"><span class="std std-ref">AsiteDesign</span></a></p></li>
+<li><p><a class="reference internal" href="#ahatool"><span class="std std-ref">Ahatool</span></a></p></li>
 </ul>
 <section id="alphafold">
 <span id="id1"></span><h3>Alphafold<a class="headerlink" href="#alphafold" title="Link to this heading">#</a></h3>
@@ -810,6 +811,28 @@ the consensus of a multiple sequence alignment.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">Container</span></code>: If you are launching the block in a container. The container to use.</p></li>
 </ul>
 </section>
+<section id="ahatool">
+<span id="id12"></span><h3>Ahatool<a class="headerlink" href="#ahatool" title="Link to this heading">#</a></h3>
+<p>AHATool an Automatic HMM and Analysis Tool.</p>
+<a class="reference internal image-reference" href="blocks/imgs/ahatool.png"><img alt="Horus AHATool block" class="align-center" src="blocks/imgs/ahatool.png" style="width: 350px;" /></a>
+<p><em>Input</em>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Database</span> <span class="pre">path</span></code>: The database where the search will be done.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Container</span> <span class="pre">name</span></code>: The container to use.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Input</span> <span class="pre">fasta</span></code>: The fasta file with the sequences to search.</p></li>
+</ul>
+<p><em>Output</em>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Output</span> <span class="pre">folder</span></code>: Folder with the output of the search.</p></li>
+</ul>
+<p><em>Parameters</em>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Prefix</span></code>: The prefix the tool will use for produced files.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Start</span></code>: From where to start the search (search or build).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">E-value</span></code>: The e-value to use in the search (1e-10).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Threads</span></code>: The number of threads to use in the search (1,2,4).</p></li>
+</ul>
+</section>
 </section>
 </section>
 
@@ -880,6 +903,7 @@ the consensus of a multiple sequence alignment.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hmmbuild">HmmBuild</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hmmsearch">HmmSearch</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#asitedesign">AsiteDesign</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ahatool">Ahatool</a></li>
 </ul>
 </li>
 </ul>
