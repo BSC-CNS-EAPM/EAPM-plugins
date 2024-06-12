@@ -193,16 +193,16 @@ iterations = PluginVariable(
 )
 
 
-def runEppred(block: SlurmBlock):
+def run_eppred(block: SlurmBlock):
 
     import os
 
     inputfasta = block.inputs.get("input_fasta", None)
 
     if inputfasta is None:
-        raise Exception("No input fasta provided")
+        raise ValueError("No input fasta provided")
     if not os.path.exists(inputfasta):
-        raise Exception(f"The input fasta file does not exist: {inputfasta}")
+        raise FileNotFoundError(f"The input fasta file does not exist: {inputfasta}")
 
     command = "python -m ep_pred.Launch "
     command += f"-i {inputfasta} "
@@ -230,69 +230,69 @@ def runEppred(block: SlurmBlock):
     filtered_out = block.variables.get("filtered_out", None)
     if filtered_out is not None:
         command += f"-fo {filtered_out} "
-    dbinp = block.variables.get("dbinp", None)
-    if dbinp is not None:
-        command += f"-di {dbinp} "
-    dbout = block.variables.get("dbout", None)
-    if dbout is not None:
-        command += f"-do {dbout} "
+    _dbinp = block.variables.get("dbinp", None)
+    if _dbinp is not None:
+        command += f"-di {_dbinp} "
+    _dbout = block.variables.get("dbout", None)
+    if _dbout is not None:
+        command += f"-do {_dbout} "
     res_dir = block.variables.get("res_dir", None)
     if res_dir is not None:
         command += f"-rs {res_dir} "
     num_similar_samples = block.variables.get("num_similar_samples", None)
     if num_similar_samples is not None:
         command += f"-nss {num_similar_samples} "
-    restart = block.variables.get("restart", "feature")
-    if restart is not None:
-        command += f"-re {restart} "
+    _restart = block.variables.get("restart", "feature")
+    if _restart is not None:
+        command += f"-re {_restart} "
     filter_only = block.variables.get("filter_only", None)
     if filter_only is not None:
         command += f"-on {filter_only} "
     extraction_restart = block.variables.get("extraction_restart", None)
     if extraction_restart is not None:
         command += f"-er {extraction_restart} "
-    long = block.variables.get("long", None)
-    if long is not None:
-        command += f"-lg {long} "
-    run = block.variables.get("run", None)
-    if run is not None:
-        command += f"-r {run} "
-    start = block.variables.get("start", None)
-    if start is not None:
-        command += f"-st {start} "
-    end = block.variables.get("end", None)
-    if end is not None:
-        command += f"-en {end} "
+    _long = block.variables.get("long", None)
+    if _long is not None:
+        command += f"-lg {_long} "
+    _run = block.variables.get("run", None)
+    if _run is not None:
+        command += f"-r {_run} "
+    _start = block.variables.get("start", None)
+    if _start is not None:
+        command += f"-st {_start} "
+    _end = block.variables.get("end", None)
+    if _end is not None:
+        command += f"-en {_end} "
     sbatch_path = block.variables.get("sbatch_path", None)
     if sbatch_path is not None:
         command += f"-sp {sbatch_path} "
-    value = block.variables.get("value", None)
-    if value is not None:
-        command += f"-v {value} "
-    iterations = block.variables.get("iterations", None)
-    if iterations is not None:
-        command += f"-iter {iterations} "
+    _value = block.variables.get("value", None)
+    if _value is not None:
+        command += f"-v {_value} "
+    _iterations = block.variables.get("iterations", None)
+    if _iterations is not None:
+        command += f"-iter {_iterations} "
 
     jobs = [command]
 
-    folderName = block.variables.get("folder_name", "epPred")
-    block.extraData["folder_name"] = folderName
-    removeExisting = block.variables.get("remove_existing_results", False)
+    folder_name = block.variables.get("folder_name", "epPred")
+    block.extraData["folder_name"] = folder_name
+    remove_existing = block.variables.get("remove_existing_results", False)
 
     # If folder already exists, raise exception
-    if removeExisting and os.path.exists(folderName):
-        os.system("rm -rf " + folderName)
+    if remove_existing and os.path.exists(folder_name):
+        os.system("rm -rf " + folder_name)
 
-    if not removeExisting and os.path.exists(folderName):
-        raise Exception(
+    if not remove_existing and os.path.exists(folder_name):
+        raise FileExistsError(
             "The folder {} already exists. Please, choose another name or remove it.".format(
-                folderName
+                folder_name
             )
         )
 
     # Create an copy the inputs
-    os.makedirs(folderName, exist_ok=True)
-    os.system(f"cp {inputfasta} {folderName}")
+    os.makedirs(folder_name, exist_ok=True)
+    os.system(f"cp {inputfasta} {folder_name}")
 
     from utils import launchCalculationAction
 
@@ -301,7 +301,7 @@ def runEppred(block: SlurmBlock):
         jobs,
         program="epPred",
         uploadFolders=[
-            folderName,
+            folder_name,
         ],
     )
 
@@ -315,7 +315,7 @@ from utils import BSC_JOB_VARIABLES
 epPredBlock = SlurmBlock(
     name="Ep-pred",
     id="ep_pred",
-    initialAction=runEppred,
+    initialAction=run_eppred,
     finalAction=finalAction,
     description="A machine learning program to predict promiscuity of esterases.",
     inputs=[inputFasta],

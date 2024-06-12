@@ -40,25 +40,28 @@ hmmOutput = PluginVariable(
 # ==========================#
 
 
-def convertMSA2HMM(block: PluginBlock):
+def convert_msa_2_hmm(block: PluginBlock):
     """
     Convert MSA to HMM
     """
+    # pylint: disable=import-outside-toplevel
     import os
 
     import pyhmmer
+    from pyhmmer.easel import MSAFile
 
+    # pylint: enable=import-outside-toplevel
     # Loading plugin variables
-    inputMSA = block.inputs.get("input_file_msa")
-    if inputMSA is None:
-        raise Exception("No input MSA provided")
+    input_msa = block.inputs.get(inputFileMSA.id, None)
+    if input_msa is None:
+        raise ValueError("No input MSA provided")
 
-    if not os.path.exists(inputMSA):
-        raise Exception(f"The input MSA file does not exist: {inputMSA}")
+    if not os.path.exists(input_msa):
+        raise ValueError(f"The input MSA file does not exist: {input_msa}")
 
     alphabet = pyhmmer.easel.Alphabet.amino()
 
-    with pyhmmer.easel.MSAFile(inputMSA, digital=True, alphabet=alphabet) as msa_file:
+    with MSAFile(input_msa, digital=True, alphabet=alphabet) as msa_file:
         msa = msa_file.read()
         msa.name = b"input_msa"
 
@@ -93,5 +96,5 @@ convertMSAToHMMBlock = PluginBlock(
     ],
     variables=[],
     outputs=[hmmOutput],
-    action=convertMSA2HMM,
+    action=convert_msa_2_hmm,
 )

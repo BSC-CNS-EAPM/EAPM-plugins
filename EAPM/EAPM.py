@@ -2,126 +2,129 @@
 Entry point for the EAPM plugin
 """
 
-from HorusAPI import Plugin, PluginConfig
+from HorusAPI import Plugin
 
 
-def createPlugin():
+def create_plugin():
     """
     Generates the EAPM plugin and returns the instance
     """
     # ========== Plugin Definition ========== #
 
-    eapmPlugin = Plugin(id="EAPM")
+    eapm_plugin = Plugin(id="EAPM")
 
     # ========== Blocks ========== #
-    from Blocks.AlphaFoldEAPM import alphafoldBlock  # type: ignore
+    # pylint: disable=import-outside-toplevel
+    from Blocks.alphafold import alphafoldBlock
 
     # Add the block to the plugin
-    eapmPlugin.addBlock(alphafoldBlock)
+    eapm_plugin.addBlock(alphafoldBlock)
 
-    from Blocks.PrepWizardEAPM import prepWizardBlock  # type: ignore
+    from Blocks.prepwizard import prepWizardBlock
 
-    eapmPlugin.addBlock(prepWizardBlock)
+    eapm_plugin.addBlock(prepWizardBlock)
 
-    from Blocks.AlignPdbEAPM import alignBlock  # type: ignore
+    from Blocks.align_pdb import alignBlock
 
-    eapmPlugin.addBlock(alignBlock)
+    eapm_plugin.addBlock(alignBlock)
 
-    from Blocks.SetupDockingGrid import setupDockingGrid  # type: ignore
+    from Blocks.setup_docking_grid import setupDockingGrid
 
-    eapmPlugin.addBlock(setupDockingGrid)
+    eapm_plugin.addBlock(setupDockingGrid)
 
-    from Blocks.AnalyseGlideDocking import analyseGlideDocking  # type: ignore
+    # from Blocks.analyse_glide_docking import analyseGlideDocking
 
-    eapmPlugin.addBlock(analyseGlideDocking)
+    # eapm_plugin.addBlock(analyseGlideDocking)
 
-    from Blocks.PDBToMAE import convertPDBToMAEBlock  # type: ignore
+    from Blocks.pdb_2_mae import convertPDBToMAEBlock
 
-    eapmPlugin.addBlock(convertPDBToMAEBlock)
+    eapm_plugin.addBlock(convertPDBToMAEBlock)
 
-    from Blocks.TrimAlphafoldModels import trimAlphaFoldModelsBlock  # type: ignore
+    from Blocks.trim_alphafold_models import trimAlphaFoldModelsBlock
 
-    eapmPlugin.addBlock(trimAlphaFoldModelsBlock)
+    eapm_plugin.addBlock(trimAlphaFoldModelsBlock)
 
-    from Blocks.SetupGlide import setupGlideBlock  # type: ignore
+    from Blocks.setup_glide import setupGlideBlock
 
-    eapmPlugin.addBlock(setupGlideBlock)
+    eapm_plugin.addBlock(setupGlideBlock)
 
-    from Blocks.PeleEAPM import peleBlock  # type: ignore
+    from Blocks.pele import peleBlock
 
-    eapmPlugin.addBlock(peleBlock)
+    eapm_plugin.addBlock(peleBlock)
 
-    from Blocks.AnalysePELE import analysePELEBlock  # type: ignore
+    from Blocks.analyse_PELE import analysePELEBlock
 
-    eapmPlugin.addBlock(analysePELEBlock)
+    eapm_plugin.addBlock(analysePELEBlock)
 
-    from Blocks.ConservedResiduesMSA import conservedResiduesMSABlock  # type: ignore
+    from Blocks.conserved_residues import conservedResiduesMSABlock
 
-    eapmPlugin.addBlock(conservedResiduesMSABlock)
+    eapm_plugin.addBlock(conservedResiduesMSABlock)
 
-    from Blocks.Mafft import multipleSequenceAlignmentBlock  # type: ignore
+    from Blocks.mafft import multipleSequenceAlignmentBlock
 
-    eapmPlugin.addBlock(multipleSequenceAlignmentBlock)
+    eapm_plugin.addBlock(multipleSequenceAlignmentBlock)
 
-    from Blocks.HmmBuild import hmmBuildBlock  # type: ignore
+    from Blocks.hmmbuild import hmmBuildBlock
 
-    eapmPlugin.addBlock(hmmBuildBlock)
+    eapm_plugin.addBlock(hmmBuildBlock)
 
-    from Blocks.HmmSearch import hmmSearchBlock  # type: ignore
+    from Blocks.hmmsearch import hmmSearchBlock
 
-    eapmPlugin.addBlock(hmmSearchBlock)
+    eapm_plugin.addBlock(hmmSearchBlock)
 
-    from Blocks.HmmScan import hmmScanBlock  # type: ignore
+    from Blocks.hmmscan import hmmScanBlock
 
-    eapmPlugin.addBlock(hmmScanBlock)
+    eapm_plugin.addBlock(hmmScanBlock)
 
-    from Blocks.HmmAlign import hmmAlignBlock  # type: ignore
+    from Blocks.hmmalign import hmmAlignBlock
 
-    eapmPlugin.addBlock(hmmAlignBlock)
+    eapm_plugin.addBlock(hmmAlignBlock)
 
-    from Blocks.JackHmmer import jackHmmerBlock  # type: ignore
+    from Blocks.jackhmmer import jackHmmerBlock
 
-    eapmPlugin.addBlock(jackHmmerBlock)
+    eapm_plugin.addBlock(jackHmmerBlock)
 
-    from Blocks.AsiteDesign import asiteDesignBlock  # type: ignore
+    from Blocks.asitedesign import asiteDesignBlock
 
-    eapmPlugin.addBlock(asiteDesignBlock)
+    eapm_plugin.addBlock(asiteDesignBlock)
 
-    from Blocks.Ahatool import ahatoolBlock  # type: ignore
+    from Blocks.ahatool import ahatoolBlock
 
-    eapmPlugin.addBlock(ahatoolBlock)
+    eapm_plugin.addBlock(ahatoolBlock)
 
-    from Blocks.EpPred import epPredBlock  # type: ignore
+    from Blocks.ep_pred import epPredBlock
 
-    eapmPlugin.addBlock(epPredBlock)
+    eapm_plugin.addBlock(epPredBlock)
 
-    # from Blocks.testBlock import testBlock  # type: ignore
+    # from Blocks.testBlock import testBlock
 
-    # eapmPlugin.addBlock(testBlock)
+    # eapm_plugin.addBlock(testBlock)
 
-    from Blocks.AnalyseGlide import AnalyseGBlock  # type: ignore
+    from Blocks.analyse_glide import AnalyseGBlock
 
-    eapmPlugin.addBlock(AnalyseGBlock)
+    eapm_plugin.addBlock(AnalyseGBlock)
 
-    # from Blocks.Rbcavity import rbCavityBlock  # type: ignore
+    # from Blocks.Rbcavity import rbCavityBlock
 
-    # eapmPlugin.addBlock(rbCavityBlock)
+    # eapm_plugin.addBlock(rbCavityBlock)
 
-    # from Blocks.Rbdock import rbDockBlock  # type: ignore
+    # from Blocks.Rbdock import rbDockBlock
 
-    # eapmPlugin.addBlock(rbDockBlock)
+    # eapm_plugin.addBlock(rbDockBlock)
 
     # Add the configs
-    from Configs.mafftConfig import mafftExecutableConfig  # type: ignore
+    from Configs.mafftConfig import mafftExecutableConfig
 
-    eapmPlugin.addConfig(mafftExecutableConfig)
+    eapm_plugin.addConfig(mafftExecutableConfig)
 
-    from Configs.hmmerConfig import hmmerExecutableConfig  # type: ignore
+    from Configs.hmmerConfig import hmmerExecutableConfig
 
-    eapmPlugin.addConfig(hmmerExecutableConfig)
+    eapm_plugin.addConfig(hmmerExecutableConfig)
+
+    # pylint: enable=import-outside-toplevel
 
     # Return the plugin
-    return eapmPlugin
+    return eapm_plugin
 
 
-plugin = createPlugin()
+plugin = create_plugin()

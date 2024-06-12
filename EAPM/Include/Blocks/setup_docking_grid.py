@@ -1,4 +1,9 @@
+"""
+Module containing the setup docking grid block for the EAPM plugin
+"""
+
 from HorusAPI import PluginVariable, SlurmBlock, VariableGroup, VariableTypes
+from utils import BSC_JOB_VARIABLES
 
 # Input variables
 modelFolderVariable = PluginVariable(
@@ -20,14 +25,16 @@ ligandFolderVariable = PluginVariable(
 dockingCenterVariable = PluginVariable(
     id="outer_box",
     name="Outer box",
-    description="Select the center of the box for docking. This will define the outer box size too.",
+    description="Select the center of the box for docking. "
+    "This will define the outer box size too.",
     type=VariableTypes.SPHERE,
 )
 
 innerBoxVariable = PluginVariable(
     id="inner_box",
     name="Inner Box",
-    description="Select the inner box size for docking. From this variable only the radius will be used.",
+    description="Select the inner box size for docking. "
+    "From this variable only the radius will be used.",
     type=VariableTypes.SPHERE,
 )
 
@@ -42,20 +49,40 @@ gridOutputVariable = PluginVariable(
 
 
 # Action
-def glideDocking(block: SlurmBlock):
+def glide_docking(block: SlurmBlock):
+    """
+    Performs Glide docking for a given block.
+
+    Args:
+        block (SlurmBlock): The SlurmBlock object containing the necessary inputs.
+
+    Raises:
+        Exception: If the models folder is not valid or not selected.
+        Exception: If the ligands folder is not valid or not selected.
+        Exception: If any ligand file has the extension '.pdb'.
+        Exception: If no valid models are found in the models folder.
+        Exception: If no jobs are created (Glide may not be correctly installed).
+
+    Returns:
+        None
+    """
+    # pylint: disable=import-outside-toplevel
     import os
 
     import prepare_proteins
+    from utils import launchCalculationAction
 
-    models_folder = block.inputs.get("model_folder")
+    # pylint: enable=import-outside-toplevel
+
+    models_folder = block.inputs.get(modelFolderVariable.id, None)
 
     if models_folder is None or not os.path.isdir(models_folder):
-        raise Exception("No valid models folder selected")
+        raise ValueError("No valid models folder selected")
 
     ligand_folder = block.inputs.get("ligand_folder")
 
     if ligandFolderVariable is None or not os.path.isdir(ligand_folder):
-        raise Exception("No valid ligands folder selected")
+        raise ValueError("No valid ligands folder selected")
 
     docking_center = block.inputs["outer_box"]
     radius = docking_center["radius"]
@@ -66,14 +93,16 @@ def glideDocking(block: SlurmBlock):
 
     for ligand in os.listdir(ligand_folder):
         if ligand.endswith(".pdb"):
-            raise Exception(
-                "PDB files are not supported as ligands. Please convert to MAE using the 'PDB to MAE' block"
+            raise ValueError(
+                "PDB files are not supported as ligands. "
+                "Please convert to MAE using the 'PDB to MAE' block"
             )
 
     # for model in os.listdir(models_folder):
     #     if model.endswith(".pdb"):
-    #         raise Exception(
-    #             "PDB files are not supported as models. Please convert to MAE using the 'PDB to MAE' block"
+    #         raise ValueError(
+    #             "PDB files are not supported as models."
+    #             "Please convert to MAE using the 'PDB to MAE' block"
     #         )
 
     # # Get the PDB models
@@ -81,7 +110,9 @@ def glideDocking(block: SlurmBlock):
 
     # if not os.path.isdir(pdb_models_folder):
     #     raise Exception(
-    #         f"PDB models folder ({pdb_models_folder}) not found. Please convert the models to PDB using the 'MAE to PDB' block and keep the original PDB models folder"
+    #         f"PDB models folder ({pdb_models_folder}) not found. "
+    #           "Please convert the models to PDB using the 'MAE to PDB' "
+    #           "block and keep the original PDB models folder"
     #     )
 
     models = prepare_proteins.proteinModels(models_folder)
@@ -90,7 +121,7 @@ def glideDocking(block: SlurmBlock):
         # Get the common residues
         common_residues = block.inputs.get("multimodel_common_residue", {})
 
-        # Parse the atomcenter for each model
+        # Parse the atom center for each model
         center_atoms = {}  # Create dictionary to store the atom 3-element tuple for each model
         for model in models:  # Iterate the models inside the library
             for r in models.structures[
@@ -103,7 +134,7 @@ def glideDocking(block: SlurmBlock):
                         r.get_parent().id,
                         r.id[1],
                         RESIDUE_DICTIONARY[r.resname],
-                    )  # Store the corresponsing tuple.
+                    )  # Store the corresponding tuple.
     else:
         # Create a fake center_atoms variable for the library
         center_atoms = {}
@@ -115,7 +146,7 @@ def glideDocking(block: SlurmBlock):
 
     # If the center_atoms is empty, raise an exception
     if len(center_atoms) == 0:
-        raise Exception("No valid models found in the models folder")
+        raise ValueError("No valid models found in the models folder")
 
     # Create a box from the radius
     radius = int(radius)
@@ -129,7 +160,7 @@ def glideDocking(block: SlurmBlock):
         center_atoms,
         innerbox=innerbox,
         outerbox=outerbox,
-    )  # Set grid calcualtion
+    )  # Set grid calculation
 
     # Copy the models .mae to the grid/input_models folder
     for model in os.listdir(models_folder):
@@ -142,15 +173,25 @@ def glideDocking(block: SlurmBlock):
     os.system("rm grid/input_models/*.pdb")
 
     if len(jobs) == 0:
-        raise Exception("No jobs created. Is Glide correctly installed?")
-
-    from utils import launchCalculationAction
+        raise ValueError("No jobs created. Is Glide correctly installed?")
 
     launchCalculationAction(block, jobs, "schrodinger", ["grid"])
 
 
-def downloadGridResults(block: SlurmBlock):
+def download_grid(block: SlurmBlock):
+    """
+    Downloads the grid for docking.
+
+    Args:
+        block (SlurmBlock): The SlurmBlock object representing the current block.
+
+    Returns:
+        None
+    """
+    # pylint: disable=import-outside-toplevel
     from utils import downloadResultsAction
+
+    # pylint: enable=import-outside-toplevel
 
     downloadResultsAction(block)
 
@@ -163,14 +204,12 @@ def downloadGridResults(block: SlurmBlock):
     block.setOutput("grid_output", grid_output)
 
 
-from utils import BSC_JOB_VARIABLES
-
 setupDockingGrid = SlurmBlock(
     name="Setup Docking Grid",
     id="setup_docking_grid",
     description="Prepare the files for a GLIDE docking calculation",
-    initialAction=glideDocking,
-    finalAction=downloadGridResults,
+    initialAction=glide_docking,
+    finalAction=download_grid,
     inputGroups=[
         VariableGroup(
             id="single_model",

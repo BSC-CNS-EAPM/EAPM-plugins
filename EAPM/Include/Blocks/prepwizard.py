@@ -3,6 +3,7 @@ Module containing the PrepWizard block for the EAPM plugin
 """
 
 from HorusAPI import PluginVariable, SlurmBlock, VariableGroup, VariableTypes
+from utils import BSC_JOB_VARIABLES
 
 # ==========================#
 # Variable inputs
@@ -131,16 +132,22 @@ noProtAssignPW = PluginVariable(
 
 
 # PrepWizard action block
-def prepWizardAction(block: SlurmBlock):
+def prepwizard_action(block: SlurmBlock):
     """
     Initial action of the block. It prepares the simulation and sends it to the remote.
 
     Args:
         block (SlurmBlock): The block to run the action on.
     """
-
+    # pylint: disable=import-outside-toplevel
     import os
     import time
+    import traceback
+
+    import prepare_proteins
+    from utils import launchCalculationAction
+
+    # pylint: enable=import-outside-toplevel
 
     if block.selectedInputGroup == fileVariableGroup.id:
         input_file = block.inputs.get(inputFilePW.id, None)
@@ -152,24 +159,22 @@ def prepWizardAction(block: SlurmBlock):
     elif block.selectedInputGroup == folderVariableGroup.id:
         input_folder = block.inputs.get(inputFolderPW.id, None)
     else:
-        raise Exception("No input selected")
+        raise ValueError("No input selected")
 
     # Get prepWizard variables
-    folderName = block.variables.get(folderNameVariable.id, "prepared_proteins")
-    if os.path.exists(folderName):
-        folderName = folderName + "_" + str(time.time())
-        block.extraData[folderNameVariable.id] = folderName
+    folder_name = block.variables.get(folderNameVariable.id, "prepared_proteins")
+    if os.path.exists(folder_name):
+        folder_name = folder_name + "_" + str(time.time())
+        block.extraData[folderNameVariable.id] = folder_name
     ph = int(block.variables.get(phPW.id, 7))
-    epikPH = block.variables.get(epikPHPW.id, False)
-    sampleWater = block.variables.get(sampleWaterPW.id, False)
-    removeHydrogens = block.variables.get(removeHydrogensPW.id, False)
-    delWaterHbondCutOff = block.variables.get(delWaterHbondCutOffPW.id, False)
-    fillLoops = block.variables.get(fillLoopsPW.id, False)
-    protonationStates = block.variables.get(protonationStatesPW.id, None)
+    epik_ph = block.variables.get(epikPHPW.id, False)
+    sample_water = block.variables.get(sampleWaterPW.id, False)
+    remove_hydrogens = block.variables.get(removeHydrogensPW.id, False)
+    del_water_hbond_cutoff = block.variables.get(delWaterHbondCutOffPW.id, False)
+    fill_loops = block.variables.get(fillLoopsPW.id, False)
+    protonation_states = block.variables.get(protonationStatesPW.id, None)
     noepik = block.variables.get(noepikPW.id, False)
-    noProtAssign = block.variables.get(noProtAssignPW.id, False)
-
-    import prepare_proteins
+    no_prot_assign = block.variables.get(noProtAssignPW.id, False)
 
     print("Loading pdbs files...")
 
@@ -177,69 +182,76 @@ def prepWizardAction(block: SlurmBlock):
 
     print("Setting up PrepWizard Optimitzations...")
 
-    folderNameWizard = folderName + "_wizard"
+    folder_name_wizard = folder_name + "_wizard"
 
-    if block.remote.name.lower() == "local":
-        prime = False
-    else:
-        prime = True
+    # if block.remote.name.lower() == "local":
+    #     prime = False
+    # else:
+    #     prime = True
 
     try:
         jobs = models.setUpPrepwizardOptimization(
-            prepare_folder=folderNameWizard,
+            prepare_folder=folder_name_wizard,
             pH=ph,
-            epik_pH=epikPH,
-            samplewater=sampleWater,
-            remove_hydrogens=removeHydrogens,
-            delwater_hbond_cutoff=delWaterHbondCutOff,
-            fill_loops=fillLoops,
-            protonation_states=protonationStates,
+            epik_pH=epik_ph,
+            samplewater=sample_water,
+            remove_hydrogens=remove_hydrogens,
+            delwater_hbond_cutoff=del_water_hbond_cutoff,
+            fill_loops=fill_loops,
+            protonation_states=protonation_states,
             noepik=noepik,
-            noprotassign=noProtAssign,
+            noprotassign=no_prot_assign,
             # prime=prime,
         )
-    except Exception as exc:
-        import traceback
+    except ValueError as exc:
 
         trace = traceback.format_exc()
 
-        raise Exception(f"Error setting up PrepWizard optimization: {trace}") from exc
+        raise ValueError(f"Error setting up PrepWizard optimization: {trace}") from exc
 
     print("Jobs ready to be run.")
 
-    from utils import launchCalculationAction
-
-    launchCalculationAction(block, jobs, "schrodinger", [folderNameWizard])
+    launchCalculationAction(block, jobs, "schrodinger", [folder_name_wizard])
 
 
-def downloadPrepWizardResults(block: SlurmBlock):
+def final_prepwizard(block: SlurmBlock):
+    """
+    Downloads the results of the PrepWizard job and moves the prepared
+    proteins to the output folder.
+
+    Args:
+        block (SlurmBlock): The SlurmBlock object representing the PrepWizard job.
+
+    Returns:
+        None
+    """
+    # pylint: disable=import-outside-toplevel
     import os
+    import shutil
 
     from utils import downloadResultsAction
 
+    # pylint: enable=import-outside-toplevel
+
     downloadResultsAction(block)
 
-    folderName = block.extraData[folderNameVariable.id]
+    folder_name = block.extraData[folderNameVariable.id]
 
     # Create the output folder containing the prepared proteins
-    if not os.path.exists(folderName):
-        os.mkdir(folderName)
-
-    import shutil
+    if not os.path.exists(folder_name):
+        os.mkdir(folder_name)
 
     # Move the prepared proteins to the output folder
-    for model in os.listdir(os.path.join(folderName + "_wizard", "output_models")):
-        for file in os.listdir(os.path.join(folderName + "_wizard", "output_models", model)):
+    for model in os.listdir(os.path.join(folder_name + "_wizard", "output_models")):
+        for file in os.listdir(os.path.join(folder_name + "_wizard", "output_models", model)):
             if file.endswith(".pdb"):
-                finalPath = os.path.join(folderName, file)
-                pdbPath = os.path.join(folderName + "_wizard", "output_models", model, file)
-                shutil.copyfile(pdbPath, finalPath)
+                final_path = os.path.join(folder_name, file)
+                pdb_path = os.path.join(folder_name + "_wizard", "output_models", model, file)
+                shutil.copyfile(pdb_path, final_path)
 
-    block.setOutput(outputPDB.id, finalPath)
-    block.setOutput(outputPW.id, folderName)
+    block.setOutput(outputPDB.id, final_path)
+    block.setOutput(outputPW.id, folder_name)
 
-
-from utils import BSC_JOB_VARIABLES
 
 block_variables = BSC_JOB_VARIABLES + [
     folderNameVariable,
@@ -259,8 +271,8 @@ prepWizardBlock = SlurmBlock(
     name="PrepWizard",
     id="PrepWizard",
     description="Run Preparation Wizard optimization. (For AMD cluster, workstations and local)",
-    initialAction=prepWizardAction,
-    finalAction=downloadPrepWizardResults,
+    initialAction=prepwizard_action,
+    finalAction=final_prepwizard,
     variables=block_variables,
     inputGroups=[folderVariableGroup, fileVariableGroup],
     outputs=[outputPDB, outputPW],

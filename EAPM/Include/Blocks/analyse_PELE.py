@@ -1,3 +1,7 @@
+"""
+Module containing the analyse PELE block for the EAPM plugin
+"""
+
 from HorusAPI import PluginBlock, PluginVariable, VariableTypes
 
 peleOutputFolderInput = PluginVariable(
@@ -9,13 +13,28 @@ peleOutputFolderInput = PluginVariable(
 )
 
 
-def analysePELE(block: PluginBlock):
-    peleFolder = block.inputs.get("pele_folder", "pele")
+def analyse_PELE(block: PluginBlock):
+    """
+    Analyze PELE data and calculates catalytic distances.
 
+    Args:
+        block (PluginBlock): The PluginBlock object representing the PELE block.
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
+    # pylint: disable=import-outside-toplevel
     import pele_analysis
 
+    # pylint: enable=import-outside-toplevel
+
+    pele_folder = block.inputs.get(peleOutputFolderInput.id, "pele")
+
     pele = pele_analysis.peleAnalysis(
-        peleFolder,
+        pele_folder,
         verbose=True,
         separator="-",
         trajectories=False,
@@ -67,7 +86,7 @@ analysePELEBlock = PluginBlock(
     name="Analyse PELE",
     id="analyse_pele",
     description="Analyse PELE output",
-    action=analysePELE,
+    action=analyse_PELE,
     inputs=[peleOutputFolderInput],
     variables=[],
     outputs=[],

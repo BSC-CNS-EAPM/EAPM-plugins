@@ -1,6 +1,8 @@
-from HorusAPI import PluginBlock, PluginVariable, VariableGroup, VariableTypes
+"""
+Module containing the analyse glide block for the EAPM plugin
+"""
 
-# TODO  Configure the inputs correctly
+from HorusAPI import PluginBlock, PluginVariable, VariableGroup, VariableTypes
 
 # ==========================#
 # Variable inputs
@@ -121,9 +123,27 @@ separatorVar = PluginVariable(
 )
 
 
-def finalAction(block: PluginBlock):
+def final_action(block: PluginBlock):
+    """
+    Perform the final action for the Glide analysis.
+
+    Args:
+        block (PluginBlock): The PluginBlock object representing the current block.
+
+    Raises:
+        ValueError: If conserved residues are not provided
+        or if conserved indexes are not an integer or a dictionary of integers.
+
+    Returns:
+        None
+    """
+    # pylint: disable=import-outside-toplevel
+
+    import pickle
 
     import prepare_proteins
+
+    # pylint: enable=import-outside-toplevel
 
     bsc_result = block.inputs.get(glideOutputVariable.id, None)
     folder_to_analyse = bsc_result["dock_folder"]
@@ -156,8 +176,10 @@ def finalAction(block: PluginBlock):
     if not isinstance(conserved_indexes, dict):
         try:
             conserved_indexes = int(conserved_indexes)
-        except ValueError:
-            raise ValueError("Conserved indexes must be an integer or a dictionary of integers")
+        except ValueError as exc:
+            raise ValueError(
+                "Conserved indexes must be an integer or a dictionary of integers"
+            ) from exc
         conserved_indexes_f = {}
         for model in models:
             conserved_indexes_f[model] = [conserved_indexes]
@@ -172,7 +194,7 @@ def finalAction(block: PluginBlock):
             if r.id[1] in conserved_indexes[model]:
                 # Assert that the residue has the correct residue identity
                 if r.resname == res_name_prot:
-                    # Store the corresponsing tuple.
+                    # Store the corresponding tuple.
                     center_atom[model] = (r.get_parent().id, r.id[1], atom_name_prot)
                     break
 
@@ -207,24 +229,23 @@ def finalAction(block: PluginBlock):
 
     block.setOutput(outputModelsVariable.id, "best_docking_poses")
 
-    glideOutput = {
+    glide_output = {
         "poses_folder": "best_docking_poses",
         "models_folder": model_folder,  # "prepared_proteins",
         "atom_pairs": atom_pairs,
     }
-    import pickle
 
     with open("glide_output.pkl", "wb") as f:
-        pickle.dump(glideOutput, f)
+        pickle.dump(glide_output, f)
 
-    block.setOutput(analyseGlideOutputVariable.id, glideOutput)
+    block.setOutput(analyseGlideOutputVariable.id, glide_output)
 
 
 AnalyseGBlock = PluginBlock(
     name="Analyse Glide",
     id="Analyse_Glide",
     description="To analyse Glide results",
-    action=finalAction,
+    action=final_action,
     variables=[metricsVar, removePreviousVar, separatorVar],
     inputGroups=[atomGroup, stringGroup],
     outputs=[outputModelsVariable, analyseGlideOutputVariable],

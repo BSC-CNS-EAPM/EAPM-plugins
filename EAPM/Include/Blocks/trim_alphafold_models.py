@@ -1,3 +1,7 @@
+"""
+Module containing the trim alphafold models block for the EAPM plugin
+"""
+
 from HorusAPI import PluginBlock, PluginVariable, VariableTypes
 
 resultsFolderAF = PluginVariable(
@@ -11,7 +15,8 @@ resultsFolderAF = PluginVariable(
 confidenceThresholdAF = PluginVariable(
     name="Confidence threshold",
     id="confidence_threshold",
-    description="Threshold confidence indicates the maximum confidence score at which to stop the trimming of terminal regions.",
+    description="Threshold confidence indicates the maximum"
+    "confidence score at which to stop the trimming of terminal regions.",
     type=VariableTypes.FLOAT,
     defaultValue=90.0,
 )
@@ -33,15 +38,31 @@ trimmedModelsOutputAF = PluginVariable(
 )
 
 
-def trimAlphaFoldModels(block: PluginBlock):
+def trim_alphafold_models(block: PluginBlock):
+    """
+    Trims AlphaFold models based on confidence scores.
+
+    Args:
+        block (PluginBlock): The PluginBlock object representing the current block.
+
+    Raises:
+        ValueError: If no models folder is selected.
+
+    Returns:
+        None
+    """
+    # pylint: disable=import-outside-toplevel
     import os
     import shutil
 
+    import prepare_proteins
+
+    # pylint: enable=import-outside-toplevel
     # Get the models folder
-    models_folder = block.inputs.get("results_folder", None)
+    models_folder = block.inputs.get(resultsFolderAF.id, None)
 
     if models_folder is None:
-        raise Exception("No models folder selected")
+        raise ValueError("No models folder selected")
 
     # Create the untrimmed_models folder
     untrimmed_folder = os.path.join(os.getcwd(), "untrimmed_models")
@@ -59,15 +80,13 @@ def trimAlphaFoldModels(block: PluginBlock):
                 os.path.join(untrimmed_folder, new_model_filename),
             )
 
-    import prepare_proteins
-
     print(f"Loading models from {untrimmed_folder}...")
     models = prepare_proteins.proteinModels(untrimmed_folder)
 
     print("Trimming the models...")
-    confidenceThreshold = float(block.variables.get("confidence_threshold", 90))
+    confidence_threshold = float(block.variables.get(confidenceThresholdAF.id, 90))
 
-    models.removeTerminiByConfidenceScore(confidenceThreshold)
+    models.removeTerminiByConfidenceScore(confidence_threshold)
 
     print("Saving trimmed models")
     models.saveModels("trimmed_models")
@@ -82,13 +101,13 @@ def trimAlphaFoldModels(block: PluginBlock):
     # Set the output
     block.setOutput(trimmedModelsOutputAF.id, trimmed_folder)
 
-    outPdb = None
+    out_pdb = None
     for file in os.listdir(trimmed_folder):
         if file.endswith(".pdb"):
-            outPdb = os.path.join(trimmed_folder, file)
+            out_pdb = os.path.join(trimmed_folder, file)
             break
 
-    block.setOutput(outputPDBAF.id, outPdb)
+    block.setOutput(outputPDBAF.id, out_pdb)
 
 
 trimAlphaFoldModelsBlock = PluginBlock(
@@ -103,5 +122,5 @@ trimAlphaFoldModelsBlock = PluginBlock(
         outputPDBAF,
         trimmedModelsOutputAF,
     ],
-    action=trimAlphaFoldModels,
+    action=trim_alphafold_models,
 )

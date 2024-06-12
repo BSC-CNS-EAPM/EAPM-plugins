@@ -9,7 +9,7 @@
 project = "EAPM-plugins"
 copyright = "2023, BSC | Barcelona Supercomputing Center"
 author = "Barcelona Supercomputing Center"
-release = "0.1"
+release = "0.2"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

@@ -63,6 +63,7 @@ There is the list of the blocks available in this repository:
 - :ref:`HmmBuild <hmmbuild>`
 - :ref:`HmmSearch <hmmsearch>`
 - :ref:`AsiteDesign <asite_design>`
+- :ref:`Ahatool <ahatool>`
 
 .. _alphafold:
 
@@ -537,3 +538,32 @@ AsiteDesign is a tool for designing the active site of a protein.
 *Parameters*:
 
 - ``Container``: If you are launching the block in a container. The container to use.
+
+.. _ahatool:
+
+Ahatool
+-------
+
+AHATool an Automatic HMM and Analysis Tool.
+
+.. image:: imgs/ahatool.png
+    :width: 350
+    :align: center
+    :alt: Horus AHATool block
+
+*Input*:
+
+- ``Database path``: The database where the search will be done.
+- ``Container name``: The container to use.
+- ``Input fasta``: The fasta file with the sequences to search.
+
+*Output*:
+
+- ``Output folder``: Folder with the output of the search.
+
+*Parameters*:
+
+- ``Prefix``: The prefix the tool will use for produced files.
+- ``Start``: From where to start the search (search or build).
+- ``E-value``: The e-value to use in the search (1e-10).
+- ``Threads``: The number of threads to use in the search (1,2,4).
