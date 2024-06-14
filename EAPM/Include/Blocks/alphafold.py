@@ -3,11 +3,12 @@ Module containing the AlphaFold block for the EAPM plugin
 """
 
 from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
+from utils import BSC_JOB_VARIABLES
 
 # ==========================#
 # Variable inputs
 # ==========================#
-fasta_fileAF = PluginVariable(
+fastaFile = PluginVariable(
     name="Fasta file",
     id="fasta_file",
     description="The input fasta file.",
@@ -19,7 +20,7 @@ fasta_fileAF = PluginVariable(
 # ==========================#
 # Variables
 # ==========================#
-outputAF = PluginVariable(
+output = PluginVariable(
     name="Alphafold simulation folder",
     id="folder_name",
     description="The name of the folder where the simulation will be stored.",
@@ -44,24 +45,30 @@ outputModelsVariable = PluginVariable(
 
 
 # Alphafold action block
-def initialAlphafold(block: SlurmBlock):
+def initial_alphafold(block: SlurmBlock):
     """
     Initial action of the block. It prepares the simulation and sends it to the remote.
 
     Args:
         block (SlurmBlock): The block to run the action on.
     """
+    # pylint: disable=import-outside-toplevel
+    import os
 
+    import prepare_proteins
+    from utils import launchCalculationAction
+
+    # pylint: enable=import-outside-toplevel
     # Loading plugin variables
-    fastaFile = block.inputs["fasta_file"]
-    if fastaFile == "None":
-        raise Exception("No fasta file provided.")
+    fasta_file = block.inputs.get(fastaFile.id, None)
+    if fasta_file == "None":
+        raise ValueError("No fasta file provided.")
 
-    folderName = block.variables.get("folder_name", "alphafold")
-    removeExisting = block.variables.get("remove_existing_results", False)
+    folder_name = block.variables.get(output.id, "alphafold")
+    remove_existing = block.variables.get(removeExistingResults.id, False)
 
     cpus_per_task = block.variables.get("cpus_per_task")
-    if cpus_per_task is 1:
+    if cpus_per_task == 1:
         print("Alphafold requires at least 20 cpus per task. Changing to 20 cpus per task.")
         block.variables["cpus_per_task"] = 20
 
@@ -70,58 +77,62 @@ def initialAlphafold(block: SlurmBlock):
         print("Alphafold requires an accelerated partition. Changing to acc_bscls.")
         block.variables["partition"] = "acc_bscls"
 
-    import os
-
     # If folder already exists, raise exception
-    if removeExisting and os.path.exists(folderName):
-        os.system("rm -rf " + folderName)
+    if remove_existing and os.path.exists(folder_name):
+        os.system("rm -rf " + folder_name)
 
-    if not removeExisting and os.path.exists(folderName):
-        raise Exception(
-            "The folder {} already exists. Please, choose another name or remove it with the remove existing folder option.".format(
-                folderName
-            )
+    if not remove_existing and os.path.exists(folder_name):
+        raise ValueError(
+            f"The folder {folder_name} already exists. "
+            "Please, choose another name or remove it with the remove existing folder option."
         )
 
-    block.extraData["folder_name"] = folderName
-
-    import prepare_proteins
+    block.extraData["folder_name"] = folder_name
 
     print("Loading fasta files...")
 
-    sequences = prepare_proteins.sequenceModels(fastaFile)
+    sequences = prepare_proteins.sequenceModels(fasta_file)
 
     print("Setting up AlphaFold...")
 
-    jobs = sequences.setUpAlphaFold(folderName, gpu_relax=False)
+    jobs = sequences.setUpAlphaFold(folder_name, gpu_relax=False)
 
-    from utils import launchCalculationAction
-
-    launchCalculationAction(block, jobs, "alphafold", [folderName])
+    launchCalculationAction(block, jobs, "alphafold", [folder_name])
 
 
-def finalAlhafoldAction(block: SlurmBlock):
+def final_alphafold(block: SlurmBlock):
+    """
+    Perform the final steps of the AlphaFold algorithm.
+
+    Args:
+        block (SlurmBlock): The SlurmBlock object representing the current block.
+
+    Returns:
+        None
+    """
+    # pylint: disable=import-outside-toplevel
+    import os
+
     from utils import downloadResultsAction
+
+    # pylint: enable=import-outside-toplevel
 
     downloaded_path = downloadResultsAction(block)
 
-    resultsFolder = block.extraData["folder_name"]
+    results_folder = block.extraData["folder_name"]
 
-    import os
-
-    output_models_folder = os.path.join(downloaded_path, resultsFolder, "output_models")
+    output_models_folder = os.path.join(downloaded_path, results_folder, "output_models")
 
     block.setOutput(outputModelsVariable.id, output_models_folder)
 
 
-from utils import BSC_JOB_VARIABLES
-
 alphafoldBlock = SlurmBlock(
     name="Alphafold",
+    id="Alphafold",
     description="Run Alphafold. (For marenostrum, nord3 clusters or local)",
-    initialAction=initialAlphafold,
-    finalAction=finalAlhafoldAction,
-    variables=BSC_JOB_VARIABLES + [outputAF, removeExistingResults],
-    inputs=[fasta_fileAF],
+    initialAction=initial_alphafold,
+    finalAction=final_alphafold,
+    variables=BSC_JOB_VARIABLES + [output, removeExistingResults],
+    inputs=[fastaFile],
     outputs=[outputModelsVariable],
 )

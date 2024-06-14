@@ -1,7 +1,8 @@
+"""
+Module containing the PELE block for the EAPM plugin
+"""
 
-
-from HorusAPI import (PluginVariable, SlurmBlock, VariableGroup, VariableList,
-                      VariableTypes)
+from HorusAPI import PluginVariable, SlurmBlock, VariableGroup, VariableList, VariableTypes
 
 # Input variables
 yamlPELEFileVariable = PluginVariable(
@@ -12,7 +13,6 @@ yamlPELEFileVariable = PluginVariable(
     defaultValue="input.yaml",
     allowedValues=["yaml"],
 )
-
 modelFolderVariable = PluginVariable(
     id="model_folder",
     name="Model folder",
@@ -20,14 +20,12 @@ modelFolderVariable = PluginVariable(
     type=VariableTypes.FOLDER,
     defaultValue="models",
 )
-
 posesFolderVariable = PluginVariable(
     id="poses_folder",
     name="Best docking poses",
     description="Best docking poses to analyse",
     type=VariableTypes.FOLDER,
 )
-
 glideOutputVariable = PluginVariable(
     id="glide_output",
     name="Glide output",
@@ -35,15 +33,12 @@ glideOutputVariable = PluginVariable(
     type=VariableTypes.CUSTOM,
     allowedValues=["glide_output"],
 )
-
-
 folderInputGroup = VariableGroup(
     id="folder_input_group",
     name="Folder input group",
-    description="Input the model and ligand folders after a Dcoking Grid setup has been run",
+    description="Input the model and ligand folders after a Docking Grid setup has been run",
     variables=[modelFolderVariable, posesFolderVariable, yamlPELEFileVariable],
 )
-
 glideOutputGroup = VariableGroup(
     id="glide_output_group",
     name="Glide output group",
@@ -59,35 +54,30 @@ peleFolderNameVariable = PluginVariable(
     type=VariableTypes.STRING,
     defaultValue="pele",
 )
-
 atom1SelectionVariable = PluginVariable(
     id="protein_atom",
     name="Protein atom",
     description="Select an atom on the protein to calculate the distance",
     type=VariableTypes.ATOM,
 )
-
 atom2SelectionVariable = PluginVariable(
     id="ligand_atom",
     name="Ligand atom",
     description="Select an atom on the ligand to calculate the distance",
     type=VariableTypes.ATOM,
 )
-
 atomSelectionsGroupVariable = PluginVariable(
     id="group",
     name="Group",
-    description="Name of the group selection to clusterize",
+    description="Name of the group selection for clustering",
     type=VariableTypes.STRING,
 )
-
 overrideLigandNameVariable = PluginVariable(
     id="override_ligand_name",
     name="Override ligand name",
     description="Override the ligand name with a custom name",
     type=VariableTypes.STRING,
 )
-
 selectionsListVariable = VariableList(
     id="selections_list",
     name="Selections",
@@ -101,7 +91,6 @@ selectionsListVariable = VariableList(
 )
 
 # PELE variables
-
 constraintsVariable = PluginVariable(
     id="constraints",
     name="Constraints",
@@ -109,7 +98,6 @@ constraintsVariable = PluginVariable(
     type=VariableTypes.STRING,
     category="PELE",
 )
-
 ligandIndexVariable = PluginVariable(
     id="ligand_index",
     name="Ligand index",
@@ -118,7 +106,6 @@ ligandIndexVariable = PluginVariable(
     defaultValue=1,
     category="PELE",
 )
-
 peleStepsVariable = PluginVariable(
     id="pele_steps",
     name="PELE steps",
@@ -127,7 +114,6 @@ peleStepsVariable = PluginVariable(
     defaultValue=100,
     category="PELE",
 )
-
 peleDebugVariable = PluginVariable(
     id="pele_debug",
     name="PELE debug",
@@ -136,7 +122,6 @@ peleDebugVariable = PluginVariable(
     defaultValue=False,
     category="PELE",
 )
-
 peleIterationsVariable = PluginVariable(
     id="pele_iterations",
     name="PELE iterations",
@@ -145,7 +130,6 @@ peleIterationsVariable = PluginVariable(
     defaultValue=5,
     category="PELE",
 )
-
 equilibrationStepsVariable = PluginVariable(
     id="equilibration_steps",
     name="Equilibration steps",
@@ -154,7 +138,6 @@ equilibrationStepsVariable = PluginVariable(
     defaultValue=100,
     category="PELE",
 )
-
 ligandEnergyGroupsVariable = PluginVariable(
     id="ligand_energy_groups",
     name="Ligand energy groups",
@@ -162,7 +145,6 @@ ligandEnergyGroupsVariable = PluginVariable(
     type=VariableTypes.STRING,
     category="PELE",
 )
-
 peleSeparatorVariable = PluginVariable(
     id="pele_separator",
     name="PELE separator",
@@ -171,7 +153,6 @@ peleSeparatorVariable = PluginVariable(
     defaultValue="@",
     category="PELE",
 )
-
 usePeleffyVariable = PluginVariable(
     id="use_peleffy",
     name="Use PELEffy",
@@ -180,7 +161,6 @@ usePeleffyVariable = PluginVariable(
     defaultValue=True,
     category="PELE",
 )
-
 useSrunVariable = PluginVariable(
     id="use_srun",
     name="Use srun",
@@ -189,7 +169,6 @@ useSrunVariable = PluginVariable(
     defaultValue=True,
     category="PELE",
 )
-
 energyByResidueVariable = PluginVariable(
     id="energy_by_residue",
     name="Energy by residue",
@@ -198,7 +177,6 @@ energyByResidueVariable = PluginVariable(
     defaultValue=False,
     category="PELE",
 )
-
 ebrNewFlagVariable = PluginVariable(
     id="ebr_new_flag",
     name="EBR new flag",
@@ -207,7 +185,6 @@ ebrNewFlagVariable = PluginVariable(
     defaultValue=False,
     category="PELE",
 )
-
 ninetyDegreesVersionVariable = PluginVariable(
     id="ninety_degrees_version",
     name="90 degrees version",
@@ -216,7 +193,6 @@ ninetyDegreesVersionVariable = PluginVariable(
     defaultValue=False,
     category="PELE",
 )
-
 analysisVariable = PluginVariable(
     id="analysis",
     name="Analysis",
@@ -225,8 +201,6 @@ analysisVariable = PluginVariable(
     defaultValue=False,
     category="PELE",
 )
-
-
 energyByResidueTypeVariable = PluginVariable(
     id="energy_by_residue_type",
     name="Energy by residue type",
@@ -236,7 +210,6 @@ energyByResidueTypeVariable = PluginVariable(
     defaultValue="all",
     category="PELE",
 )
-
 peptideVariable = PluginVariable(
     id="peptide",
     name="Peptide",
@@ -245,7 +218,6 @@ peptideVariable = PluginVariable(
     defaultValue=False,
     category="PELE",
 )
-
 equilibrationModeVariable = PluginVariable(
     id="equilibration_mode",
     name="Equilibration mode",
@@ -255,7 +227,6 @@ equilibrationModeVariable = PluginVariable(
     defaultValue="equilibrationLastSnapshot",
     category="PELE",
 )
-
 spawningVariable = PluginVariable(
     id="spawning",
     name="Spawning",
@@ -276,7 +247,6 @@ spawningVariable = PluginVariable(
     defaultValue="independent",
     category="PELE",
 )
-
 continuationVariable = PluginVariable(
     id="continuation",
     name="Continuation",
@@ -285,7 +255,6 @@ continuationVariable = PluginVariable(
     defaultValue=False,
     category="PELE",
 )
-
 equilibrationVariable = PluginVariable(
     id="equilibration",
     name="Equilibration",
@@ -294,7 +263,6 @@ equilibrationVariable = PluginVariable(
     defaultValue=True,
     category="PELE",
 )
-
 skipModelsVariable = PluginVariable(
     id="skip_models",
     name="Skip models",
@@ -302,7 +270,6 @@ skipModelsVariable = PluginVariable(
     type=VariableTypes.LIST,
     category="PELE",
 )
-
 skipLigandsVariable = PluginVariable(
     id="skip_ligands",
     name="Skip ligands",
@@ -310,7 +277,6 @@ skipLigandsVariable = PluginVariable(
     type=VariableTypes.LIST,
     category="PELE",
 )
-
 extendIterationsVariable = PluginVariable(
     id="extend_iterations",
     name="Extend iterations",
@@ -319,7 +285,6 @@ extendIterationsVariable = PluginVariable(
     defaultValue=False,
     category="PELE",
 )
-
 logFileVariable = PluginVariable(
     id="log_file",
     name="Log file",
@@ -328,7 +293,6 @@ logFileVariable = PluginVariable(
     defaultValue=False,
     category="PELE",
 )
-
 rescoringVariable = PluginVariable(
     id="rescoring",
     name="Rescoring",
@@ -337,7 +301,6 @@ rescoringVariable = PluginVariable(
     defaultValue=False,
     category="PELE",
 )
-
 epsilonVariable = PluginVariable(
     id="epsilon",
     name="Epsilon",
@@ -346,7 +309,6 @@ epsilonVariable = PluginVariable(
     defaultValue=0.5,
     category="PELE",
 )
-
 ligandEquilibrationCstVariable = PluginVariable(
     id="ligand_equilibration_cst",
     name="Ligand equilibration cst",
@@ -355,7 +317,6 @@ ligandEquilibrationCstVariable = PluginVariable(
     defaultValue=True,
     category="PELE",
 )
-
 covalentSetupVariable = PluginVariable(
     id="covalent_setup",
     name="Covalent setup",
@@ -364,7 +325,6 @@ covalentSetupVariable = PluginVariable(
     defaultValue=False,
     category="PELE",
 )
-
 nonbondedNewFlagVariable = PluginVariable(
     id="nonbonded_new_flag",
     name="Nonbonded new flag",
@@ -373,7 +333,6 @@ nonbondedNewFlagVariable = PluginVariable(
     defaultValue=False,
     category="PELE",
 )
-
 onlyModelsVariable = PluginVariable(
     id="only_models",
     name="Only models",
@@ -381,7 +340,6 @@ onlyModelsVariable = PluginVariable(
     type=VariableTypes.LIST,
     category="PELE",
 )
-
 onlyLigandsVariable = PluginVariable(
     id="only_ligands",
     name="Only ligands",
@@ -389,7 +347,6 @@ onlyLigandsVariable = PluginVariable(
     type=VariableTypes.LIST,
     category="PELE",
 )
-
 onlyCombinationsVariable = PluginVariable(
     id="only_combinations",
     name="Only combinations",
@@ -397,7 +354,6 @@ onlyCombinationsVariable = PluginVariable(
     type=VariableTypes.LIST,
     category="PELE",
 )
-
 nonbondedEnergyVariable = PluginVariable(
     id="nonbonded_energy",
     name="Nonbonded energy",
@@ -405,7 +361,6 @@ nonbondedEnergyVariable = PluginVariable(
     type=VariableTypes.LIST,
     category="PELE",
 )
-
 covalentBaseAaVariable = PluginVariable(
     id="covalent_base_aa",
     name="Covalent base AA",
@@ -413,7 +368,6 @@ covalentBaseAaVariable = PluginVariable(
     type=VariableTypes.LIST,
     category="PELE",
 )
-
 membraneResiduesVariable = PluginVariable(
     id="membrane_residues",
     name="Membrane residues",
@@ -421,7 +375,6 @@ membraneResiduesVariable = PluginVariable(
     type=VariableTypes.LIST,
     category="PELE",
 )
-
 biasToPointVariable = PluginVariable(
     id="bias_to_point",
     name="Bias to point",
@@ -429,7 +382,6 @@ biasToPointVariable = PluginVariable(
     type=VariableTypes.LIST,
     category="PELE",
 )
-
 comBias1Variable = PluginVariable(
     id="com_bias1",
     name="com bias1",
@@ -437,7 +389,6 @@ comBias1Variable = PluginVariable(
     type=VariableTypes.LIST,
     category="PELE",
 )
-
 comBias2Variable = PluginVariable(
     id="com_bias2",
     name="com bias2",
@@ -445,7 +396,6 @@ comBias2Variable = PluginVariable(
     type=VariableTypes.LIST,
     category="PELE",
 )
-
 ligandTemplateVariable = PluginVariable(
     id="ligand_template",
     name="Ligand template",
@@ -453,7 +403,6 @@ ligandTemplateVariable = PluginVariable(
     type=VariableTypes.STRING,
     category="PELE",
 )
-
 seedVariable = PluginVariable(
     id="seed",
     name="Seed",
@@ -462,7 +411,6 @@ seedVariable = PluginVariable(
     defaultValue=-1,
     category="PELE",
 )
-
 boxRadiusVariable = PluginVariable(
     id="box_radius",
     name="Box radius",
@@ -471,8 +419,6 @@ boxRadiusVariable = PluginVariable(
     defaultValue=10,
     category="PELE",
 )
-
-
 # box_centers input
 modelVariable = PluginVariable(
     id="model",
@@ -480,35 +426,30 @@ modelVariable = PluginVariable(
     description="TODO model variable description",
     type=VariableTypes.STRING,
 )
-
 ligandVariable = PluginVariable(
     id="ligand",
     name="Ligand",
     description="TODO ligand variable description",
     type=VariableTypes.STRING,
 )
-
 chainVariable = PluginVariable(
     id="chain",
     name="Chain",
     description="TODO chain variable description",
     type=VariableTypes.STRING,
 )
-
 residueVariable = PluginVariable(
     id="residue",
     name="Residue number",
     description="TODO residue number variable description",
     type=VariableTypes.INTEGER,
 )
-
 atomNameVariable = PluginVariable(
     id="atom_name",
     name="Atom name",
     description="TODO atom name variable description",
     type=VariableTypes.STRING,
 )
-
 # box_centers VariableList
 boxCentersVariable = VariableList(
     id="box_centers",
@@ -527,9 +468,22 @@ peleOutputFolderOutput = PluginVariable(
 )
 
 
-def peleAction(block: SlurmBlock):
+def pele_action(block: SlurmBlock):
+    """
+    Perform the PELE action based on the provided block and inputs.
+
+    Args:
+        block (SlurmBlock): The SlurmBlock object containing the necessary inputs and variables.
+
+    Raises:
+        Exception: If the required folders are not found in the glide output.
+        ValueError: If the spawning method or energy by residue type is invalid.
+
+    Returns:
+        None
+    """
     if block.selectedInputGroup == "glide_output_group":
-        glide_outputr = block.inputs.get("glide_output")
+        glide_output = block.inputs.get("glide_output")
         # load the pickle file
 
         # with open(glide_outputr, "rb") as f:
@@ -833,7 +787,7 @@ blockVariables = BSC_JOB_VARIABLES + [
 
 def wrappedFunction(block: SlurmBlock):
     try:
-        peleAction(block)
+        pele_action(block)
     except Exception as e:
         import traceback
 
@@ -843,6 +797,7 @@ def wrappedFunction(block: SlurmBlock):
 
 peleBlock = SlurmBlock(
     name="PELE",
+    id="PELE",
     description="Run PELE",
     initialAction=wrappedFunction,
     finalAction=peleFinalAction,

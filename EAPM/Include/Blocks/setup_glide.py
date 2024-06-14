@@ -1,4 +1,9 @@
+"""
+Module containing the setup glide block for the EAPM plugin
+"""
+
 from HorusAPI import PluginVariable, SlurmBlock, VariableGroup, VariableTypes
+from utils import BSC_JOB_VARIABLES
 
 # Input variables
 modelFolderVariable = PluginVariable(
@@ -20,7 +25,7 @@ ligandFolderVariable = PluginVariable(
 folderInputGroup = VariableGroup(
     id="folder_input_group",
     name="Folder input group",
-    description="Input the model and ligand folders after a Dcoking Grid setup has been run",
+    description="Input the model and ligand folders after a Docking Grid setup has been run",
     variables=[modelFolderVariable, ligandFolderVariable],
 )
 
@@ -51,39 +56,39 @@ outputDockingResultsVariable = PluginVariable(
 
 
 def setupGlideDocking(block: SlurmBlock):
+    # pylint: disable=import-outside-toplevel
     import os
     import shutil
 
     import prepare_proteins
+    from utils import launchCalculationAction
+
+    # pylint: enable=import-outside-toplevel
 
     if block.selectedInputGroup == "folder_input_group":
-        models_folder = block.inputs.get("model_folder")
-        ligand_folder = block.inputs.get("ligand_folder")
+        models_folder = block.inputs.get(modelFolderVariable.id, None)
+        ligand_folder = block.inputs.get(ligandFolderVariable.id, None)
     else:
-        grid_output = block.inputs.get("grid_output")
+        grid_output = block.inputs.get(gridOutputVariable.id, None)
 
         if grid_output is None:
-            raise Exception("No valid grid output selected")
-            # TODO get the grid folder from the grid output
-
-            # TODO take care of the input as it can happend multiple grid in same wf, create a folder if docking exists
+            raise ValueError("No valid grid output selected")
 
         models_folder = grid_output.get("model_folder")
         print(f"Models folder: {models_folder}")
         ligand_folder = grid_output.get("ligand_folder")
         print(f"Ligand folder: {grid_output.get('ligand_folder')}")
-        grid_folder = grid_output.get("grid_folder")
 
         if models_folder is None or not os.path.isdir(models_folder):
-            raise Exception("No valid input")
+            raise ValueError("No valid input")
 
     if models_folder is None or not os.path.isdir(models_folder):
-        raise Exception("No valid models folder selected")
+        raise ValueError("No valid models folder selected")
 
     if ligand_folder is None or not os.path.isdir(ligand_folder):
-        raise Exception("No valid ligands folder selected")
+        raise ValueError("No valid ligands folder selected")
 
-    # If no maes are inside the ligan folder, raise an exception
+    # If no mae files are inside the ligand folder, raise an exception
     mae_found = False
     for file in os.listdir(ligand_folder):
         if file.endswith(".mae"):
@@ -91,7 +96,7 @@ def setupGlideDocking(block: SlurmBlock):
             break
 
     if not mae_found:
-        raise Exception(f"No .mae files found in {ligand_folder}")
+        raise ValueError(f"No .mae files found in {ligand_folder}")
 
     # Get the original pdb models
     original_pdb_folder = os.path.basename(models_folder).replace("_mae", "")
@@ -103,8 +108,10 @@ def setupGlideDocking(block: SlurmBlock):
         shutil.copytree(models_folder, os.path.join(os.getcwd(), original_pdb_folder))
 
     if not os.path.isdir(original_pdb_folder):
-        raise Exception(
-            f"PDB models folder ({original_pdb_folder}) not found. Please convert the models to PDB using the 'MAE to PDB' block and keep the original PDB models folder"
+        raise ValueError(
+            f"PDB models folder ({original_pdb_folder}) not found. "
+            "Please convert the models to PDB using the 'MAE to PDB' "
+            "block and keep the original PDB models folder"
         )
 
     block.extraData["original_pdb_folder"] = original_pdb_folder
@@ -132,19 +139,32 @@ def setupGlideDocking(block: SlurmBlock):
     jobs_created = len(jobs)
 
     if jobs_created == 0:
-        raise Exception("No jobs created. Did the Glide Grid block produce the correct output?")
-
-    from utils import launchCalculationAction
+        raise ValueError("No jobs created. Did the Glide Grid block produce the correct output?")
 
     launchCalculationAction(
         block, jobs, "schrodinger", uploadFolders=["docking", "grid", relative_ligand_folder]
     )
 
 
-def downloadGlideDocking(block: SlurmBlock):
+def download_glide_docking(block: SlurmBlock):
+    """
+    Downloads the glide docking results and checks for errors in the log files.
+
+    Args:
+        block (SlurmBlock): The SlurmBlock object representing the current block.
+
+    Raises:
+        ValueError: If rough pose refine failed for any model.
+
+    Returns:
+        None
+    """
+    # pylint: disable=import-outside-toplevel
     import os
 
     from utils import downloadResultsAction
+
+    # pylint: enable=import-outside-toplevel
 
     downloadResultsAction(block)
 
@@ -173,23 +193,22 @@ def downloadGlideDocking(block: SlurmBlock):
         if not os.path.isfile(log_file):
             continue
 
-        with open(log_file, "r") as f:
+        with open(log_file, "r", encoding="utf-8") as f:
             log_content = f.read()
 
             if "ROUGH POSE REFINE FAILED" in log_content:
-                raise Exception(
+                raise ValueError(
                     f"Rough pose refine failed for model {model}, try a different grid size"
                 )
 
     block.setOutput(outputDockingResultsVariable.id, results_data)
 
 
-from utils import BSC_JOB_VARIABLES
-
 block_variables = BSC_JOB_VARIABLES + [posesPerLigandVariable]
 
 setupGlideBlock = SlurmBlock(
     name="Run Glide",
+    id="run_glide",
     description="Run a glide docking calculation.",
     inputGroups=[
         folderInputGroup,
@@ -202,6 +221,6 @@ setupGlideBlock = SlurmBlock(
     ],
     variables=block_variables,
     initialAction=setupGlideDocking,
-    finalAction=downloadGlideDocking,
+    finalAction=download_glide_docking,
     outputs=[outputDockingResultsVariable],
 )

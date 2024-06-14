@@ -1,3 +1,7 @@
+"""
+Module containing the PDB2MAE block for the EAPM plugin
+"""
+
 from HorusAPI import PluginBlock, PluginVariable, VariableGroup, VariableTypes
 
 # Input variables
@@ -27,7 +31,8 @@ structureVariable = PluginVariable(
 changeLigandNameVariable = PluginVariable(
     id="change_ligand_name",
     name="Change ligand name",
-    description="Change the ligand name inside the PDB. This will replace the chain, residue and atom names with the ligand name (L)",
+    description="Change the ligand name inside the PDB. "
+    "This will replace the chain, residue and atom names with the ligand name (L)",
     type=VariableTypes.BOOLEAN,
     defaultValue=False,
 )
@@ -41,31 +46,50 @@ outputVariable = PluginVariable(
 )
 
 
-def convertPDBToMAE(block: PluginBlock):
+def convert_pdb_2_mae(block: PluginBlock):
+    """
+    Converts PDB files to MAE format.
+
+    Args:
+        block (PluginBlock): The PluginBlock object representing the current block.
+
+    Raises:
+        Exception: If no valid Schrödinger installation is found on the remote.
+        Exception: If no PDB file is selected.
+        Exception: If the selected PDB file is invalid.
+        Exception: If no PDB folder is selected.
+        Exception: If the selected PDB folder is invalid.
+        Exception: If no PDB files are found in the selected folder.
+
+    Returns:
+        None
+    """
+    # pylint: disable=import-outside-toplevel
     import os
     import shutil
 
+    import prepare_proteins
+
+    # pylint: enable=import-outside-toplevel
     # Test if we have valid glide installation
     command = "echo $SCHRODINGER"
     output = block.remote.remoteCommand(command)
 
     if output is None or output == "":
-        raise Exception(f"No valid Schrodinger installation found on remote {block.remote.name}")
+        raise ValueError(f"No valid Schrödinger installation found on remote {block.remote.name}")
     else:
-        print(f"Schrodinger installation found on remote {block.remote.name}: {output}")
+        print(f"Schrödinger installation found on remote {block.remote.name}: {output}")
 
     run_command = str(output) + "/run"
-
-    import prepare_proteins
 
     if block.selectedInputGroup == singlePDBVariable.id:
         pdb_file = block.inputs.get("single_pdb", None)
 
         if pdb_file is None:
-            raise Exception("No PDB file selected")
+            raise ValueError("No PDB file selected")
 
         if not os.path.isfile(pdb_file):
-            raise Exception(f"Invalid PDB file: {pdb_file}")
+            raise ValueError(f"Invalid PDB file: {pdb_file}")
 
         if os.path.exists("tmp_ligand"):
             shutil.rmtree("tmp_ligand")
@@ -77,28 +101,28 @@ def convertPDBToMAE(block: PluginBlock):
         pdb_folder = block.inputs.get("pdb_folder", None)
 
     if pdb_folder is None:
-        raise Exception("No PDB folder selected")
+        raise ValueError("No PDB folder selected")
 
     if not os.path.isdir(pdb_folder):
-        raise Exception(f"Invalid PDB folder: {pdb_folder}")
+        raise ValueError(f"Invalid PDB folder: {pdb_folder}")
 
     # If there are subfolders inside the PDB folder, we need to move the files
     # to the main folder
-    hasSubfolders = False
+    has_subfolders = False
     for subfolder in os.listdir(pdb_folder):
         if os.path.isdir(os.path.join(pdb_folder, subfolder)):
-            hasSubfolders = True
+            has_subfolders = True
 
-    if hasSubfolders:
+    if has_subfolders:
         # Recursively get all the PDBs inside the folder
         pdb_files = []
-        for root, dirs, files in os.walk(pdb_folder):
+        for root, _, files in os.walk(pdb_folder):
             for file in files:
                 if file.endswith(".pdb"):
                     pdb_files.append(os.path.join(root, file))
 
         if len(pdb_files) == 0:
-            raise Exception(f"No PDB files found in {pdb_folder}")
+            raise ValueError(f"No PDB files found in {pdb_folder}")
 
         # Create a new folder for the PDB files
         folder_name = os.path.basename(pdb_folder)
@@ -115,7 +139,7 @@ def convertPDBToMAE(block: PluginBlock):
     change_ligand_name = block.variables.get("change_ligand_name", False)
 
     # The first time we run this, the script will be generated but not executed
-    # as we don't have the Schrodinger license locally. We need to run it again
+    # as we don't have the Schrödinger license locally. We need to run it again
     # on the remote once the convert script is generated.
     print("Generating conversion script")
     models.convertLigandPDBtoMae(pdb_folder, change_ligand_name=change_ligand_name)
@@ -124,6 +148,11 @@ def convertPDBToMAE(block: PluginBlock):
 
     # Move the MAE files to the output folder
     os.makedirs(mae_folder, exist_ok=True)
+
+    for model in os.listdir(pdb_folder):
+        if model.endswith(".mae"):
+            # Move the MAE files to the output folder
+            shutil.move(os.path.join(pdb_folder, model), os.path.join(mae_folder, model))
 
     if block.remote.name != "Local":
         # Upload the folder to the remote
@@ -139,12 +168,12 @@ def convertPDBToMAE(block: PluginBlock):
         # Mock the os.system call
         old_system = os.system
 
-        def mockSystem(command):
+        def mock_system(command):
             command = f"cd {final_remote_dir} && {command.replace('run', run_command)}"
 
             block.remote.remoteCommand(command)
 
-        os.system = mockSystem
+        os.system = mock_system
         print("Running conversion script on remote")
         models.convertLigandPDBtoMae(pdb_folder, change_ligand_name=change_ligand_name)
 
@@ -169,7 +198,7 @@ def convertPDBToMAE(block: PluginBlock):
                 shutil.move(os.path.join(pdb_folder, model), os.path.join(mae_folder, model))
 
     print(
-        f"Sucessfully converted PDB files to MAE. Files converted: {len(os.listdir(mae_folder))}"
+        f"Successfully converted PDB files to MAE. Files converted: {len(os.listdir(mae_folder))}"
     )
 
     block.setOutput("output", mae_folder)
@@ -177,6 +206,7 @@ def convertPDBToMAE(block: PluginBlock):
 
 convertPDBToMAEBlock = PluginBlock(
     name="PDB to MAE",
+    id="PDBToMAE",
     description="Convert PDB files to MAE for Glide",
     inputGroups=[
         VariableGroup(
@@ -200,5 +230,5 @@ convertPDBToMAEBlock = PluginBlock(
     ],
     variables=[changeLigandNameVariable],
     outputs=[outputVariable],
-    action=convertPDBToMAE,
+    action=convert_pdb_2_mae,
 )

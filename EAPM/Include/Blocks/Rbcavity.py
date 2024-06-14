@@ -82,6 +82,7 @@ def initialRbcavity(block: PluginBlock):
 
 rbCavityBlock = PluginBlock(
     name="Rbcavity",
+    id="rbcavity",
     description="Calculate docking cavities. (For local)",
     action=initialRbcavity,
     variables=[

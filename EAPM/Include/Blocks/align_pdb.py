@@ -7,14 +7,14 @@ from HorusAPI import PluginBlock, PluginVariable, VariableList, VariableTypes
 # ==========================#
 # Variable inputs
 # ==========================#
-inputFolderAlign = PluginVariable(
+inputFolder = PluginVariable(
     name="Input folder",
     id="input_folder",
     description="The input folder with the PDBs to align.",
     type=VariableTypes.FOLDER,
     defaultValue="trimmed_models",
 )
-pdbReferenceAlign = PluginVariable(
+pdbReference = PluginVariable(
     name="PDB reference",
     id="pdb_reference",
     description="The reference PDB to align to.",
@@ -26,14 +26,13 @@ pdbReferenceAlign = PluginVariable(
 # ==========================#
 # Variable outputs
 # ==========================#
-outputAlign = PluginVariable(
+output = PluginVariable(
     name="Align output",
     id="path",
     description="The folder containing the results.",
     type=VariableTypes.FOLDER,
     defaultValue="aligned_models",
 )
-
 
 ##############################
 #       Other variables      #
@@ -45,10 +44,11 @@ integerChainIndexVariable = PluginVariable(
     type=VariableTypes.INTEGER,
     defaultValue=0,
 )
-chainIndexesAlign = VariableList(
+chainIndexes = VariableList(
     name="Chain indexes",
     id="chain_indexes",
-    description="Chain indexes to use for the alignment. Use this option when the trajectories have corresponding chains in their topologies.",
+    description="Chain indexes to use for the alignment. "
+    "Use this option when the trajectories have corresponding chains in their topologies.",
     prototypes=[integerChainIndexVariable],
 )
 
@@ -62,135 +62,141 @@ trajectoryChainIndexVariable = PluginVariable(
     type=VariableTypes.INTEGER,
     defaultValue=0,
 )
-trajectoryChainIndexesAlign = VariableList(
+trajectoryChainIndexes = VariableList(
     name="Trajectory chain indexes",
     id="trajectory_chain_indexes",
     description="Chain indexes of the target trajectories to use in the alignment.",
     prototypes=[trajectoryChainIndexVariable],
 )
-alignmentModeAlign = PluginVariable(
+alignmentMode = PluginVariable(
     name="Alignment mode",
     id="alignment_mode",
-    description="The mode defines how sequences are aligned. 'exact' for structurally aligning positions with exactly the same aminoacids after the sequence alignment or 'aligned' for structurally aligning sequences using all positions aligned in the sequence alignment.",
+    description="The mode defines how sequences are aligned. "
+    "'exact' for structurally aligning positions with exactly the same amino acids after the sequence alignment "
+    "or 'aligned' for structurally aligning sequences using all positions aligned in the sequence alignment.",
     type=VariableTypes.STRING_LIST,
     defaultValue="aligned",
     allowedValues=["aligned", "exact"],
 )
-referenceResiduesAlign = PluginVariable(
+integerReferenceResidues = PluginVariable(
     name="Reference residue index",
-    id="reference_residues",
+    id="reference_residues_int",
     description="Reference residues.",
     type=VariableTypes.INTEGER,
     defaultValue=None,
 )
-referenceResiduesAlign = VariableList(
+referenceResidues = VariableList(
     name="Reference residues",
     id="reference_residues",
     description="Reference residues.",
-    prototypes=[referenceResiduesAlign],
+    prototypes=[integerReferenceResidues],
 )
 
 
 # Align action block
-def initialAlign(block: PluginBlock):
+def initial_action(block: PluginBlock):
     """
     Initial action of the block. It prepares the simulation and sends it to the remote.
 
     Args:
         block (SlurmBlock): The block to run the action on.
     """
-
-    if block.remote.name != "Local":
-        raise Exception("This block is only available for local execution.")
-
-    mafftExecutable = block.config.get("mafft_path", "mafft")
-    # Check if the remote has the mafft executable
-    try:
-        block.remote.remoteCommand(f"{mafftExecutable} --version")
-    except Exception as exc:
-        raise Exception(
-            "MAFFT is not installed in the selected machine. Please install MAFFT in order to align the PDBs"
-        ) from exc
-
-    # Loading plugin variables
-    inputFolder = block.inputs.get("input_folder", None)
-    pdbReference = block.inputs.get("pdb_reference", None)
-    outputFolder = block.outputs.get("path", "aligned_models")
-
-    defaultChainIndex = {"chain_index": 0}
-
-    chainIndexes = block.variables.get("chain_indexes", [defaultChainIndex])
-    trajectoryChainIndexes = block.variables.get("trajectory_chain_indexes", [])
-    alignmentMode = block.variables.get("alignment_mode", "aligned")
-    referenceResidues = block.variables.get("reference_residues", [])
+    # pylint: disable=import-outside-toplevel
+    import subprocess
 
     import prepare_proteins
 
+    # pylint: enable=import-outside-toplevel
+
+    if block.remote.name != "Local":
+        raise ValueError("This block is only available for local execution.")
+
+    mafft_executable = block.config.get("mafft_path", "mafft")
+    # Check if the remote has the mafft executable
+    try:
+        block.remote.remoteCommand(f"{mafft_executable} --version")
+    except Exception as exc:
+        raise ValueError(
+            "MAFFT is not installed in the selected machine. "
+            "Please install MAFFT in order to align the PDBs"
+        ) from exc
+
+    # Loading plugin variables
+    input_folder = block.inputs.get(inputFolder.id, None)
+    pdb_reference = block.inputs.get(pdbReference.id, None)
+    output_folder = block.outputs.get(output.id, "aligned_models")
+
+    default_chain_index = {"chain_index": 0}
+
+    chain_indexes = block.variables.get(chainIndexes.id, [default_chain_index])
+    trajectory_chain_indexes = block.variables.get(trajectoryChainIndexes.id, [])
+    alignment_mode = block.variables.get(alignmentMode.id, "aligned")
+    reference_residues = block.variables.get(referenceResidues.id, [])
+
     print("Loading PDB files...")
 
-    models = prepare_proteins.proteinModels(inputFolder)
+    models = prepare_proteins.proteinModels(input_folder)
 
     # Parse the chain indexes
-    if chainIndexes is not None:
-        chainIndexes = [x["chain_index"] for x in chainIndexes]
+    if chain_indexes is not None:
+        chain_indexes = [x["chain_index"] for x in chain_indexes]
     else:
-        chainIndexes = [0]
+        chain_indexes = [0]
 
     trajectory_chain_indexes = None
     # Parse the trajectory chain indexes
-    if trajectoryChainIndexes is not None:
-        trajectoryChainIndexes = [x["trajectory_chain_index"] for x in trajectoryChainIndexes]
+    if trajectory_chain_indexes is not None:
+        trajectory_chain_indexes = [x["trajectory_chain_index"] for x in trajectory_chain_indexes]
         trajectory_chain_indexes = {}
         for i, model in enumerate(models.models_names):
-            trajectory_chain_indexes[model] = trajectoryChainIndexes[i]
+            trajectory_chain_indexes[model] = trajectory_chain_indexes[i]
 
     # Parse the reference residues
-    if referenceResidues is not None:
-        referenceResidues = [x["reference_residues"] for x in referenceResidues]
+    if reference_residues is not None:
+        reference_residues = [x["reference_residues"] for x in reference_residues]
 
     print("Aligning models...")
 
-    import subprocess
+    old_subprocess = subprocess.run
 
-    oldSubprocess = subprocess.run
-
-    def hookSubprocessMafft(command, **kwargs):
+    def hook_subprocess_mafft(command, **kwargs):
         if command.startswith("mafft"):
-            command = command.replace("mafft", mafftExecutable)
+            command = command.replace("mafft", mafft_executable)
 
         print("Running command:", command)
-        return oldSubprocess(command, **kwargs)
+        return old_subprocess(command, check=True, **kwargs)
 
     try:
-        subprocess.run = hookSubprocessMafft
+        subprocess.run = hook_subprocess_mafft
         models.alignModelsToReferencePDB(
-            pdbReference,
-            outputFolder,
-            chain_indexes=chainIndexes,
+            pdb_reference,
+            output_folder,
+            chain_indexes=chain_indexes,
             trajectory_chain_indexes=trajectory_chain_indexes,
-            aligment_mode=alignmentMode,
-            reference_residues=referenceResidues,
+            aligment_mode=alignment_mode,
+            reference_residues=reference_residues,
             verbose=True,
         )
     finally:
-        subprocess.run = oldSubprocess
+        subprocess.run = old_subprocess
 
     print("Setting output of block to the results directory...")
 
     # Set the output
-    block.setOutput("path", outputFolder)
+    block.setOutput(output.id, output_folder)
 
 
 alignBlock = PluginBlock(
     name="Align PDBs",
+    id="align_PDBs",
     description="Align all models to a reference PDB based on a sequence alignment. (For local)",
-    action=initialAlign,
+    action=initial_action,
     variables=[
-        chainIndexesAlign,
-        trajectoryChainIndexesAlign,
-        alignmentModeAlign,
-        referenceResiduesAlign,
+        chainIndexes,
+        trajectoryChainIndexes,
+        alignmentMode,
+        referenceResidues,
     ],
-    inputs=[pdbReferenceAlign, inputFolderAlign],
-    outputs=[outputAlign],
+    inputs=[pdbReference, inputFolder],
+    outputs=[output],
 )

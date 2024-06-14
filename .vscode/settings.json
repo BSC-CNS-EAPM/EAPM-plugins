@@ -12,5 +12,13 @@
         "EAPM/Include/",
     ],
     "python.envFile": "${workspaceFolder}/.env",
-    "esbonio.sphinx.confDir": ""
+    "esbonio.sphinx.confDir": "",
+    "cSpell.words": [
+        "ahatool",
+        "Asitedesign",
+        "bsceapm",
+        "eapm",
+        "hmmer",
+        "mafft"
+    ]
 }
