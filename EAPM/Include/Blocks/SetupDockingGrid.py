@@ -131,6 +131,7 @@ def glideDocking(block: SlurmBlock):
         outerbox=outerbox,
     )  # Set grid calcualtion
 
+    # TODO take care of the input as it can happend multiple grid in same wf, create a folder if grid exists
     # Copy the models .mae to the grid/input_models folder
     for model in os.listdir(models_folder):
         if model.endswith(".mae"):
@@ -158,6 +159,7 @@ def downloadGridResults(block: SlurmBlock):
     grid_output = {
         "model_folder": block.inputs["model_folder"],
         "ligand_folder": block.inputs["ligand_folder"],
+        "grid_folder": "grid",
     }
 
     block.setOutput("grid_output", grid_output)

@@ -64,11 +64,15 @@ def setupGlideDocking(block: SlurmBlock):
 
         if grid_output is None:
             raise Exception("No valid grid output selected")
+            # TODO get the grid folder from the grid output
+
+            # TODO take care of the input as it can happend multiple grid in same wf, create a folder if docking exists
 
         models_folder = grid_output.get("model_folder")
         print(f"Models folder: {models_folder}")
         ligand_folder = grid_output.get("ligand_folder")
         print(f"Ligand folder: {grid_output.get('ligand_folder')}")
+        grid_folder = grid_output.get("grid_folder")
 
         if models_folder is None or not os.path.isdir(models_folder):
             raise Exception("No valid input")
