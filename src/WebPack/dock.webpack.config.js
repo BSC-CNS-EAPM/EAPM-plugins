@@ -10,7 +10,7 @@ module.exports = (env, argv) => {
   return {
     mode: mode,
     entry: {
-      docking_analysis: "./EAPM/dev/DockingAnalysis/docking_analysis.js",
+      docking_analysis: "./src/DockingAnalysis/index.tsx",
     },
     output: {
       path: path.resolve("EAPM", "Pages"),

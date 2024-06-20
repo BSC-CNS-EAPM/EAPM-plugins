@@ -3,7 +3,6 @@ Module containing the HmmSearch block for the EAPM plugin as a local implementat
 """
 
 import os
-import pyhmmer
 from HorusAPI import PluginBlock, PluginVariable, VariableTypes, Extensions
 
 
@@ -38,47 +37,50 @@ outputVariable = PluginVariable(
     allowedValues=["domtbl"],
 )
 
+
 def runHmmSearch(block: PluginBlock):
-    
+
+    import pyhmmer
+
     input = block.inputs.get("input_hmm", None)
-    
+
     if input is None:
         raise Exception("No input hmm provided")
-   
+
     if not os.path.exists(input):
         raise Exception(f"The input hmm file does not exist: {input}")
-    
+
     try:
         with pyhmmer.plan7.HMMFile(input) as hmm_file:
             hmm = hmm_file.read()
     except Exception as e:
         raise Exception(f"Error reading the input hmm file: {e}")
-    
+
     alphabet = pyhmmer.plan7.Alphabet.amino()
     background = pyhmmer.plan7.Background(alphabet)
     pipeline = pyhmmer.plan7.Pipeline(alphabet, background=background)
-    
+
     sequenceDB = block.inputs.get("sequence_db", None)
-    
+
     if sequenceDB is None:
         raise Exception("No sequence database provided")
-    
+
     if not os.path.exists(sequenceDB):
         raise Exception(f"The sequence database file does not exist: {sequenceDB}")
-    
+
     try:
         with pyhmmer.easel.SequenceFile(sequenceDB, digital=True, alphabet=alphabet) as seq_file:
             hits = pipeline.search_hmm(hmm, seq_file)
     except Exception as e:
         raise Exception(f"Error searching the sequence database: {e}")
-    
+
     output = block.outputs.get("output", "output.domtbl")
-    
+
     with open(output, "wb") as f:
         hits.write(f, format="domains")
-        
+
     block.setOutput("outputVariable", output)
-    
+
 
 hmmsearchLocalBlock = PluginBlock(
     name="HmmSearch Local",

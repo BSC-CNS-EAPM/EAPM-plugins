@@ -169,3 +169,10 @@ deps/
 **/.DS_Store
 
 node_modules/
+
+package-lock.json
+
+EAPM/config
+EAPM/Pages
+
+bun.lockb

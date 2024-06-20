@@ -1,7 +1,7 @@
 """
 Module containing the Mafft block for the EAPM plugin
 """
-import Bio.AlignIO, Bio.SeqIO
+
 from HorusAPI import PluginBlock, PluginVariable, VariableTypes, Extensions
 
 
@@ -43,7 +43,9 @@ def calculateMSAAction(block: PluginBlock):
             break
 
     if not hasPDB:
-        raise Exception(f"There are no pdb files in the protein folder: {proteinFolder}")
+        raise Exception(
+            f"There are no pdb files in the protein folder: {proteinFolder}"
+        )
 
     models = prepare_proteins.proteinModels(proteinFolder)
 
@@ -64,12 +66,13 @@ def calculateMSAAction(block: PluginBlock):
     try:
         subprocess.run = hookSubprocessMafft
         msa = models.calculateMSA()
-        
+
         output = "output.fasta"
-        
+
         import bioprospecting
+
         bioprospecting.alignment.mafft.writeMsaToFastaFile(msa, output)
-        
+
         block.setOutput(msaFile.id, output)
     except Exception as e:
         raise Exception(f"Error running Mafft: {e}")
@@ -85,6 +88,3 @@ multipleSequenceAlignmentBlock = PluginBlock(
     outputs=[msaFile],
     action=calculateMSAAction,
 )
-
-
-
