@@ -15,7 +15,7 @@ def checkMAFFTInstallation(block: PluginConfig):
     print("verifying MAFFT installation")
 
     # Get the path to the mafft executable
-    mafftPath = block.variables.get("MAFFT_path")
+    mafftPath = block.variables.get(mafftPathVariable.id)
 
     # Check if the path is valid
     if not os.path.isfile(mafftPath):

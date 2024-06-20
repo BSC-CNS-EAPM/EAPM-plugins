@@ -48,21 +48,24 @@ List of the blocks
 
 There is the list of the blocks available in this repository:
 
-- Alphafold
-- PrepWizard
-- Align PDBs
-- Setup Docking Grid (with glide)
-- Analyse Glide Docking
-- PDB to MAE
-- Trim Alphafold models
-- Run Glide Docking
-- PELE
-- Analyse PELE
-- Conserved Residues from MSA
-- Multiple Sequence Alignment with Mafft
-- MSA to HMM
-- HmmSearch
-- AsiteDesign
+- :ref:`Alphafold <alphafold>`
+- :ref:`PrepWizard <prepwizard>`
+- :ref:`Align PDBs <align_pdbs>`
+- :ref:`Setup Docking Grid (with glide) <setup_docking_grid>`
+- :ref:`Run Glide Docking <run_glide_docking>`
+- :ref:`Analyse Glide Docking <analyse_glide_docking>`
+- :ref:`PDB to MAE <pdb_to_mae>`
+- :ref:`Trim Alphafold models <trim_alphafold_models>`
+- :ref:`PELE <pele>`
+- :ref:`Analyse PELE <analyse_pele>`
+- :ref:`Conserved Residues from MSA <conserved_residues_msa>`
+- :ref:`Multiple Sequence Alignment with Mafft <msa_mafft>`
+- :ref:`HmmBuild <hmmbuild>`
+- :ref:`HmmSearch <hmmsearch>`
+- :ref:`AsiteDesign <asite_design>`
+- :ref:`Ahatool <ahatool>`
+
+.. _alphafold:
 
 Alphafold
 ---------
@@ -86,6 +89,8 @@ Flow for executing the alphafold block, can run locally and in the clusters cte_
 
 - ``folder name``: Name of the folder where the output will be saved.
 - ``remove``: Remove the folder with the output of the Alphafold model. For restarting porpoises.
+
+.. _prepwizard:
 
 PrepWizard
 ----------
@@ -121,6 +126,8 @@ PrepWizard is a tool for preparing protein structures for molecular simulations.
 - ``No Epik``: Do not use Epik in the preparation.
 - ``No Prot Assign``: Do not use ProtAssign in the preparation.
 
+.. _align_pdbs:
+
 Align PDBs
 ----------
 
@@ -150,6 +157,8 @@ Align PDBs is a tool for aligning protein structures. It is used to align the st
 - ``Alignment mode``: The mode defines how sequences are aligned. 'exact' for structurally aligning positions with exactly the same aminoacids after the sequence alignment or 'aligned' for structurally aligning sequences using all positions aligned in the sequence alignment.
 - ``Reference residues``: Reference residues to use in the alignment.
 
+.. _setup_docking_grid:
+
 Setup Docking Grid
 ------------------
 
@@ -178,39 +187,7 @@ Setup Docking Grid is a tool for setting up the docking grid for Glide. It is us
 
 - None
 
-Analyse Glide Docking
----------------------
-
-.. warning::
-    Need a Schrödinger Glide license to run this block.
-
-Analyse Glide Docking is a tool for analysing the results of the Glide docking. It is used to analyse the results of the docking of the ligands.
-
-.. image:: imgs/analysisDocking.png
-    :width: 350
-    :align: center
-    :alt: Horus Analyse Glide Docking block
-
-*Input*:
-
-- ``Model folder``: Folder with the models to be used in the docking.
-- ``Docking folder``: Folder with the docking results.
-
-or
-
-- ``Glide output``: Folder with the docking results.
-
-*Output*:
-
-- ``Output poses``: Folder with the poses of the model and ligand.
-- ``Glide results output``: Folder with the results of the analysis.
-
-*Parameters*:
-
-- ``Ligand separator``: Separator used to separate the ligand name from the docking pose.
-- ``Max threshold``: Maximum threshold to consider a pose as a good pose.
-- ``Poses folder name``: Name of the folder where the poses will be saved.
-- ``Selections``: List of selections to analyse.
+.. _run_glide_docking:
 
 Run Glide
 ---------
@@ -245,6 +222,48 @@ or
 
 - ``Poses per ligand``: Number of poses to generate per ligand.
 
+.. _analyse_glide_docking:
+
+Analyse Glide Docking
+---------------------
+
+.. warning::
+    Need a Schrödinger Glide license to run this block.
+
+Analyse Glide Docking is a tool for analysing the results of the Glide docking. The function allows to calculation of ligand 
+distances with the options protein_atoms or protein_pairs. With the first option, the analysis will calculate the closest distance 
+between the protein atoms given and any ligand atom (or heavy atom if ignore_hydrogens=True). The analysis will also return which ligand 
+atom is the closest for each pose. On the other hand, with the atom_pairs option only distances for the specific atom pairs between 
+the protein and the ligand will be calculated.
+
+.. image:: imgs/analysisDocking.png
+    :width: 350
+    :align: center
+    :alt: Horus Analyse Glide Docking block
+
+*Input*:
+
+- ``Model folder``: Folder with the models to be used in the docking.
+- ``Docking folder``: Folder with the docking results.
+
+or
+
+- ``Glide output``: Folder with the docking results.
+
+*Output*:
+
+- ``Output poses``: Folder with the poses of the model and ligand.
+- ``Glide results output``: Folder with the results of the analysis.
+
+*Parameters*:
+
+- ``Ligand separator``: Separator used to separate the ligand name from the docking pose.
+- ``Max threshold``: Maximum threshold to consider a pose as a good pose.
+- ``Poses folder name``: Name of the folder where the poses will be saved.
+- ``Selections``: List of selections to analyse.
+
+.. _pdb_to_mae:
+
 PDB to MAE
 ----------
 
@@ -278,6 +297,8 @@ or
 
 - ``Change ligand name``: Change the ligand name inside the PDB. This will replace the chain, residue and atom names with the ligand name (L).
 
+.. _trim_alphafold_models:
+
 Trim Alphafold models
 ---------------------
 
@@ -300,3 +321,249 @@ Trim Alphafold models is a tool for trimming the Alphafold models. It is used to
 *Parameters*:
 
 - ``Confidence threshold``: Threshold confidence indicates the maximum confidence score at which to stop the trimming of terminal regions.
+
+.. _pele:
+
+PELE
+----
+
+PELE is a tool for running PELE simulations. 
+
+.. image:: imgs/pele.png
+    :width: 350
+    :align: center
+    :alt: Horus PELE block
+
+*Input*:
+
+- ``Model folder``: Folder with the PDBs files for the PELE simulation.
+- ``PELE folder``: Folder with the PDBs models with the docked ligand.
+- ``PELE yaml``: PELE yaml file with the configuration of the simulation.
+
+*Output*:
+
+- ``PELE output``: Folder with the PELE output.
+
+*Parameters*:
+
+- ``PELE folder name``: Name of the folder where the PELE output will be saved.
+- ``Selections``: List of selections to analyse.
+- ``Box centers``: Box centers for the PELE simulation.
+- ``Box radius``: Box radius for the PELE simulation.
+- ``Constraints``: List of the constraints for the PELE simulation. **WIP**.
+- ``Ligand index``: Index of the ligand in the PDB file.
+- ``PELE steps``: Number of steps for the PELE simulation.
+- ``PELE debug``: Debug mode for the PELE simulation.
+- ``PELE iterations``: Number of iterations for the PELE simulation.
+- ``Equilibration steps``: Number of equilibration steps for the PELE simulation.
+- ``Ligand energy groups``: Energy groups for the ligand in the PELE simulation. **WIP**.
+- ``PELE separator``: Separator used to separate the ligand name from the docking pose.
+- ``Use PELEffy``: Use PELEffy to generate the ligand parameters.
+- ``Use srun``: Use srun to launch the PELE simulation.
+- ``Energy by residue``: Calculate the energy by residue in the PELE simulation.
+- ``EBR new flag``: New flag for the energy by residue calculation.
+- ``90 degrees version``: Use the 90 degrees version of the PELE simulation.
+- ``Analysis``: Analysis to perform in the PELE simulation.
+- ``Energy by residue type``: Type of energy by residue calculation.
+- ``Peptide``: Peptide to use in the PELE simulation.
+- ``Equilibration mode``: Equilibration mode to use in the PELE simulation.
+- ``Spawning``: Spawning to use in the PELE simulation.
+- ``Continuation``: If is a continuation of a previous simulation.
+- ``Equilibration``: If is an equilibration simulation.
+- ``Skip models``: Write which models names to skip.
+- ``Skip ligands``: Write which ligands names to skip.
+- ``Extend iterations``: Extend the number of iterations in the PELE simulation.
+- ``Only models``: Only run the PELE simulation for the models in the list.
+- ``Only ligands``: Only run the PELE simulation for the ligands in the list.
+- ``Only combinations``: Only run the PELE simulation for the combinations in the list.
+- ``Ligand template``: Template to use for the ligand in the PELE simulation. **WIP**.
+- ``Seed``: Seed to use in the PELE simulation.
+- ``Log file``: Enable log file in the PELE simulation.
+- ``Rescoring``: Rescoring to use in the PELE simulation.
+- ``Epsilon``: Epsilon to use in the PELE simulation.
+- ``Ligand equilibration cst``: Ligand equilibration constraints to use in the PELE simulation.
+- ``Covalent setup``: Covalent setup to use in the PELE simulation.
+- ``Nonbonded new flag``: Nonbonded new flag to use in the PELE simulation.
+- ``Nonbonded energy``: Nonbonded energy to use in the PELE simulation.
+- ``Covalent base AA``: Covalent base aminoacid to use in the PELE simulation.
+- ``Membrane residues``: Membrane residues to use in the PELE simulation.
+- ``Bias to point``: Bias to point to use in the PELE simulation.
+- ``com bias1``: Bias to point to use in the PELE simulation.
+- ``com bias2``: Bias to point to use in the PELE simulation.
+
+.. _analyse_pele:
+
+Analyse PELE
+------------
+
+Analyse PELE is a tool for analysing the results of the PELE simulations. 
+
+.. image:: imgs/peleAnalysis.png
+    :width: 350
+    :align: center
+    :alt: Horus Analyse PELE block
+
+*Input*:
+
+- ``PELE folder``: Folder with the PELE simulation.
+
+*Output*:
+
+- None
+
+*Parameters*:
+
+- None
+
+.. _conserved_residues_msa:
+
+Conserved Residues from MSA
+---------------------------
+
+Conserved Residues from MSA is a tool for calculating the conserved residues from a Multiple Sequence Alignment.
+
+.. image:: imgs/conserved.png
+    :width: 350
+    :align: center
+    :alt: Horus Conserved Residues from MSA block
+
+*Input*:
+
+- ``Protein folder``: Folder with the models PDBs.
+
+*Output*:
+
+- ``Conserved residues``: Dictionary with the conserved residues between the residues.
+
+*Parameters*:
+
+- ``Residue index``: Index of the residues to get. If not set all the residues will be returned.
+
+.. _msa_mafft:
+
+Multiple Sequence Alignment with Mafft
+--------------------------------------
+
+Multiple Sequence Alignment with Mafft is a tool for aligning multiple sequences.
+
+.. image:: imgs/msa.png
+    :width: 350
+    :align: center
+    :alt: Horus MSA block
+
+*Input*:
+
+- ``Protein folder``: Folder with the models PDBs.
+
+*Output*:
+
+- ``MSA File``: File with the multiple sequence alignment.
+
+*Parameters*:
+
+- None
+
+.. _hmmbuild:
+
+HmmBuild
+--------
+
+HmmerBuild creates a position-specific scoring table, called a profile hidden Markov model (HMM), that is a statistical model of 
+the consensus of a multiple sequence alignment.
+
+.. image:: imgs/hmmBuild.png
+    :width: 350
+    :align: center
+    :alt: Horus HmmBuild block
+
+*Input*:
+
+- ``MSA File``: File with the multiple sequence alignment.
+
+*Output*:
+
+- ``Output HMM``: File with the Hidden Markov Model.
+
+*Parameters*:
+
+- None
+
+.. _hmmsearch:
+
+HmmSearch
+---------
+
+HmmSearch is a tool for searching a Hidden Markov Model in a database.
+
+.. image:: imgs/hmmSearch.png
+    :width: 350
+    :align: center
+    :alt: Horus HmmSearch block
+
+*Input*:
+
+- ``HMM Input``: File with the Hidden Markov Model.
+
+*Output*:
+
+- ``Output``: Folder with the output of the search.
+
+*Parameters*:
+
+- ``Sequence DB``: Database to search the HMM.
+- ``Hmmsearch evalue``: E-value to use in the search.
+
+.. _asite_design:
+
+AsiteDesign
+-----------
+
+AsiteDesign is a tool for designing the active site of a protein.
+
+.. image:: imgs/asiteDesign.png
+    :width: 350
+    :align: center
+    :alt: Horus AsiteDesign block
+
+*Input*:
+
+- ``Input yaml``: File with the configuration of the design.
+- ``Input PDB``: PDB file with the protein to design.
+- ``Parameters``: Folder with the parameters files.
+
+*Output*:
+
+- ``Asite simulation folder``: Folder with the output of the design.
+
+*Parameters*:
+
+- ``Container``: If you are launching the block in a container. The container to use.
+
+.. _ahatool:
+
+Ahatool
+-------
+
+AHATool an Automatic HMM and Analysis Tool.
+
+.. image:: imgs/ahatool.png
+    :width: 350
+    :align: center
+    :alt: Horus AHATool block
+
+*Input*:
+
+- ``Database path``: The database where the search will be done.
+- ``Container name``: The container to use.
+- ``Input fasta``: The fasta file with the sequences to search.
+
+*Output*:
+
+- ``Output folder``: Folder with the output of the search.
+
+*Parameters*:
+
+- ``Prefix``: The prefix the tool will use for produced files.
+- ``Start``: From where to start the search (search or build).
+- ``E-value``: The e-value to use in the search (1e-10).
+- ``Threads``: The number of threads to use in the search (1,2,4).

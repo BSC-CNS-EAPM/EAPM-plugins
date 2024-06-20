@@ -2,9 +2,13 @@
 Module containing the HmmSearch block for the EAPM plugin as a local implementation
 """
 
+<<<<<<< HEAD
 import os
 from HorusAPI import PluginBlock, PluginVariable, VariableTypes, Extensions
 
+=======
+from HorusAPI import Extensions, PluginBlock, PluginVariable, VariableTypes
+>>>>>>> main
 
 # ==========================#
 # Variable inputs
@@ -39,6 +43,7 @@ outputVariable = PluginVariable(
 
 
 def runHmmSearch(block: PluginBlock):
+    import os
 
     import pyhmmer
 
@@ -84,6 +89,7 @@ def runHmmSearch(block: PluginBlock):
 
 hmmsearchLocalBlock = PluginBlock(
     name="HmmSearch Local",
+    id="hmmsearch_local",
     description="Searches a sequence database with a given hmm",
     inputs=[hmmInput, sequenceDBVar],
     variables=[],

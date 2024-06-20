@@ -198,18 +198,15 @@ class blast:
         if not all(len(seq) == first_seq_len for seq in sequences.values()):
             # Create a multiple sequence alignment
             msa = mafft.multipleSequenceAlignment(sequences, stderr=False)
-            if not save_msa:
-                msa_file = '.'+str(uuid.uuid4())+'.fasta.tmp'
-            else:
-                msa_file = save_msa
-            writeMsaToFastaFile(msa, msa_file)
         else:
             print('All sequences are of the same length so no MSA calculation will be run.')
-            if not save_msa:
-                msa_file = '.'+str(uuid.uuid4())+'.fasta.tmp'
-            else:
-                msa_file = save_msa
-            writeFastaFile(sequences, msa_file)
+            msa = sequences
+
+        if not save_msa:
+            msa_file = '.'+str(uuid.uuid4())+'.fasta.tmp'
+        else:
+            msa_file = save_msa
+        writeMsaToFastaFile(msa, msa_file)
 
         if not db_file:
             # Create a mock fasta file (necessary to run psiblast but calculation is not affected by it.)
@@ -217,13 +214,11 @@ class blast:
             with open(mock_file, 'w') as mf:
                 mf.write('>mock_sequence\n')
                 mf.write('AAA\n')
+            db_file = mock_file
 
         # Create PSSM
         command =  'psiblast '
-        if db_file:
-            command += '-db '+db_file+' '
-        else:
-            command += '-subject '+mock_file+' '
+        command += '-db '+db_file+' '
         command += '-in_msa '+msa_file+' '
         command += '-out_ascii_pssm '+output_file+' '
 
@@ -275,19 +270,22 @@ class blast:
 
         return positions, native, aminoacids, log_llh
 
-    def createLibraryFromPSSM(pssm, target_sequence=None, score_threshold=0, return_scores=False):
+    def createLibraryFromPSSM(pssm_file, target_sequence=None, score_threshold=0, return_scores=False):
         """
         Create a mutational library based on the given PSSM log likelihood scores.
         """
-        aminoacids = ['A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V']
+
+        pssm = blast.parsePSSM(pssm_file)
+        positions, native, aminoacids, log_llh = pssm
+        # aminoacids = ['A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V']
 
         mutational_library = {}
-        for p in range(1, pssm.shape[0]+1):
+        for p in range(1, log_llh.shape[0]+1):
             for i, aa in enumerate(aminoacids):
-                if pssm[p-1, i] >= score_threshold:
+                if log_llh[p-1, i] >= score_threshold:
                     if return_scores:
                         mutational_library.setdefault(p, {})
-                        mutational_library[p][aa] = int(pssm[p-1, i])
+                        mutational_library[p][aa] = int(log_llh[p-1, i])
                     else:
                         mutational_library.setdefault(p, [])
                         mutational_library[p].append(aa)

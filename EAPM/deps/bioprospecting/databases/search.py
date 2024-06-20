@@ -52,7 +52,7 @@ def PSIBlastUniProtDatabase(target_sequence, num_iterations=5, max_target_seqs=5
 
     return psiblast_sequences
 
-def searchTriads(job_folder,pdb_path):
+def searchTriads(job_folder, pdb_path):
 
     if not os.path.exists(job_folder):
         os.mkdir(job_folder)

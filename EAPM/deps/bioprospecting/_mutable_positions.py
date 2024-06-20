@@ -75,7 +75,8 @@ class mutation_restrictions:
             self.counts = {}
 
     def getMutablePositions(self,cov_filter=0.75, id_filter=0.35, tm_score_filter=0.5, scores_threshold=None, max_seqs=None,
-                            return_all_counts=False, overwrite=False, cpus=None, return_counts=False, verbose=True, rosetta_params=None):
+                            return_all_counts=False, overwrite=False, cpus=None, return_counts=False, verbose=True, rosetta_params=None,
+                            return_seq=False):
 
         """
 
@@ -259,6 +260,10 @@ class mutation_restrictions:
 
             # Give weight to each of the sequences in the alignment based on their similarity
             seqs = {k:v for k,v in seqs.items() if k not in codes_to_remove}
+            if return_seq:
+                return seqs
+            if verbose:
+                print('Calculating sequences clusters.')
             cluster = alignment.cdhit.clusterSequences(seqs)
             weights = {}
             for c in cluster.values():
@@ -266,12 +271,16 @@ class mutation_restrictions:
                     weights[m] = 1/len(c)
 
             # Get msa position of loop regions
+            if verbose:
+                print('Get msa position of loop regions.')
             msa_loop_ranges = []
             for r in loop_ranges:
                 r = [x+1 for x in r]
-                msa_loop_ranges.append(alignment.msaIndexesFromSequencePositions(msa,'target',r))
+                msa_loop_ranges.append(alignment.getMsaIndexesFromSequencePositions(msa,'target',r))
 
             # Get loop regions that have gaps in them
+            if verbose:
+                print('Get loop regions that have gaps in them.')
             t_sequence = msa[0].seq
             gapped_loop = {}
             for s in msa:
@@ -284,6 +293,7 @@ class mutation_restrictions:
 
             # Get counts
             count = {}
+            print('Calculating counts.')
             all_loop_pos = [item for sublist in msa_loop_ranges for item in sublist]
             t_sequence = msa[0].seq
             in_loop = False
@@ -313,6 +323,8 @@ class mutation_restrictions:
                                 allowed_aa[position][s.seq[i]] += 1*weights[s.id]
 
             self.counts = allowed_aa
+            if verbose:
+                print('Calculating counts finished.')
             with open(self.output_folder+'/'+self.model_name+'/'+'counts.json','w') as f:
                 json.dump(self.counts,f)
 
@@ -325,8 +337,9 @@ class mutation_restrictions:
 
         elif return_counts:
             return self.counts
-
+        
         else:
+            print("Calculating scores.")
             if self.scores != {} and not overwrite:
                 if scores_threshold == None:
                     return self.scores

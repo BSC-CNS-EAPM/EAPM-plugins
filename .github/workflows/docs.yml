@@ -1,0 +1,36 @@
+name: Deploy EAPM-plugin documentation to Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build_docs:
+    runs-on: ubuntu-latest
+    name: Build docs
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # fetch all history for all branches and tags
+      - uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: Devtools/Environment/docs.yaml
+          environment-name: eapmPlugin_docs
+          cache-environment: true
+          download-micromamba: true
+      - name: Build docs
+        run: |
+          eval "$(micromamba shell hook -s bash)"
+          micromamba activate eapmPlugin_docs
+          cd docs && make html
+      - name: Deploy documentation
+        if: success()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          publish_branch: gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/build/html
+          user_name: "Albert Cañellas"
+          user_email: "acanella@bsc.es"
