@@ -2,8 +2,9 @@
 Module containing the AlphaFold block for the EAPM plugin
 """
 
-from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 from utils import BSC_JOB_VARIABLES
+
+from HorusAPI import PluginVariable, SlurmBlock, VariableTypes
 
 # ==========================#
 # Variable inputs
@@ -67,10 +68,11 @@ def initial_alphafold(block: SlurmBlock):
     folder_name = block.variables.get(output.id, "alphafold")
     remove_existing = block.variables.get(removeExistingResults.id, False)
 
-    cpus_per_task = block.variables.get("cpus_per_task")
-    if cpus_per_task == 1:
+    cpus_per_task = block.variables.get("cpus_per_task", 1)
+    cpus = block.variables.get("cpus", 20)
+    if cpus_per_task < 20 and cpus < 20:
         print("Alphafold requires at least 20 cpus per task. Changing to 20 cpus per task.")
-        block.variables["cpus_per_task"] = 20
+        block.variables["cpus"] = 20
 
     partiton = block.variables.get("partition")
     if partiton is None:

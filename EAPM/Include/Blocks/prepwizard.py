@@ -165,7 +165,8 @@ def prepwizard_action(block: SlurmBlock):
     folder_name = block.variables.get(folderNameVariable.id, "prepared_proteins")
     if os.path.exists(folder_name):
         folder_name = folder_name + "_" + str(time.time())
-        block.extraData[folderNameVariable.id] = folder_name
+    block.extraData[folderNameVariable.id] = folder_name
+    print("Folder name: ", folder_name)
     ph = int(block.variables.get(phPW.id, 7))
     epik_ph = block.variables.get(epikPHPW.id, False)
     sample_water = block.variables.get(sampleWaterPW.id, False)
@@ -243,10 +244,14 @@ def final_prepwizard(block: SlurmBlock):
 
     # Move the prepared proteins to the output folder
     for model in os.listdir(os.path.join(folder_name + "_wizard", "output_models")):
-        for file in os.listdir(os.path.join(folder_name + "_wizard", "output_models", model)):
+        for file in os.listdir(
+            os.path.join(folder_name + "_wizard", "output_models", model)
+        ):
             if file.endswith(".pdb"):
                 final_path = os.path.join(folder_name, file)
-                pdb_path = os.path.join(folder_name + "_wizard", "output_models", model, file)
+                pdb_path = os.path.join(
+                    folder_name + "_wizard", "output_models", model, file
+                )
                 shutil.copyfile(pdb_path, final_path)
 
     block.setOutput(outputPDB.id, final_path)

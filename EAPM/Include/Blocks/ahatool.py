@@ -15,13 +15,6 @@ dbPath = PluginVariable(
     defaultValue="nr.fa",
     allowedValues=["fa"],
 )
-containerName = PluginVariable(
-    name="Container name",
-    id="container_name",
-    description="The container name to use.",
-    type=VariableTypes.STRING,
-    defaultValue="bsceapm/ahatool:2.2",
-)
 inputFasta = PluginVariable(
     name="Input fasta",
     id="input_fasta",
@@ -78,6 +71,13 @@ threadsVar = PluginVariable(
     description="Number of threads. Options (1, 2, 4).",
     type=VariableTypes.INTEGER,
     defaultValue=None,
+)
+containerName = PluginVariable(
+    name="Container name",
+    id="container_name",
+    description="The container name to use.",
+    type=VariableTypes.STRING,
+    defaultValue="bsceapm/ahatool:2.2",
 )
 
 
@@ -183,7 +183,7 @@ ahatoolBlock = PluginBlock(
     id="AHATool",
     action=initial_action,
     description="Iteratively search a protein sequence against a protein database",
-    inputs=[inputFasta, dbPath, containerName],
-    variables=[removeExistingResults, prefixVar, startVar, evaleVar, threadsVar],
+    inputs=[inputFasta, dbPath],
+    variables=[containerName, removeExistingResults, prefixVar, startVar, evaleVar, threadsVar],
     outputs=[outputAhatool],
 )

@@ -143,13 +143,13 @@ def initial_action(block: PluginBlock):
     else:
         chain_indexes = [0]
 
-    trajectory_chain_indexes = None
+    indexes = None
     # Parse the trajectory chain indexes
     if trajectory_chain_indexes is not None:
-        trajectory_chain_indexes = [x["trajectory_chain_index"] for x in trajectory_chain_indexes]
-        trajectory_chain_indexes = {}
+        trajectory_chain_indexes = [x["indexes"] for x in trajectory_chain_indexes]
+        indexes = {}
         for i, model in enumerate(models.models_names):
-            trajectory_chain_indexes[model] = trajectory_chain_indexes[i]
+            indexes[model] = trajectory_chain_indexes[i]
 
     # Parse the reference residues
     if reference_residues is not None:
