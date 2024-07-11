@@ -121,6 +121,10 @@ def create_plugin():
 
     eapm_plugin.addConfig(hmmerExecutableConfig)
 
+    from Pages.load_tables import load_page
+
+    eapm_plugin.addPage(load_page)
+
     # pylint: enable=import-outside-toplevel
 
     # Return the plugin
