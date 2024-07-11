@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Load HTML</title>
+  </head>
+  <body>
+    <a id="load" href="/plugins/pages/eapm.load_tables/load_table"
+      >Loading...</a
+    >
+    <script>
+      function loadData() {
+        const data = parent.extensionData;
+        if (data) {
+          const pathToLoad = encodeURIComponent(data.path);
+          const aElement = document.getElementById("load");
+          const url = new URL(window.location.href + "load_table");
+          url.searchParams.set("path", pathToLoad);
+          const urlToGet = url.toString();
+          aElement.href = urlToGet;
+          aElement.click();
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", loadData);
+    </script>
+  </body>
+</html>
