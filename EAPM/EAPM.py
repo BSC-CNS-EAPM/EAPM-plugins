@@ -104,13 +104,17 @@ def create_plugin():
 
     eapm_plugin.addBlock(AnalyseGBlock)
 
-    # from Blocks.Rbcavity import rbCavityBlock
+    from Blocks.Rbcavity import rbCavityBlock
 
-    # eapm_plugin.addBlock(rbCavityBlock)
+    eapm_plugin.addBlock(rbCavityBlock)
 
-    # from Blocks.Rbdock import rbDockBlock
+    from Blocks.Rbdock import rbDockBlock
 
-    # eapm_plugin.addBlock(rbDockBlock)
+    eapm_plugin.addBlock(rbDockBlock)
+
+    from Blocks.RbParameterFile import rbParameterFile
+
+    eapm_plugin.addBlock(rbParameterFile)
 
     # Add the configs
     from Configs.mafftConfig import mafftExecutableConfig

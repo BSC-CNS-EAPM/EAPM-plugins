@@ -15,12 +15,20 @@ inputPRMFile = PluginVariable(
     defaultValue="parameter_file.prm",
     allowedValues=["prm"],
 )
+cavityFile = PluginVariable(
+    name="Cavity File",
+    id="cavity_file",
+    description="Cavity file of the docking volume.",
+    type=VariableTypes.FILE,
+    defaultValue="parameter_file.as",
+    allowedValues=["as"],
+)
 inputLigand = PluginVariable(
     name="Ligand SD file",
     id="input_ligand",
     description="The input ligand SD file.",
     type=VariableTypes.FILE,
-    allowedValues=["sd"],
+    allowedValues=["sd","sdf"],
 )
 
 # ==========================#
@@ -31,35 +39,33 @@ outputFile = PluginVariable(
     id="output_file",
     description="The output file with the ligand docked.",
     type=VariableTypes.FILE,
-    defaultValue="parameter_file",
+    defaultValue="output_dock",
 )
-
 
 ##############################
 #       Other variables      #
 ##############################
-protoPrmFile = PluginVariable(
-    name="proto Prm File",
+protocolPrmFile = PluginVariable(
+    name="Protocol Parameter File",
     id="proto_prm_file",
     description="The docking protocol parameter file.",
     type=VariableTypes.FILE,
     defaultValue="dock.prm",
 )
 nRuns = PluginVariable(
-    name="nRuns",
+    name="Number of runs",
     id="n_runs",
-    description="Number of runs/ligand (default=1).",
+    description="Number of runs/ligand (default=10).",
     type=VariableTypes.INTEGER,
-    defaultValue=None,
+    defaultValue=10,
 )
 allH = PluginVariable(
-    name="allH",
+    name="Hydrogens",
     id="all_h",
     description="Keep all hydrogens, read all hydrogens present (default=polar hydrogens only).",
     type=VariableTypes.BOOLEAN,
-    defaultValue=False,
+    defaultValue=True,
 )
-
 
 # Align action block
 def initialRbdock(block: PluginBlock):
@@ -75,26 +81,38 @@ def initialRbdock(block: PluginBlock):
         raise Exception("No parameter file provided.")
     if not os.path.exists(input_PRMfile):
         raise Exception("Parameter file does not exist.")
+    
     input_ligand = block.inputs.get(inputLigand.id, None)
-    out = "output_dock"
     if input_ligand is None:
         raise Exception("No ligand file provided.")
     if not os.path.exists(input_ligand):
         raise Exception("Ligand file does not exist.")
-    else:
-        out = os.path.basename(input_ligand).split(".")[0] + "_out"
-    output_file = block.outputs.get(outputFile.id, out)
+    
+    cavity_file = block.inputs.get(cavityFile.id, None)
+    if cavity_file is None:
+        raise Exception("No cavity file provided.")
+    if not os.path.exists(input_ligand):
+        raise Exception("Cavity file does not exist.")
+
+    out = "output_dock"
+    path_output = os.path.dirname(input_ligand)
+    path_cavity = os.path.dirname(cavity_file)
+
+    if path_output != path_cavity:
+        print("WARNING! The ligands to dock and the cavity file are not in the same directory.")
+        print(f"The docking output file (.sd) will be saved in {path_output}.")
+
+    output_file = os.path.join(path_output,block.outputs.get(outputFile.id, out))
 
     # rbcavity -was -d -r parameter_file.prm > parameter_file.log
     command = f"rbdock -i {input_ligand} -o {output_file} -r {input_PRMfile} "
+
     if block.variables.get("proto_prm_file", None) is not None:
         command += f"-p {block.variables.get('proto_prm_file')} "
-    if block.variables.get("n_runs", None) is not None:
+    if block.variables.get("n_runs", 50) is not None:
         command += f"-n {block.variables.get('n_runs')} "
-    if block.variables.get("all_h", False):
+    if block.variables.get("all_h", True):
         command += "-allH "
-
-    print("Setting output of block to the results directory...")
 
     # Subprocess the command
     import subprocess
@@ -103,11 +121,12 @@ def initialRbdock(block: PluginBlock):
 
     # Get the output and error
     output = completed_process.stdout
-    # Save the output and error
-    with open(f"{output_file}.out", "w") as f:
-        f.write(output)
     error = completed_process.stderr
-    with open(f"{output_file}.err", "w") as f:
+
+    # Save the output and error
+    with open(f"{os.path.join(path_output,output_file)}.out", "w") as f:
+        f.write(output)    
+    with open(f"{os.path.join(path_output,output_file)}.err", "w") as f:
         f.write(error)
 
     # Set the output
@@ -115,15 +134,15 @@ def initialRbdock(block: PluginBlock):
 
 
 rbDockBlock = PluginBlock(
-    name="Rbdock",
+    name="rDock",
     id="rbdock",
     description="Calculate the docking. (For local)",
     action=initialRbdock,
     variables=[
-        protoPrmFile,
+        protocolPrmFile,
         nRuns,
         allH,
     ],
-    inputs=[inputPRMFile, inputLigand],
+    inputs=[inputPRMFile, cavityFile, inputLigand],
     outputs=[outputFile],
 )

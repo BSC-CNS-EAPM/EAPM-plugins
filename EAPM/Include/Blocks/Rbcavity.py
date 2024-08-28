@@ -19,14 +19,13 @@ inputPRMFile = PluginVariable(
 # ==========================#
 # Variable outputs
 # ==========================#
-outputLog = PluginVariable(
-    name="Output log",
-    id="output_log",
-    description="The output log file.",
+cavityFile = PluginVariable(
+    name="Cavity file",
+    id="cavity_file",
+    description="File required to perform an rDock docking.",
     type=VariableTypes.FILE,
-    defaultValue="parameter_file.log",
+    defaultValue=None,
 )
-
 
 ##############################
 #       Other variables      #
@@ -50,12 +49,16 @@ dumpInsight = PluginVariable(
 # Align action block
 def initialRbcavity(block: PluginBlock):
 
+    import os
+
     if block.remote.name != "Local":
         raise Exception("This block is only available for local execution.")
 
     # Loading plugin variables
     input_PRMfile = block.inputs.get(inputPRMFile.id, None)
-    output_log = block.outputs.get(outputLog.id, "parameter_file.log")
+    output_log = "cavity_generation.log"
+
+    path_output = os.path.dirname(input_PRMfile)
 
     # rbcavity -was -d -r parameter_file.prm > parameter_file.log
     command = "rbcavity "
@@ -63,9 +66,7 @@ def initialRbcavity(block: PluginBlock):
         command += "-was "
     if block.variables.get("dump_insight", False):
         command += "-d "
-    command += f"-r {input_PRMfile} > {output_log}"
-
-    print("Setting output of block to the results directory...")
+    command += f"-r {input_PRMfile} > {os.path.join(path_output,output_log)}"
 
     # subprocess the command
     import subprocess
@@ -76,19 +77,28 @@ def initialRbcavity(block: PluginBlock):
     output = completed_process.stdout
     error = completed_process.stderr
 
+    # Save the output and error
+    with open(f"{os.path.join(path_output,'cavity_grid.out')}", "w") as f:
+        f.write(output)
+    with open(f"{os.path.join(path_output,'cavity_grid.err')}", "w") as f:
+        f.write(error)
+
+    parameter_file_name = input_PRMfile.split('.')[0]
+
     # Set the output
-    block.setOutput(outputLog.id, output_log)
+    block.setOutput(cavityFile.id, os.path.join(path_output, f"{parameter_file_name}.as"))
 
 
 rbCavityBlock = PluginBlock(
-    name="Rbcavity",
+    name="rDockCavity",
     id="rbcavity",
-    description="Calculate docking cavities. (For local)",
+    description="Calculate docking cavity for rDock. (For local)",
     action=initialRbcavity,
     variables=[
         was,
         dumpInsight,
     ],
     inputs=[inputPRMFile],
-    outputs=[outputLog],
+    outputs=[cavityFile],
 )
+
