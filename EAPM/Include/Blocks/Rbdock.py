@@ -1,5 +1,5 @@
 """
-Module containing the rbdock block for the EAPM plugin
+Module containing the rDock block for the EAPM plugin
 """
 
 from HorusAPI import PluginBlock, PluginVariable, VariableTypes
@@ -28,23 +28,30 @@ inputLigand = PluginVariable(
     id="input_ligand",
     description="The input ligand SD file.",
     type=VariableTypes.FILE,
-    allowedValues=["sd","sdf"],
+    allowedValues=["sd", "sdf"],
 )
 
 # ==========================#
 # Variable outputs
 # ==========================#
-outputFile = PluginVariable(
-    name="Output File",
+outputFolder = PluginVariable(
+    name="Docked Folder",
     id="output_file",
-    description="The output file with the ligand docked.",
-    type=VariableTypes.FILE,
-    defaultValue="output_dock",
+    description="The output folder with all the ligand docked in different files.",
+    type=VariableTypes.FOLDER,
+    defaultValue="dock_output",
 )
 
 ##############################
 #       Other variables      #
 ##############################
+cpus = PluginVariable(
+    name="CPUs",
+    id="cpus",
+    description="Number of cpus to be used in the docking.",
+    type=VariableTypes.INTEGER,
+    defaultValue=3,
+)
 protocolPrmFile = PluginVariable(
     name="Protocol Parameter File",
     id="proto_prm_file",
@@ -67,10 +74,69 @@ allH = PluginVariable(
     defaultValue=True,
 )
 
+
 # Align action block
 def initialRbdock(block: PluginBlock):
 
     import os
+    import subprocess
+
+    def _splitInputLigands(input_ligand, cpus):
+        """
+        Split the input ligand file into multiple files.
+
+        Parameters:
+        ----------
+        input_ligand: str
+            The input ligand file
+        cpus: int
+            The number of CPUs to be used in the docking
+        """
+
+        num_cpus = os.cpu_count()
+        if cpus > num_cpus:
+            cpus = num_cpus
+            print(
+                f"WARNING! The number of CPUs requested is higher than the available CPUs. The number of CPUs will be set to the maximum available ({num_cpus})."
+            )
+
+        # setting paths
+        path_output = os.path.dirname(input_ligand)
+        path_split_ligands = os.path.join(path_output, "ligands")
+        split_mols_file = os.path.join(path_output, ".splitMols.sh")
+        split_mols_runner = os.path.join(path_output, ".split.sh")
+
+        # Generating split file
+        if not os.path.isfile(split_mols_file):
+            with open(split_mols_file, "w") as filein:
+                filein.writelines(
+                    "#!/bin/bash\n"
+                    "#Usage: splitMols.sh <input> #Nfiles <outputRoot>\n"
+                    "fname=$1\n"
+                    "nfiles=$2\n"
+                    "output=$3\n"
+                    "molnum=$(grep -c '$$$$' $fname)\n"
+                    'echo " - $molnum molecules found"\n'
+                    "echo \" - Dividing '$fname' into $nfiles files\"\n"
+                    'echo " "\n'
+                    "rawstep=`echo $molnum/$nfiles | bc -l`\n"
+                    "let step=$molnum/$nfiles\n"
+                    "if [ ! `echo $rawstep%1 | bc` == 0 ]; then\n"
+                    "        let step=$step+1;\n"
+                    "fi;\n"
+                    "sdsplit -$step -o$output $1\n"
+                )
+
+        if not os.path.isdir(path_split_ligands):
+            os.mkdir(path_split_ligands)
+
+        # Generating splitted ligand files
+        with open(split_mols_runner, "w") as fileout:
+            fileout.writelines(
+                f"bash .splitMols.sh {input_ligand} {cpus} {os.path.join(path_split_ligands,'split')}\n"
+            )
+
+        return split_mols_file, split_mols_runner
 
     if block.remote.name != "Local":
         raise Exception("This block is only available for local execution.")
@@ -81,13 +147,13 @@ def initialRbdock(block: PluginBlock):
         raise Exception("No parameter file provided.")
     if not os.path.exists(input_PRMfile):
         raise Exception("Parameter file does not exist.")
-    
+
     input_ligand = block.inputs.get(inputLigand.id, None)
     if input_ligand is None:
         raise Exception("No ligand file provided.")
     if not os.path.exists(input_ligand):
         raise Exception("Ligand file does not exist.")
-    
+
     cavity_file = block.inputs.get(cavityFile.id, None)
     if cavity_file is None:
         raise Exception("No cavity file provided.")
@@ -102,47 +168,68 @@ def initialRbdock(block: PluginBlock):
         print("WARNING! The ligands to dock and the cavity file are not in the same directory.")
         print(f"The docking output file (.sd) will be saved in {path_output}.")
 
-    output_file = os.path.join(path_output,block.outputs.get(outputFile.id, out))
+    # Splitting ligands
+    output_folder_path = os.path.join(path_output, block.outputs.get(outputFolder.id, out))
+    os.makedirs(output_folder_path, exist_ok=True)
 
-    # rbcavity -was -d -r parameter_file.prm > parameter_file.log
-    command = f"rbdock -i {input_ligand} -o {output_file} -r {input_PRMfile} "
+    n_cpus = block.variables.get("cpus", 3)
+    split_mols_file, split_mols_runner = _splitInputLigands(input_ligand, n_cpus)
+    command_split = f"bash {os.path.join(path_output,'.split.sh')}"
+    _ = subprocess.run(command_split, shell=True, capture_output=True, text=True)
 
+    # Running rDock
+    command_back = " "
     if block.variables.get("proto_prm_file", None) is not None:
-        command += f"-p {block.variables.get('proto_prm_file')} "
+        command_back += f"-p {block.variables.get('proto_prm_file')} "
     if block.variables.get("n_runs", 50) is not None:
-        command += f"-n {block.variables.get('n_runs')} "
+        command_back += f"-n {block.variables.get('n_runs')} "
     if block.variables.get("all_h", True):
-        command += "-allH "
+        command_back += "-allH "
 
-    # Subprocess the command
-    import subprocess
+    # Iterating over number of requested cpus
+    processes = []
+    for i in range(1, n_cpus + 1):
+        command = f"rbdock -i {os.path.join(path_output, f'ligands/split{i}.sd')} -o {os.path.join(output_folder_path, f'split{i}_out')} -r {input_PRMfile}"
+        full_command = command + command_back
 
-    completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
+        # Start the process and store the Popen object
+        process = subprocess.Popen(
+            full_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        processes.append((i, process))
 
-    # Get the output and error
-    output = completed_process.stdout
-    error = completed_process.stderr
+    with open(os.path.join(output_folder_path, ".docking.info"), "w") as f:
+        f.write(full_command)
 
-    # Save the output and error
-    with open(f"{os.path.join(path_output,output_file)}.out", "w") as f:
-        f.write(output)    
-    with open(f"{os.path.join(path_output,output_file)}.err", "w") as f:
-        f.write(error)
+    # Wait for all processes to complete and collect their outputs
+    for i, process in processes:
+        output, error = process.communicate()
+
+        # Save the output and error
+        with open(os.path.join(output_folder_path, f"dock_{i}.out"), "w") as f:
+            f.write(output.decode())
+        with open(os.path.join(output_folder_path, f"dock_{i}.err"), "w") as f:
+            f.write(error.decode())
+
+    # Removing the split files
+    os.remove(split_mols_file)
+    os.remove(split_mols_runner)
 
     # Set the output
-    block.setOutput(outputFile.id, output_file)
+    block.setOutput(outputFolder.id, output_folder_path)
 
 
 rbDockBlock = PluginBlock(
     name="rDock",
     id="rbdock",
-    description="Calculate the docking. (For local)",
+    description="Perform a docking with rDock. (For local)",
     action=initialRbdock,
     variables=[
+        cpus,
         protocolPrmFile,
         nRuns,
         allH,
     ],
     inputs=[inputPRMFile, cavityFile, inputLigand],
-    outputs=[outputFile],
+    outputs=[outputFolder],
 )

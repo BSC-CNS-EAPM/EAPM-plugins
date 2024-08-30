@@ -1,5 +1,5 @@
 """
-Module containing the rbcavity block for the EAPM plugin
+Module containing the rDock cavity block for the EAPM plugin
 """
 
 from HorusAPI import PluginBlock, PluginVariable, VariableTypes
@@ -83,7 +83,7 @@ def initialRbcavity(block: PluginBlock):
     with open(f"{os.path.join(path_output,'cavity_grid.err')}", "w") as f:
         f.write(error)
 
-    parameter_file_name = input_PRMfile.split('.')[0]
+    parameter_file_name = input_PRMfile.split(".")[0]
 
     # Set the output
     block.setOutput(cavityFile.id, os.path.join(path_output, f"{parameter_file_name}.as"))
@@ -101,4 +101,3 @@ rbCavityBlock = PluginBlock(
     inputs=[inputPRMFile],
     outputs=[cavityFile],
 )
-

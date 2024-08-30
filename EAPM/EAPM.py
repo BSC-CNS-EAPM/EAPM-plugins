@@ -112,9 +112,13 @@ def create_plugin():
 
     eapm_plugin.addBlock(rbDockBlock)
 
-    from Blocks.RbParameterFile import rbParameterFile
+    from Blocks.RbParameterFile import rbParameterFileBlock
 
-    eapm_plugin.addBlock(rbParameterFile)
+    eapm_plugin.addBlock(rbParameterFileBlock)
+
+    from Blocks.RbdockToPELE import rbDockToPELEBlock
+
+    eapm_plugin.addBlock(rbDockToPELEBlock)
 
     # Add the configs
     from Configs.mafftConfig import mafftExecutableConfig

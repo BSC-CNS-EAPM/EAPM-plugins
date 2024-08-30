@@ -6,7 +6,7 @@
   "pluginFile": "EAPM.py",
   "dependencies": [
     "pyhmmer",
-    "numpy",
+    "numpy==1.26",
     "pandas",
     "scipy",
     "pyyaml",
@@ -33,6 +33,7 @@
     "optuna_integration",
     "lightning",
     "peft",
-    "datasets"  
-  ]
+    "datasets",
+    "rdkit"
+    ]
 }

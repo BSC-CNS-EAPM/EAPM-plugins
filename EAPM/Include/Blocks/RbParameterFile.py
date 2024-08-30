@@ -21,7 +21,7 @@ referenceLigandFile = PluginVariable(
     description="File for the prepared ligand in the bound position without the protein",
     type=VariableTypes.FILE,
     defaultValue=None,
-    allowedValues=["sd","sdf"],
+    allowedValues=["sd", "sdf"],
 )
 
 # ==========================#
@@ -69,6 +69,7 @@ gridStep = PluginVariable(
     defaultValue=0.5,
 )
 
+
 # Align action block
 def paramFileRbdock(block: PluginBlock):
 
@@ -84,15 +85,15 @@ def paramFileRbdock(block: PluginBlock):
         raise Exception("No receptor file provided.")
     if not os.path.exists(receptor_file):
         raise Exception("Parameter file does not exist.")
-    
+
     # 2. reference ligand file
-    reference_ligand_file =  block.inputs.get(referenceLigandFile.id, None)
+    reference_ligand_file = block.inputs.get(referenceLigandFile.id, None)
 
     if reference_ligand_file is None:
         raise Exception("No reference ligand file provided.")
     if not os.path.exists(reference_ligand_file):
         raise Exception("Reference ligand file does not exist.")
-    
+
     # 3. directories
     path_receptor = os.path.dirname(receptor_file)
     path_reference_ligand = os.path.dirname(reference_ligand_file)
@@ -104,9 +105,9 @@ def paramFileRbdock(block: PluginBlock):
     out = "parameter_file.prm"
 
     # 4. files paths
-    receptor_file_path = os.path.join(path_receptor,receptor_file)
-    reference_ligand_file_path = os.path.join(path_reference_ligand,reference_ligand_file)
-    parameter_file = os.path.join(path_receptor,block.outputs.get(parameterFile.id, out))
+    receptor_file_path = os.path.join(path_receptor, receptor_file)
+    reference_ligand_file_path = os.path.join(path_reference_ligand, reference_ligand_file)
+    parameter_file = os.path.join(path_receptor, block.outputs.get(parameterFile.id, out))
 
     # 5. writing the parameter file
     with open(parameter_file, "w") as f:
@@ -143,7 +144,8 @@ def paramFileRbdock(block: PluginBlock):
     # Set the output
     block.setOutput(parameterFile.id, parameter_file)
 
-rbParameterFile = PluginBlock(
+
+rbParameterFileBlock = PluginBlock(
     name="rDockParameterFile",
     id="rbParameterFile",
     description="Generate the parameter file for rDock (for local).",
