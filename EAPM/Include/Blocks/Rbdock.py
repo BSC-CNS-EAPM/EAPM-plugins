@@ -62,7 +62,7 @@ protocolPrmFile = PluginVariable(
 nRuns = PluginVariable(
     name="Number of runs",
     id="n_runs",
-    description="Number of runs/ligand (default=10).",
+    description="Number of docking poses per ligand (default=10).",
     type=VariableTypes.INTEGER,
     defaultValue=10,
 )

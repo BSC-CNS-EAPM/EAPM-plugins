@@ -49,6 +49,8 @@ def rbdockToPELE(block: PluginBlock):
     from rdkit.Chem import AllChem
     import os
     from Bio import PDB
+    import openbabel as ob
+    import re
 
     def _rDockToDataFrame(folder_path):
         """
@@ -201,61 +203,257 @@ def rbdockToPELE(block: PluginBlock):
 
             file_name, file_format = file_in.split(".")
             file_name = os.path.basename(file_name)
-
-            # Load the molecule depending on the input format
-            mol = None
-            if file_format == "sdf":
-                suppl = Chem.SDMolSupplier(file_in)
-                mol = suppl[0] if suppl else None
-            elif file_format == "mol2":
-                mol = Chem.MolFromMol2File(file_in)
-            else:
-                raise ValueError("Unsupported file format: {}".format(file_format))
-
-            if mol is None:
-                raise ValueError("Could not load molecule from file: {}".format(file_in))
-
-            # Generate 3D coordinates if they don't exist
-            if mol.GetNumConformers() == 0:
-                AllChem.EmbedMolecule(mol, AllChem.ETKDG())
-
-            # Write the molecule to a PDB file
             output_path = os.path.join(path_out, "{}.pdb".format(file_name))
-            Chem.MolToPDBFile(mol, output_path)
+
+            if not file_format == "pdb":
+
+                conv = ob.OBConversion()
+                conv.SetInAndOutFormats(file_in.split(".")[-1], "pdb")
+                mol = ob.OBMol()
+                conv.ReadFile(mol, file_in)
+                conv.WriteFile(mol, output_path)
 
             return output_path
 
         def _PDBMerger(receptor, ligand):
-            # Save the combined trajectory to a new PDB file
-            parser = PDB.PDBParser(QUIET=True)
+            """
+            Merges receptor and ligand into a single file with the characteristics required by
+            PELE to work properly.
 
-            # Parse both PDB files
-            structure1 = parser.get_structure("structure1", receptor)
-            structure2 = parser.get_structure("structure2", ligand)
+            Parameters
+            ==========
+            receptor : str
+                Path to the receptor file we want to merge.
+            ligand : str
+                Path to the ligand file we want to merge.
+            """
 
-            # Create a new structure object
-            combined_structure = PDB.Structure.Structure("combined_structure")
+            def _receptorModifier(receptor):
+                """
+                Changes residues numbers and counts number of atoms in the receptor.
 
-            # Add models and chains from both structures to the new structure
-            model_id = 0
-            for model in structure1:
-                model.id = model_id  # Ensure unique model ID
-                combined_structure.add(model)
-                model_id += 1
+                Parameters
+                ==========
+                receptor : str
+                    Path to the receptor file we want to merge.
 
-            for model in structure2:
-                model.id = model_id  # Ensure unique model ID
-                combined_structure.add(model)
-                model_id += 1
+                Returns
+                =======
+                file_mod_prot : str
+                    Path to the modified version of the receptor.
+                ligand_cont_num : int
+                    Number of atoms in the receptor.
+                """
 
-            # Remove the original files
-            os.remove(receptor)
-            os.remove(ligand)
+                file_mod_prot = receptor.split(".pdb")[0] + "_mod.pdb"
 
-            # Write the combined structure to the ligand PDB file
-            io = PDB.PDBIO()
-            io.set_structure(combined_structure)
-            io.save(ligand)
+                with open(receptor, "r") as pdb_file:
+                    lines = pdb_file.readlines()
+
+                modified_lines = []
+                residue_index = 1000
+                previous_residue = None
+                previous_chain_residue = None
+
+                # Changeing residue number
+                for line in lines:
+
+                    # Change lines of the receptor
+                    if line.startswith("ATOM"):
+                        residue_letters = line[17:20].strip()
+                        chain_residue = line[21:26].strip()
+
+                        if (residue_letters != previous_residue) or (
+                            chain_residue != previous_chain_residue
+                        ):
+                            residue_index += 1
+
+                        line = line[:22] + str(residue_index) + line[26:]
+                        modified_lines.append(line)
+                        previous_residue = residue_letters
+                        previous_chain_residue = chain_residue
+
+                    elif line.startswith("TER"):
+                        pass
+
+                    # Change lines of waters/metals
+                    elif line.startswith("HETATM"):
+                        residue_letters = line[17:20].strip()
+                        chain_residue = line[21:26].strip()
+
+                        if (residue_letters != previous_residue) or (
+                            chain_residue != previous_chain_residue
+                        ):
+                            residue_index += 1
+
+                        line = line[:22] + str(residue_index) + line[26:]
+                        modified_lines.append(line)
+                        previous_residue = residue_letters
+                        previous_chain_residue = chain_residue
+
+                    else:
+                        pass
+
+                # Write the modified lines back to the PDB file
+                with open(file_mod_prot, "w") as pdb_file:
+                    pdb_file.writelines(modified_lines)
+
+                # Counting number of atoms of the protein
+                ligand_cont_num = 0
+
+                with open(file_mod_prot) as filein:
+                    for line in filein:
+                        sline = line.split()
+                        if sline[0] == "ATOM":
+                            ligand_cont_num += 1
+
+                return file_mod_prot, ligand_cont_num
+
+            def _ligandAtomChainNumberModifier(ligand):
+                """
+                Modifies the ligand file to have the characteristics needed for the PELE simulation:
+                like the ligand chain or the chain name.
+
+                Parameters
+                ==========
+                ligand : str
+                    Path to the ligand file we want to merge.
+
+                Returns
+                =======
+                file_mod_lig : str
+                    Path to the modified version of the ligand.
+                """
+
+                file_mod1_lig = ligand.split(".pdb")[0] + "_m.pdb"
+                file_mod_lig = ligand.split(".pdb")[0] + "_mod.pdb"
+
+                # Modifying the atom names
+                cont = 1
+                with open(ligand) as filein:
+                    with open(file_mod1_lig, "w") as fileout:
+                        for line in filein:
+                            if line.startswith("HETATM"):
+                                sline = line.split()
+                                beginning_of_line = line[0:13]
+                                end_of_line = line[17:]
+                                atom = "".join([c for c in sline[2] if c.isalpha()])
+                                new_line = (
+                                    beginning_of_line + (atom + str(cont)).ljust(4) + end_of_line
+                                )
+                                fileout.writelines(new_line)
+                                cont += 1
+
+                # Change the chain name and number
+                with open(file_mod1_lig, "r") as filein:
+                    with open(file_mod_lig, "w") as fileout:
+                        for line in filein:
+                            if re.search("UN.......", line):
+                                line = re.sub("UN.......", "LIG L 900", line)
+                                fileout.writelines(line)
+                            else:
+                                fileout.writelines(line)
+
+                return file_mod_lig
+
+            def _receptorLigandMerger(receptor, ligand):
+                """
+                Merges the receptor and the ligand into a single file.
+
+                Parameters
+                ==========
+                receptor : str
+                    Path to the receptor file we want to merge.
+                ligand : str
+                    Path to the ligand file we want to merge.
+
+                Returns
+                =======
+                writing_path : str
+                    Path to the newly created pdb with both molecules.
+                """
+
+                output_file = "intermediate.pdb"
+                path_files = os.path.dirname(ligand)
+                writing_path = os.path.join(path_files, output_file)
+
+                # Joining ligand and receptor and directing warnings to out.txt
+                os.system(
+                    "obabel {receptor} {ligand} -O {output} 2> out.txt".format(
+                        receptor=receptor, ligand=ligand, output=writing_path
+                    )
+                )
+
+                return writing_path
+
+            def _inputAdapter(merged, output_file, ligand_cont_num):
+                """
+                Changes the atom numeration of the ligand according to the number
+                of atoms of the receptor.
+
+                Parameters
+                ==========
+                merged : str
+                    Path to the merged file.
+                output_file : str
+                    Path of the definitive merged file.
+                ligand_cont_num : int
+                    Number of atoms of the receptor.
+                """
+
+                # Changing the atom numeration of the ligand.
+                with open(merged, "r") as filein:
+                    with open(output_file, "w") as fileout:
+                        for line in filein:
+                            sline = line.split()
+                            if sline[0] == "ATOM" or sline[0] == "HETATM":
+                                if re.search("HETATM.....", line):
+                                    # Considering length of the protein
+                                    if len(str(ligand_cont_num + 1)) < 5:
+                                        line = re.sub(
+                                            "HETATM.....",
+                                            "HETATM " + str(ligand_cont_num + 1),
+                                            line,
+                                        )
+                                    elif len(str(ligand_cont_num + 1)) == 5:
+                                        line = re.sub(
+                                            "HETATM.....",
+                                            "HETATM" + str(ligand_cont_num + 1),
+                                            line,
+                                        )
+
+                                    fileout.writelines(line)
+                                    ligand_cont_num += 1
+                                else:
+                                    fileout.writelines(line)
+
+            def _intermediateFilesRemover(output_file):
+                """
+                Removes all the intermediate files that have been
+                generated in the process.
+
+                Parameters
+                ==========
+                output_file : str
+                    Path of the definitive merged file.
+                """
+
+                working_directory = os.path.dirname(output_file)
+                input_PELE_file = os.path.basename(output_file)
+
+                for file in os.listdir(working_directory):
+                    if file != input_PELE_file:
+                        os.remove(os.path.join(working_directory, file))
+
+            ligand_name = os.path.basename(ligand)
+            working_directory = os.path.dirname(ligand)
+            output_file = os.path.join(working_directory, ligand_name)
+
+            file_mod_prot, ligand_cont_num = _receptorModifier(receptor)
+            file_mod_lig = _ligandAtomChainNumberModifier(ligand)
+            intermediate = _receptorLigandMerger(file_mod_prot, file_mod_lig)
+            _inputAdapter(intermediate, output_file, ligand_cont_num)
+            _intermediateFilesRemover(output_file)
 
         # Getting paths
         docked_ligands_path = os.path.join(folder_path, "ligand_selection")
@@ -280,6 +478,8 @@ def rbdockToPELE(block: PluginBlock):
             if ligand in list_of_ligands:
                 ligand_name = ligand.split(".")[0]
                 tmp_ligand_folder = os.path.join(models_folder, ligand_name)
+                tmp_ligand_path = os.path.join(tmp_ligand_folder, ligand.split(".")[0] + ".pdb")
+                tmp_receptor_path = os.path.join(tmp_ligand_folder, converted_receptor)
 
                 os.makedirs(tmp_ligand_folder, exist_ok=True)
                 _ = _PDBConversor(
@@ -290,6 +490,8 @@ def rbdockToPELE(block: PluginBlock):
                     output_receptor_path,
                     tmp_ligand_folder,
                 )
+
+                _PDBMerger(tmp_receptor_path, tmp_ligand_path)
 
     if block.remote.name != "Local":
         raise Exception("This block is only available for local execution.")
@@ -311,6 +513,10 @@ def rbdockToPELE(block: PluginBlock):
     path = os.path.dirname(docked_folder)
     models_folder = os.path.join(path, "models")
     os.makedirs(models_folder, exist_ok=True)
+    if len(os.listdir(models_folder)) != 0:
+        print("Warning: Deleting previous models folder")
+        for model in os.listdir(models_folder):
+            shutil.rmtree(os.path.join(models_folder, model))
 
     # Extracting rDock data
     _rDockToDataFrame(docked_folder)
