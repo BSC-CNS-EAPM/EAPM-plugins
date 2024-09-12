@@ -2,9 +2,10 @@
   "id": "eapm",
   "name": "EAPM",
   "description": "The EAPM utilities plugin for Horus",
-  "author": "BSC",
+  "author": "EAPM",
   "version": "0.0.1",
   "pluginFile": "EAPM.py",
+  "externalURL": "https://bsc-cns-eapm.github.io/EAPM-plugins/",
   "dependencies": [
     "pyhmmer",
     "numpy",
