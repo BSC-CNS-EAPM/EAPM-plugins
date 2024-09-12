@@ -1,4 +1,5 @@
 {
+  "id": "eapm",
   "name": "EAPM",
   "description": "The EAPM utilities plugin for Horus",
   "author": "BSC",
@@ -33,6 +34,6 @@
     "optuna_integration",
     "lightning",
     "peft",
-    "datasets"  
+    "datasets"
   ]
 }
