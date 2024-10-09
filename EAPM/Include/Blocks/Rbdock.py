@@ -80,6 +80,7 @@ def initialRbdock(block: PluginBlock):
 
     import os
     import subprocess
+    import stat
 
     def _splitInputLigands(input_ligand, cpus):
         """
@@ -130,13 +131,10 @@ def initialRbdock(block: PluginBlock):
         if not os.path.isdir(path_split_ligands):
             os.mkdir(path_split_ligands)
 
-        # Generating splitted ligand files
-        with open(split_mols_runner, "w") as fileout:
-            fileout.writelines(
-                f"bash .splitMols.sh {input_ligand} {cpus} {os.path.join(path_split_ligands,'split')}\n"
-            )
+        command = f"bash {split_mols_file} {input_ligand} {cpus} {os.path.join(path_split_ligands,'split')}\n"
+        os.chmod(split_mols_file, os.stat(split_mols_file).st_mode | stat.S_IEXEC)
 
-        return split_mols_file, split_mols_runner
+        return command
 
     if block.remote.name != "Local":
         raise Exception("This block is only available for local execution.")
@@ -173,9 +171,14 @@ def initialRbdock(block: PluginBlock):
     os.makedirs(output_folder_path, exist_ok=True)
 
     n_cpus = block.variables.get("cpus", 3)
-    split_mols_file, split_mols_runner = _splitInputLigands(input_ligand, n_cpus)
-    command_split = f"bash {os.path.join(path_output,'.split.sh')}"
-    _ = subprocess.run(command_split, shell=True, capture_output=True, text=True)
+    command = _splitInputLigands(input_ligand, n_cpus)
+    subprocess.run(
+        command,  # Pass the command as a string
+        shell=True,  # Enable shell mode
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
 
     # Running rDock
     command_back = " "
@@ -212,8 +215,8 @@ def initialRbdock(block: PluginBlock):
             f.write(error.decode())
 
     # Removing the split files
-    os.remove(split_mols_file)
-    os.remove(split_mols_runner)
+    # os.remove(split_mols_file)
+    # os.remove(split_mols_runner)
 
     # Set the output
     block.setOutput(outputFolder.id, output_folder_path)
