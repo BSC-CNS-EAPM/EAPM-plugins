@@ -45,10 +45,7 @@ def rbdockProcess(block: PluginBlock):
     import csv
     import pandas as pd
     import shutil
-    from rdkit import Chem
-    from rdkit.Chem import AllChem
     import os
-    from Bio import PDB
     import openbabel as ob
     import re
 
