@@ -39,7 +39,7 @@ modelsToKeep = PluginVariable(
 
 
 # Align action block
-def rbdockToPELE(block: PluginBlock):
+def rbdockProcess(block: PluginBlock):
 
     import os
     import csv
@@ -455,6 +455,18 @@ def rbdockToPELE(block: PluginBlock):
             _inputAdapter(intermediate, output_file, ligand_cont_num)
             _intermediateFilesRemover(output_file)
 
+        def _manageDirectories():
+            """
+            Manages the directories to store the models.
+            """
+
+            for folder in os.listdir(models_folder):
+                path_to_delete = os.path.join(models_folder, folder)
+                if os.path.isdir(path_to_delete):
+                    file_to_move = os.path.join(path_to_delete, f"{folder}.pdb")
+                    os.rename(file_to_move, os.path.join(models_folder, f"{folder}.pdb"))
+                    shutil.rmtree(path_to_delete)
+
         # Getting paths
         docked_ligands_path = os.path.join(folder_path, "ligand_selection")
         with open(os.path.join(folder_path, ".docking.info"), "r") as f:
@@ -493,6 +505,8 @@ def rbdockToPELE(block: PluginBlock):
 
                 _PDBMerger(tmp_receptor_path, tmp_ligand_path)
 
+        _manageDirectories()
+
     if block.remote.name != "Local":
         raise Exception("This block is only available for local execution.")
 
@@ -525,11 +539,11 @@ def rbdockToPELE(block: PluginBlock):
     _rDocktoPELEModels(docked_folder, models_folder, list_of_files)
 
 
-rbDockToPELEBlock = PluginBlock(
-    name="rDock to PELE",
-    id="rbdock_to_pele",
+rbDockProcessing = PluginBlock(
+    name="rDock Processing",
+    id="rbdock_processing",
     description="Extract information from rDock docking files to generate PELE models.",
-    action=rbdockToPELE,
+    action=rbdockProcess,
     variables=[modelsToKeep],
     inputs=[dockedFolder],
     outputs=[modelsFolder],
