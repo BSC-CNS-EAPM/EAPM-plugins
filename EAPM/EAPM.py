@@ -116,9 +116,9 @@ def create_plugin():
 
     eapm_plugin.addBlock(rbParameterFileBlock)
 
-    from Blocks.RbdockToPELE import rbDockToPELEBlock
+    from Blocks.RbdockProcessing import rbDockProcessing
 
-    eapm_plugin.addBlock(rbDockToPELEBlock)
+    eapm_plugin.addBlock(rbDockProcessing)
 
     # Add the configs
     from Configs.mafftConfig import mafftExecutableConfig
