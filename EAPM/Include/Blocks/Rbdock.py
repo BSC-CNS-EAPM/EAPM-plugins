@@ -105,7 +105,6 @@ def initialRbdock(block: PluginBlock):
         path_output = os.path.dirname(input_ligand)
         path_split_ligands = os.path.join(path_output, "ligands")
         split_mols_file = os.path.join(path_output, ".splitMols.sh")
-        split_mols_runner = os.path.join(path_output, ".split.sh")
 
         # Generating split file
         if not os.path.isfile(split_mols_file):
@@ -213,10 +212,6 @@ def initialRbdock(block: PluginBlock):
             f.write(output.decode())
         with open(os.path.join(output_folder_path, f"dock_{i}.err"), "w") as f:
             f.write(error.decode())
-
-    # Removing the split files
-    # os.remove(split_mols_file)
-    # os.remove(split_mols_runner)
 
     # Set the output
     block.setOutput(outputFolder.id, output_folder_path)
