@@ -120,6 +120,10 @@ def create_plugin():
 
     eapm_plugin.addBlock(rbDockProcessing)
 
+    from Blocks.Rbdock import rDock_path
+
+    eapm_plugin.addConfig(rDock_path)
+
     # Add the configs
     from Configs.mafftConfig import mafftExecutableConfig
 
