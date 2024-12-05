@@ -58,7 +58,7 @@ outputPDB = PluginVariable(
 ##############################
 folderNameVariable = PluginVariable(
     name="Folder Name",
-    id="folder_name",
+    id="folder_name_variable",
     description="Folder name for the prepared proteins.",
     type=VariableTypes.STRING,
     defaultValue="prepared_proteins",

@@ -21,9 +21,9 @@ fastaFile = PluginVariable(
 # ==========================#
 # Variables
 # ==========================#
-output = PluginVariable(
+output_folder = PluginVariable(
     name="Alphafold simulation folder",
-    id="folder_name",
+    id="folder_name_output",
     description="The name of the folder where the simulation will be stored.",
     type=VariableTypes.STRING,
     defaultValue="alphafold",
@@ -65,7 +65,7 @@ def initial_alphafold(block: SlurmBlock):
     if fasta_file == "None":
         raise ValueError("No fasta file provided.")
 
-    folder_name = block.variables.get(output.id, "alphafold")
+    folder_name = block.variables.get(output_folder.id, "alphafold")
     remove_existing = block.variables.get(removeExistingResults.id, False)
 
     cpus_per_task = block.variables.get("cpus_per_task", 1)
@@ -134,7 +134,7 @@ alphafoldBlock = SlurmBlock(
     description="Run Alphafold. (For marenostrum, nord3 clusters or local)",
     initialAction=initial_alphafold,
     finalAction=final_alphafold,
-    variables=BSC_JOB_VARIABLES + [output, removeExistingResults],
+    variables=BSC_JOB_VARIABLES + [output_folder, removeExistingResults],
     inputs=[fastaFile],
     outputs=[outputModelsVariable],
 )

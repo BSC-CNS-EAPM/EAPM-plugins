@@ -42,7 +42,7 @@ removeExistingResults = PluginVariable(
 )
 folderName = PluginVariable(
     name="Folder name",
-    id="folder_name",
+    id="folder_name_variable",
     description="Folder name for the results",
     type=VariableTypes.STRING,
     defaultValue="hmmScan",
