@@ -1,8 +1,8 @@
 """
-Module containing the rDock cavity block for the EAPM plugin
+Module containing the rDock cavity block for the rDock plugin
 """
 
-from HorusAPI import PluginBlock, PluginVariable, VariableTypes
+from HorusAPI import SlurmBlock, PluginVariable, VariableTypes
 
 # ==========================#
 # Variable inputs
@@ -25,6 +25,7 @@ cavityFile = PluginVariable(
     description="File required to perform an rDock docking.",
     type=VariableTypes.FILE,
     defaultValue=None,
+    allowedValues=["as"],
 )
 
 ##############################
@@ -47,7 +48,7 @@ dumpInsight = PluginVariable(
 
 
 # Align action block
-def initialRbcavity(block: PluginBlock):
+def initialRbcavity(block: SlurmBlock):
 
     import os
 
@@ -85,15 +86,31 @@ def initialRbcavity(block: PluginBlock):
 
     parameter_file_name = input_PRMfile.split(".")[0]
 
+
+def download_results(block: SlurmBlock):
+
+    output_folder_path = block.outputs.get(outputFolder.id, "output_dock")
+
+    if not block.remote.isLocal:
+        remote_folder = block.extraData.get("remote_folder", None)
+        if remote_folder is None:
+            raise Exception("No remote folder found.")
+
+        block.remote.getData(remote_folder, output_folder_path)
+
+    # Set the output
+    block.setOutput(outputFolder.id, output_folder_path)
+
     # Set the output
     block.setOutput(cavityFile.id, os.path.join(path_output, f"{parameter_file_name}.as"))
 
 
-rbCavityBlock = PluginBlock(
+rbCavityBlock = SlurmBlock(
     name="rDockCavity",
     id="rbcavity",
     description="Calculate docking cavity for rDock. (For local)",
-    action=initialRbcavity,
+    initialAction=initialRbcavity,
+    finalAction=download_results,
     variables=[
         was,
         dumpInsight,
