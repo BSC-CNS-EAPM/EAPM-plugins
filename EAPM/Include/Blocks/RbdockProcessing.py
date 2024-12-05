@@ -1,5 +1,5 @@
 """
-Module containing the rDock to PELE block for the EAPM plugin
+Module containing the rDock processing block for the rDock plugin
 """
 
 from HorusAPI import PluginBlock, PluginVariable, VariableTypes
@@ -38,7 +38,6 @@ modelsToKeep = PluginVariable(
 )
 
 
-# Align action block
 def rbdockProcess(block: PluginBlock):
 
     import os
