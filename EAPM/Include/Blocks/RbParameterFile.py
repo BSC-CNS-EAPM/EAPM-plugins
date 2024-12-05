@@ -1,8 +1,8 @@
 """
-Module containing the rDock parameter file block for the EAPM plugin
+Module containing the rDock parameter file block for the rDock plugin
 """
 
-from HorusAPI import PluginBlock, PluginVariable, VariableTypes
+from HorusAPI import PluginBlock, PluginVariable, VariableTypes, VariableGroup
 
 # ==========================#
 # Variable inputs
@@ -15,6 +15,7 @@ receptorFile = PluginVariable(
     defaultValue=None,
     allowedValues=["mol2"],
 )
+
 referenceLigandFile = PluginVariable(
     name="Reference Ligand File",
     id="ref_ligand_file",
@@ -22,6 +23,36 @@ referenceLigandFile = PluginVariable(
     type=VariableTypes.FILE,
     defaultValue=None,
     allowedValues=["sd", "sdf"],
+)
+
+boxCenter = PluginVariable(
+    name="Cavity Sphere",
+    id="cavity_box_center",
+    description="Coordinates of the center of the cavity box.",
+    type=VariableTypes.SPHERE,
+    defaultValue=None,
+)
+
+radius = PluginVariable(
+    name="Radius",
+    id="radius",
+    description="Radius of cavity mapping region (angstroms).",
+    type=VariableTypes.FLOAT,
+    defaultValue=10.0,
+)
+
+groupCavitySphere = VariableGroup(
+    name="RbtSphereSiteMapper",
+    id="RbtSphereSiteMapper",
+    description="Cavity definition using a sphere.",
+    variables=[receptorFile, boxCenter],
+)
+
+groupCavityLigand = VariableGroup(
+    name="RbtLigandSiteMapper",
+    id="RbtLigandSiteMapper",
+    description="Cavity definition using a reference ligand.",
+    variables=[receptorFile, referenceLigandFile, radius],
 )
 
 # ==========================#
@@ -34,6 +65,7 @@ parameterFile = PluginVariable(
     description="The parameter file required for rDock.",
     type=VariableTypes.FILE,
     defaultValue="parameter_file.prm",
+    allowedValues=["prm"],
 )
 
 ##############################
@@ -46,13 +78,6 @@ receptorFlex = PluginVariable(
     description="Defines terminal OH and NH3+ groups within this distance of docking volume as flexible (angstroms).",
     type=VariableTypes.FLOAT,
     defaultValue=3.0,
-)
-radius = PluginVariable(
-    name="Radius",
-    id="radius",
-    description="Radius of cavity mapping region (angstroms).",
-    type=VariableTypes.FLOAT,
-    defaultValue=6.0,
 )
 minVolume = PluginVariable(
     name="Minimum volume",
@@ -86,30 +111,15 @@ def paramFileRbdock(block: PluginBlock):
     if not os.path.exists(receptor_file):
         raise Exception("Parameter file does not exist.")
 
-    # 2. reference ligand file
-    reference_ligand_file = block.inputs.get(referenceLigandFile.id, None)
-
-    if reference_ligand_file is None:
-        raise Exception("No reference ligand file provided.")
-    if not os.path.exists(reference_ligand_file):
-        raise Exception("Reference ligand file does not exist.")
-
-    # 3. directories
+    # 2. paths
     path_receptor = os.path.dirname(receptor_file)
-    path_reference_ligand = os.path.dirname(reference_ligand_file)
-
-    if path_receptor != path_reference_ligand:
-        print("WARNING! The receptor and reference ligand are not in the same directory.")
-        print("The parameter file (.prm) will be saved in the receptor directory.")
-
     out = "parameter_file.prm"
 
-    # 4. files paths
+    # 3. files paths
     receptor_file_path = os.path.join(path_receptor, receptor_file)
-    reference_ligand_file_path = os.path.join(path_reference_ligand, reference_ligand_file)
-    parameter_file = os.path.join(path_receptor, block.outputs.get(parameterFile.id, out))
+    parameter_file = block.outputs.get(parameterFile.id, out)
 
-    # 5. writing the parameter file
+    # 4. writing the parameter file
     with open(parameter_file, "w") as f:
         f.write("RBT_PARAMETER_FILE_V1.00\n")
         f.write("TILTE rdock\n")
@@ -118,12 +128,49 @@ def paramFileRbdock(block: PluginBlock):
         f.write(f"RECEPTOR_FLEX {block.variables.get('receptor_flex', 6.0)}\n")
         f.write("\n")
         f.write("##################################################################\n")
-        f.write("### CAVITY DEFINITION: REFERENCE LIGAND METHOD\n")
+        f.write("### CAVITY DEFINITION\n")
         f.write("##################################################################\n")
         f.write("SECTION MAPPER\n")
-        f.write("    SITE_MAPPER RbtLigandSiteMapper\n")
-        f.write(f"    REF_MOL {reference_ligand_file_path}\n")
-        f.write(f"    RADIUS {block.variables.get('radius', 6.0)}\n")
+        if block.selectedInputGroup == groupCavitySphere.id:
+
+            # Checking inputs
+            sphere_position = block.inputs.get(boxCenter.id, None)
+            print(sphere_position)
+
+            if sphere_position is None:
+                raise Exception("No cavity sphere provided.")
+
+            # Getting center and radius of sphere
+            center = sphere_position["center"]
+            formatted_center = ",".join(center.values())
+            radius_sphere = sphere_position["radius"]
+
+            f.write("    SITE_MAPPER RbtSphereSiteMapper\n")
+            f.write(f"    CENTER ({formatted_center})\n")
+            f.write(f"    RADIUS {radius_sphere}\n")
+
+        else:
+            # Checking inputs
+            reference_ligand_file = block.inputs.get(referenceLigandFile.id, None)
+            if reference_ligand_file is None:
+                raise Exception("No reference ligand file provided.")
+            if not os.path.exists(reference_ligand_file):
+                raise Exception("Reference ligand file does not exist.")
+
+            # Declaring paths
+            path_reference_ligand = os.path.dirname(reference_ligand_file)
+            if path_receptor != path_reference_ligand:
+                print("WARNING! The receptor and reference ligand are not in the same directory.")
+                print("The parameter file (.prm) will be saved in the receptor directory.")
+
+            reference_ligand_file_path = os.path.join(
+                path_reference_ligand, reference_ligand_file
+            )
+
+            f.write("    SITE_MAPPER RbtLigandSiteMapper\n")
+            f.write(f"    REF_MOL {reference_ligand_file_path}\n")
+            f.write(f"    RADIUS {block.inputs.get('radius', 6.0)}\n")
+
         f.write("    SMALL_SPHERE 1.0\n")
         f.write(f"    MIN_VOLUME {block.variables.get('min_volume', 100)}\n")
         f.write("    MAX_CAVITIES 1\n")
@@ -152,10 +199,9 @@ rbParameterFileBlock = PluginBlock(
     action=paramFileRbdock,
     variables=[
         receptorFlex,
-        radius,
         minVolume,
         gridStep,
     ],
-    inputs=[receptorFile, referenceLigandFile],
+    inputGroups=[groupCavityLigand, groupCavitySphere],
     outputs=[parameterFile],
 )
