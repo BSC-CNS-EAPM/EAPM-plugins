@@ -1,8 +1,26 @@
 """
-Module containing the rDock block for the EAPM plugin
+Module containing the rDock block for the rDock plugin
 """
 
-from HorusAPI import PluginBlock, PluginVariable, VariableTypes
+from HorusAPI import SlurmBlock, PluginVariable, VariableTypes, PluginConfig
+import os
+import subprocess
+import shutil
+import datetime
+
+rDockPath_variable = PluginVariable(
+    name="rDock Path",
+    id="rdock_path",
+    description="The path to the rDock installation.",
+    type=VariableTypes.FILE,
+)
+
+rDock_path = PluginConfig(
+    name="rDock Path",
+    id="rdock_path",
+    description="The path to the rDock installation.",
+    variables=[rDockPath_variable],
+)
 
 # ==========================#
 # Variable inputs
@@ -26,7 +44,7 @@ cavityFile = PluginVariable(
 inputLigand = PluginVariable(
     name="Ligand SD file",
     id="input_ligand",
-    description="The input ligand SD file.",
+    description="The input ligand or ligands in SD file.",
     type=VariableTypes.FILE,
     allowedValues=["sd", "sdf"],
 )
@@ -74,15 +92,69 @@ allH = PluginVariable(
     defaultValue=True,
 )
 
+SLURM_DEFAULT_PREAMBLE = """#!/bin/bash
+#SBATCH -J rdock
+#SBATCH --output=rdock_%j.out
+#SBATCH --error=rdock_%j.err
+#SBATCH --ntasks=1
+#SBATCH --time=30:00
+#SBATCH --cpus-per-task 1
+#SBATCH --array=1-%n_runs%
+
+# Load necessary modules as needed
+
+# The rDock block will place here the execution command
+%execution_command%
+"""
+
+slurmScript = PluginVariable(
+    name="Slurm script",
+    id="slurm_script",
+    description="The slurm script to be executed.",
+    type=VariableTypes.CODE,
+    defaultValue=SLURM_DEFAULT_PREAMBLE,
+    allowedValues=["shell"],
+)
+
+
+def _localRunRDock(
+    rdock_executable_path, input_PRMfile, n_cpus, path_output, output_folder_path, command_back
+):
+
+    # Iterating over number of requested cpus
+    processes = []
+    for i in range(1, n_cpus + 1):
+        command = f"{rdock_executable_path} -i {os.path.join(path_output, f'ligands/split{i}.sd')} -o {os.path.join(output_folder_path, f'split{i}_out')} -r {input_PRMfile}"
+        full_command = command + command_back
+
+        # Start the process and store the Popen object
+        process = subprocess.Popen(
+            full_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        processes.append((i, process))
+
+    with open(os.path.join(output_folder_path, ".docking.info"), "w") as f:
+        f.write(full_command)
+
+    # Wait for all processes to complete and collect their outputs
+    for i, process in processes:
+        output, error = process.communicate()
+
+        # Save the output and error
+        with open(os.path.join(output_folder_path, f"dock_{i}.out"), "w") as f:
+            f.write(output.decode())
+        with open(os.path.join(output_folder_path, f"dock_{i}.err"), "w") as f:
+            f.write(error.decode())
+
 
 # Align action block
-def initialRbdock(block: PluginBlock):
+def initialRbdock(block: SlurmBlock):
 
     import os
     import subprocess
     import stat
 
-    def _splitInputLigands(input_ligand, cpus):
+    def _splitInputLigands(input_ligand, cpus, path_split_ligands):
         """
         Split the input ligand file into multiple files.
 
@@ -102,8 +174,7 @@ def initialRbdock(block: PluginBlock):
             )
 
         # setting paths
-        path_output = os.path.dirname(input_ligand)
-        path_split_ligands = os.path.join(path_output, "ligands")
+        path_output = os.getcwd()
         split_mols_file = os.path.join(path_output, ".splitMols.sh")
 
         # Generating split file
@@ -135,9 +206,6 @@ def initialRbdock(block: PluginBlock):
 
         return command
 
-    if block.remote.name != "Local":
-        raise Exception("This block is only available for local execution.")
-
     # Loading plugin variables
     input_PRMfile = block.inputs.get(inputPRMFile.id, None)
     if input_PRMfile is None:
@@ -158,19 +226,15 @@ def initialRbdock(block: PluginBlock):
         raise Exception("Cavity file does not exist.")
 
     out = "output_dock"
-    path_output = os.path.dirname(input_ligand)
-    path_cavity = os.path.dirname(cavity_file)
-
-    if path_output != path_cavity:
-        print("WARNING! The ligands to dock and the cavity file are not in the same directory.")
-        print(f"The docking output file (.sd) will be saved in {path_output}.")
+    path_output = os.getcwd()
 
     # Splitting ligands
-    output_folder_path = os.path.join(path_output, block.outputs.get(outputFolder.id, out))
+    output_folder_path = os.path.join(path_output, out)
     os.makedirs(output_folder_path, exist_ok=True)
 
     n_cpus = block.variables.get("cpus", 3)
-    command = _splitInputLigands(input_ligand, n_cpus)
+    path_split_ligands = os.path.join(path_output, "ligands")
+    command = _splitInputLigands(input_ligand, n_cpus, path_split_ligands)
     subprocess.run(
         command,  # Pass the command as a string
         shell=True,  # Enable shell mode
@@ -188,45 +252,90 @@ def initialRbdock(block: PluginBlock):
     if block.variables.get("all_h", True):
         command_back += "-allH "
 
-    # Iterating over number of requested cpus
-    processes = []
-    for i in range(1, n_cpus + 1):
-        command = f"rbdock -i {os.path.join(path_output, f'ligands/split{i}.sd')} -o {os.path.join(output_folder_path, f'split{i}_out')} -r {input_PRMfile}"
-        full_command = command + command_back
+    rdock_executable_path = block.config.get("rdock_path", None)
 
-        # Start the process and store the Popen object
-        process = subprocess.Popen(
-            full_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    if block.remote.isLocal:
+        _localRunRDock(
+            rdock_executable_path,
+            input_PRMfile,
+            n_cpus,
+            path_output,
+            output_folder_path,
+            command_back,
         )
-        processes.append((i, process))
+    else:
+        sending_folder = f"rdock_sandbox_{datetime.datetime.now().timestamp()}"
+        if os.path.exists(sending_folder):
+            shutil.rmtree(sending_folder)
+        os.makedirs(sending_folder, exist_ok=True)
 
-    with open(os.path.join(output_folder_path, ".docking.info"), "w") as f:
-        f.write(full_command)
+        # Copying input files to the sandbox folder
+        shutil.copy(input_PRMfile, sending_folder)
+        shutil.copytree(path_split_ligands, sending_folder + "/ligands")
+        shutil.copy(cavity_file, sending_folder)
 
-    # Wait for all processes to complete and collect their outputs
-    for i, process in processes:
-        output, error = process.communicate()
+        print("Sending data to remote server...")
+        print(sending_folder + ".tar.gz", block.remote.workDir)
+        remote_folder = block.remote.sendData(sending_folder, block.remote.workDir)
+        print("Data sent.")
+        input_remote_PRMfile = os.path.join(remote_folder, os.path.basename(input_PRMfile))
+        output_remote_folder = os.path.join(remote_folder, os.path.basename(output_folder_path))
 
-        # Save the output and error
-        with open(os.path.join(output_folder_path, f"dock_{i}.out"), "w") as f:
-            f.write(output.decode())
-        with open(os.path.join(output_folder_path, f"dock_{i}.err"), "w") as f:
-            f.write(error.decode())
+        block.remote.remoteCommand(f"mkdir -p {output_remote_folder}")
+
+        # Generate slurm script
+        slurm_value = block.variables.get(slurmScript.id, SLURM_DEFAULT_PREAMBLE)
+
+        slurm_command = ""
+        for i in range(1, n_cpus + 1):
+            slurm_command += f"if [[ $SLURM_ARRAY_TASK_ID = {i} ]]; then\n"
+
+            command = f"{rdock_executable_path} -i {os.path.join(remote_folder, f'ligands/split{i}.sd')} -o {os.path.join(output_remote_folder, f'split{i}_out')} -r {input_remote_PRMfile}"
+            slurm_command += command + command_back + "\n"
+
+            slurm_command += "fi\n"
+
+        slurm_value = slurm_value.replace("%execution_command%", slurm_command)
+
+        # Write the slurm script
+        with open("rdock.slurm", "w") as f:
+            f.write(slurm_value)
+
+        slurm_remote = block.remote.sendData("rdock.slurm", remote_folder)
+        jobId = block.remote.submitJob(slurm_remote)
+
+        print(f"Job submitted with ID: {jobId}")
+
+        block.extraData["remote_folder"] = remote_folder
+
+
+def download_results(block: SlurmBlock):
+
+    output_folder_path = "output_dock"
+
+    if not block.remote.isLocal:
+        remote_folder = block.extraData.get("remote_folder", None)
+        if remote_folder is None:
+            raise Exception("No remote folder found.")
+
+        block.remote.getData(remote_folder, output_folder_path)
 
     # Set the output
     block.setOutput(outputFolder.id, output_folder_path)
 
 
-rbDockBlock = PluginBlock(
+rbDockBlock = SlurmBlock(
     name="rDock",
     id="rbdock",
     description="Perform a docking with rDock. (For local)",
-    action=initialRbdock,
+    initialAction=initialRbdock,
+    finalAction=download_results,
     variables=[
         cpus,
         protocolPrmFile,
         nRuns,
         allH,
+        slurmScript,
     ],
     inputs=[inputPRMFile, cavityFile, inputLigand],
     outputs=[outputFolder],
