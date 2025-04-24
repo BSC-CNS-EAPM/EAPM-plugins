@@ -11,7 +11,7 @@ def create_plugin():
     """
     # ========== Plugin Definition ========== #
 
-    eapm_plugin = Plugin(id="EAPM")
+    eapm_plugin = Plugin()
 
     # ========== Blocks ========== #
     # pylint: disable=import-outside-toplevel
@@ -126,6 +126,11 @@ def create_plugin():
     eapm_plugin.addPage(load_page)
 
     # pylint: enable=import-outside-toplevel
+
+    # Workshop
+    from Blocks.prot_prot_documentation import prot_docs
+
+    eapm_plugin.addBlock(prot_docs)
 
     # Return the plugin
     return eapm_plugin

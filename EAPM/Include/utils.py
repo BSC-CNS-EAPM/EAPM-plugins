@@ -407,13 +407,13 @@ def downloadResultsAction(block: SlurmBlock):
 
 
 # Other variables
-simulationNameVariable = PluginVariable(
-    name="Simulation name",
-    id="folder_name",
-    description="Name of the simulation folder. By default it will be the same as the flow name.",
-    type=VariableTypes.STRING,
-    category="Slurm configuration",
-)
+# simulationNameVariable = PluginVariable(
+#     name="Simulation name",
+#     id="folder_name",
+#     description="Name of the simulation folder. By default it will be the same as the flow name.",
+#     type=VariableTypes.STRING,
+#     category="Slurm configuration",
+# )
 scriptNameVariable = PluginVariable(
     name="Script name",
     id="script_name",
@@ -486,7 +486,7 @@ environmentList = VariableList(
 )
 
 BSC_JOB_VARIABLES = [
-    simulationNameVariable,
+    # simulationNameVariable,
     scriptNameVariable,
     partitionVariable,
     cpusVariable,
