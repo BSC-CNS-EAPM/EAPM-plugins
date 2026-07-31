@@ -73,7 +73,7 @@ def convert_pdb_2_mae(block: PluginBlock):
     # pylint: enable=import-outside-toplevel
     # Test if we have valid glide installation
     command = "echo $SCHRODINGER"
-    output = block.remote.remoteCommand(command)
+    output = block.remote.command(command)
 
     if output is None or output == "":
         raise ValueError(f"No valid Schrödinger installation found on remote {block.remote.name}")
@@ -159,8 +159,8 @@ def convert_pdb_2_mae(block: PluginBlock):
         remote_dir = os.path.join(block.remote.workDir, block.flow.savedID)
 
         # Create the remote folder, delete it first if it exists
-        block.remote.remoteCommand(f"rm -rf {remote_dir}")
-        block.remote.remoteCommand(f"mkdir -p {remote_dir}")
+        block.remote.command(f"rm -rf {remote_dir}")
+        block.remote.command(f"mkdir -p {remote_dir}")
 
         print(f"Uploading {pdb_folder} to {remote_dir}")
         final_remote_dir = block.remote.sendData(pdb_folder, remote_dir)
@@ -171,7 +171,7 @@ def convert_pdb_2_mae(block: PluginBlock):
         def mock_system(command):
             command = f"cd {final_remote_dir} && {command.replace('run', run_command)}"
 
-            block.remote.remoteCommand(command)
+            block.remote.command(command)
 
         os.system = mock_system
         print("Running conversion script on remote")
@@ -185,7 +185,7 @@ def convert_pdb_2_mae(block: PluginBlock):
         downloaded_path = block.remote.getData(final_remote_dir, os.getcwd())
 
         # Remove the remote folder
-        block.remote.remoteCommand(f"rm -rf {remote_dir}")
+        block.remote.command(f"rm -rf {remote_dir}")
 
         for model in os.listdir(downloaded_path):
             if model.endswith(".mae"):
@@ -205,6 +205,7 @@ def convert_pdb_2_mae(block: PluginBlock):
 
 
 convertPDBToMAEBlock = PluginBlock(
+    category="Structure Preparation",
     name="PDB to MAE",
     id="PDBToMAE",
     description="Convert PDB files to MAE for Glide",

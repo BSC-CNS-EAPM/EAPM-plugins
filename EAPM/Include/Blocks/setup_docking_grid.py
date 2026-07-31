@@ -207,6 +207,7 @@ def download_grid(block: SlurmBlock):
 
 
 setupDockingGrid = SlurmBlock(
+    category="Docking",
     name="Setup Docking Grid",
     id="setup_docking_grid",
     description="Prepare the files for a GLIDE docking calculation",

@@ -80,7 +80,7 @@ def run_hmmscan(block: SlurmBlock):
 
     input_fasta = block.inputs.get(fastaInput.id, None)
 
-    if "nord3" not in block.remote.host:
+    if block.remote.isLocal or "nord3" not in block.remote.host:
         raise ValueError("This block only works on Nord3.")
 
     if input is None:
@@ -152,6 +152,7 @@ def final_action(block: SlurmBlock):
 
 
 hmmScanBlock = SlurmBlock(
+    category="HMMER",
     name="HmmScan",
     id="HmmScan",
     initialAction=run_hmmscan,

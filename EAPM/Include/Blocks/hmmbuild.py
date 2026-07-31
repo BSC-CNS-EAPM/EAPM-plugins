@@ -66,7 +66,7 @@ def run_hmm_build(block: SlurmBlock):
 
     input_msa = block.inputs.get(msaInput.id, None)
 
-    if "nord3" not in block.remote.host:
+    if block.remote.isLocal or "nord3" not in block.remote.host:
         raise ValueError("This block only works on Nord3.")
 
     if input_msa is None:
@@ -137,6 +137,7 @@ def final_action(block: SlurmBlock):
 
 
 hmmBuildBlock = SlurmBlock(
+    category="HMMER",
     name="HmmBuild",
     id="HmmBuild",
     initialAction=run_hmm_build,

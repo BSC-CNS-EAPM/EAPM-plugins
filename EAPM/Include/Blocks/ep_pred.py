@@ -313,6 +313,7 @@ def finalAction(block: SlurmBlock):
 from utils import BSC_JOB_VARIABLES
 
 epPredBlock = SlurmBlock(
+    category="Design & Prediction",
     name="Ep-pred",
     id="ep_pred",
     initialAction=run_eppred,

@@ -184,6 +184,7 @@ def final_asite(block: SlurmBlock):
 
 
 asiteDesignBlock = SlurmBlock(
+    category="Design & Prediction",
     name="AsiteDesign",
     id="AsiteDesign",
     description="Run AsiteDesign. (For local or nord3)",

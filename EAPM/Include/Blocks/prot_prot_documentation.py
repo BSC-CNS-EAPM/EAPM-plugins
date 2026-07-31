@@ -22,6 +22,7 @@ def open_docs(block: PluginBlock):
 
 
 prot_docs = PluginBlock(
+    category="Documentation",
     id="prot_docs",
     name="Protein Protein Tutorial PDF",
     description="This block will open the tutorial PDF right into Horus",

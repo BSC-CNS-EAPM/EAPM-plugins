@@ -85,6 +85,7 @@ def calculate_msa(block: PluginBlock):
 
 
 multipleSequenceAlignmentBlock = PluginBlock(
+    category="Sequence Alignment",
     name="Multiple Sequence Alignment with Mafft",
     id="Mafft",
     description="Get the MSA from Mafft",

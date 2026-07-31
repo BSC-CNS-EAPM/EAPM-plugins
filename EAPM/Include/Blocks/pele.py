@@ -798,6 +798,7 @@ def wrappedFunction(block: SlurmBlock):
 peleBlock = SlurmBlock(
     name="PELE",
     id="PELE",
+    category="PELE",
     description="Run PELE",
     initialAction=wrappedFunction,
     finalAction=peleFinalAction,

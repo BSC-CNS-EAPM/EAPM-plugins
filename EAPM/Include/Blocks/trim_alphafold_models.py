@@ -111,6 +111,7 @@ def trim_alphafold_models(block: PluginBlock):
 
 
 trimAlphaFoldModelsBlock = PluginBlock(
+    category="Structure Prediction",
     name="Trim Alphafold models",
     id="trim_alphafold_models",
     description="Trim the Alphafold models",

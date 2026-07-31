@@ -83,6 +83,7 @@ def analyse_PELE(block: PluginBlock):
 
 
 analysePELEBlock = PluginBlock(
+    category="PELE",
     name="Analyse PELE",
     id="analyse_pele",
     description="Analyse PELE output",

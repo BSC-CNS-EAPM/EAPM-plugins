@@ -158,6 +158,7 @@ def final_action(block: SlurmBlock):
 
 
 jackHmmerBlock = SlurmBlock(
+    category="HMMER",
     name="JackHmmer",
     id="JackHmmer",
     initialAction=run_jackhmmer,

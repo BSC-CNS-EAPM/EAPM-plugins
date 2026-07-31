@@ -207,6 +207,7 @@ def download_glide_docking(block: SlurmBlock):
 block_variables = BSC_JOB_VARIABLES + [posesPerLigandVariable]
 
 setupGlideBlock = SlurmBlock(
+    category="Docking",
     name="Run Glide",
     id="run_glide",
     description="Run a glide docking calculation.",

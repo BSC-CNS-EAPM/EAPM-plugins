@@ -127,7 +127,7 @@ def setup_bsc_calculations_based_on_horus_remote(
         print("Generating powerpuff girls jobs...")
         bsc_calculations.local.parallel(
             jobs,
-            cpus=min(40, len(jobs)),
+            cpus=min(cpus or 40, len(jobs)),
             script_name=scriptName,
         )
     # local
@@ -135,7 +135,7 @@ def setup_bsc_calculations_based_on_horus_remote(
         print("Generating local jobs...")
         bsc_calculations.local.parallel(
             jobs,
-            cpus=min(40, len(jobs)),
+            cpus=min(cpus or 40, len(jobs)),
             script_name=scriptName,
         )
     else:
@@ -195,9 +195,12 @@ def launchCalculationAction(
 
     print(f"Launching BSC calculation with {cpus} CPUs")
 
+    # The local remote has no host, so only ask for it on real remotes
+    remoteHost = "localhost" if block.remote.isLocal else block.remote.host
+
     cluster = setup_bsc_calculations_based_on_horus_remote(
         block.remote.name.lower(),
-        block.remote.host,
+        remoteHost,
         jobs,
         partition,
         scriptName,
@@ -231,7 +234,7 @@ def launchCalculationAction(
         savedID_and_date = block.flow.savedID + "_" + str(datetime.datetime.now().timestamp())
         simRemoteDir = os.path.join(block.remote.workDir, savedID_and_date)
         block.extraData["remoteDir"] = simRemoteDir
-        block.remote.remoteCommand(f"mkdir -p -v {simRemoteDir}")
+        block.remote.command(f"mkdir -p -v {simRemoteDir}")
 
         print(f"Created simulation folder in the remote at {simRemoteDir}")
         print("Sending data to the remote...")
@@ -273,10 +276,10 @@ def launchCalculationAction(
         # Run the simulation
         if cluster == "powerpuff":
             # The powerpuff cluster doesn't have Slurm, so we need to run the script manually & load the Schrodinger module
-            schrodingerPath = block.remote.remoteCommand("echo $SCHRODINGER")
+            schrodingerPath = block.remote.command("echo $SCHRODINGER")
             command = f"export={schrodingerPath} cd {simRemoteDir} && bash {scriptName}"
 
-            block.remote.remoteCommand(command)
+            block.remote.command(command)
 
         else:
             print(f"Submitting the job to the remote... {scriptPath}")
@@ -398,7 +401,7 @@ def downloadResultsAction(block: SlurmBlock):
         # Remove the remote folder
         if remove_remote_folder_on_finish:
             print(f"Removing remote folder {remoteContainer}")
-            block.remote.remoteCommand(f"rm -rf {remoteContainer}")
+            block.remote.command(f"rm -rf {remoteContainer}")
     else:
         final_path = os.path.join(os.getcwd())
         print("Calculation finished, results are in the folder: ", final_path)
@@ -436,7 +439,9 @@ partitionVariable = PluginVariable(
 cpusVariable = PluginVariable(
     name="CPUs",
     id="cpus",
-    description="Number of CPUs to use.",
+    description="Number of CPUs to use. On a cluster this sets the job's tasks/CPUs; "
+    "running locally it sets how many jobs run in parallel (capped by the number "
+    "of jobs).",
     type=VariableTypes.INTEGER,
     defaultValue=1,
     category="Slurm configuration",

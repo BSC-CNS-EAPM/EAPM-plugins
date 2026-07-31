@@ -114,7 +114,7 @@ def initial_action(block: PluginBlock):
     mafft_executable = block.config.get("mafft_path", "mafft")
     # Check if the remote has the mafft executable
     try:
-        block.remote.remoteCommand(f"{mafft_executable} --version")
+        block.remote.command(f"{mafft_executable} --version")
     except Exception as exc:
         raise ValueError(
             "MAFFT is not installed in the selected machine. "
@@ -187,6 +187,7 @@ def initial_action(block: PluginBlock):
 
 
 alignBlock = PluginBlock(
+    category="Structure Preparation",
     name="Align PDBs",
     id="align_PDBs",
     description="Align all models to a reference PDB based on a sequence alignment. (For local)",

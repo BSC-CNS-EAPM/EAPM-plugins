@@ -179,6 +179,7 @@ def initial_action(block: PluginBlock):
 
 
 ahatoolBlock = PluginBlock(
+    category="Design & Prediction",
     name="AHATool",
     id="AHATool",
     action=initial_action,

@@ -73,7 +73,7 @@ def run_hmmalign(block: SlurmBlock):
     input_fasta = block.inputs.get(fastaInput.id, None)
     input_hmm = block.inputs.get(hmmInput.id, None)
 
-    if "nord3" not in block.remote.host:
+    if block.remote.isLocal or "nord3" not in block.remote.host:
         raise ValueError("This block only works on Nord3.")
 
     if input_fasta is None:
@@ -145,6 +145,7 @@ def final_action(block: SlurmBlock):
 
 
 hmmAlignBlock = SlurmBlock(
+    category="HMMER",
     name="HmmAlign",
     id="hmmAlign",
     initialAction=run_hmmalign,

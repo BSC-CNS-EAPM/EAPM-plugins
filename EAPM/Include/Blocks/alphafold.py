@@ -129,6 +129,7 @@ def final_alphafold(block: SlurmBlock):
 
 
 alphafoldBlock = SlurmBlock(
+    category="Structure Prediction",
     name="Alphafold",
     id="Alphafold",
     description="Run Alphafold. (For marenostrum, nord3 clusters or local)",

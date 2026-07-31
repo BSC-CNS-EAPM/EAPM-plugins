@@ -118,6 +118,7 @@ def get_conserved(block: PluginBlock):
 
 
 conservedResiduesMSABlock = PluginBlock(
+    category="Sequence Alignment",
     name="Conserved Residues from MSA",
     id="conserved_residues_msa",
     description="Get the conserved residues from a set of proteins",

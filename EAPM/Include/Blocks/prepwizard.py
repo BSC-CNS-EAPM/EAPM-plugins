@@ -273,6 +273,7 @@ block_variables = BSC_JOB_VARIABLES + [
 
 
 prepWizardBlock = SlurmBlock(
+    category="Structure Preparation",
     name="PrepWizard",
     id="PrepWizard",
     description="Run Preparation Wizard optimization. (For AMD cluster, workstations and local)",

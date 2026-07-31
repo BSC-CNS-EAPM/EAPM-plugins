@@ -11,6 +11,7 @@ hmmerPathVariable = PluginVariable(
 
 def checkHmmerInstallation(block: PluginConfig):
     import os
+    import shutil
 
     print("verifying HMMER installation")
 
@@ -18,8 +19,12 @@ def checkHmmerInstallation(block: PluginConfig):
     hmmerPath = block.variables.get(hmmerPathVariable.id)
 
     # Check if the path is valid
-    if not os.path.isdir(hmmerPath):
-        raise Exception("The HMMER executable path is not valid")
+    # Accept either an absolute path to the binary or a command available on the PATH
+    if not (os.path.isfile(hmmerPath) or shutil.which(hmmerPath)):
+        raise Exception(
+            f"The HMMER executable '{hmmerPath}' was not found. "
+            "Install HMMER or set the correct path in the plugin configuration."
+        )
 
 
 # Create a plugin configuration for the mafft executable

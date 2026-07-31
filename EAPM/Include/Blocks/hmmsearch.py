@@ -87,7 +87,7 @@ def run_hmmsearch(block: SlurmBlock):
 
     input_hmm = block.inputs.get(hmmInput.id, None)
 
-    if "nord3" not in block.remote.host:
+    if block.remote.isLocal or "nord3" not in block.remote.host:
         raise ValueError("This block only works on Nord3.")
 
     if input_hmm is None:
@@ -166,6 +166,7 @@ def final_action(block: SlurmBlock):
 
 
 hmmSearchBlock = SlurmBlock(
+    category="HMMER",
     name="HmmSearch",
     id="HmmSearch",
     initialAction=run_hmmsearch,

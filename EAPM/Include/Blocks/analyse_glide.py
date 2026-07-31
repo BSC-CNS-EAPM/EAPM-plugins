@@ -242,6 +242,7 @@ def final_action(block: PluginBlock):
 
 
 AnalyseGBlock = PluginBlock(
+    category="Docking",
     name="Analyse Glide",
     id="Analyse_Glide",
     description="To analyse Glide results",

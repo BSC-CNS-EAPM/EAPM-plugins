@@ -183,7 +183,7 @@ def analyseDockingAction(block: PluginBlock):
     block.extraData["remote_folder"] = remote_folder
 
     # Create the remote folder
-    block.remote.remoteCommand(f"mkdir -p {remote_folder}")
+    block.remote.command(f"mkdir -p {remote_folder}")
 
     separatorValue = block.variables.get("ligand_separator", "-")
 
@@ -430,7 +430,7 @@ def analyseDocking(
     # os.system(command)
 
     # Test if we have valid schrodinger installation
-    schrodinger = block.remote.remoteCommand("echo $SCHRODINGER")
+    schrodinger = block.remote.command("echo $SCHRODINGER")
 
     if schrodinger is None or schrodinger == "":
         raise Exception(f"No valid Schrodinger installation found on remote {block.remote.name}")
@@ -459,7 +459,7 @@ def analyseDocking(
         command += " --overwrite "
 
     # Execute the command
-    output = block.remote.remoteCommand(command)
+    output = block.remote.command(command)
     print(output)
 
     # Download the results
@@ -598,13 +598,13 @@ def extractDockingPoses(
     remote_folder = block.extraData["remote_folder"]
 
     # Create the remote folder
-    block.remote.remoteCommand(f"mkdir -p {remote_folder}")
+    block.remote.command(f"mkdir -p {remote_folder}")
 
     # Upload the folder to the remote
     final_path = block.remote.sendData(output_folder_abs, remote_folder)
 
     print(f"Uploaded {output_folder} to {final_path}")
-    schrodinger = block.remote.remoteCommand("echo $SCHRODINGER")
+    schrodinger = block.remote.command("echo $SCHRODINGER")
 
     # Execute docking analysis
     command = (
@@ -616,14 +616,14 @@ def extractDockingPoses(
     )
 
     # Execute the command
-    output = block.remote.remoteCommand(command)
+    output = block.remote.command(command)
     print(output)
 
     # Download the results
     block.remote.getData(final_path, os.path.join(os.getcwd(), ".."))
 
     # Remove the remote folder
-    output = block.remote.remoteCommand(f"rm -rf {remote_folder}")
+    output = block.remote.command(f"rm -rf {remote_folder}")
 
     # Remove docking data
     os.remove("._docking_data.csv")
