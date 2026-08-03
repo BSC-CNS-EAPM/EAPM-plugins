@@ -197,6 +197,10 @@ def create_plugin():
 
     eapm_plugin.addConfig(mmseqsExecutableConfig)
 
+    from Configs.pyrosettaConfig import pyrosettaExecutableConfig
+
+    eapm_plugin.addConfig(pyrosettaExecutableConfig)
+
     # ========== Pages ========== #
     from Pages.load_tables import load_page
 

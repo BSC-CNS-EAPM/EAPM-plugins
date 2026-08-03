@@ -88,9 +88,9 @@ verboseVariable = PluginVariable(
 )
 maxRowsVariable = PluginVariable(
     id="max_display_rows",
-    name="Max rows in view",
-    description="Maximum number of raw data rows shown in the results view. The full "
-    "table is always written to CSV.",
+    name="Rows per page",
+    description="Number of rows shown per page in the 'Relax data' table. All the "
+    "rows are available in the view, this only sets the page size.",
     type=VariableTypes.INTEGER,
     defaultValue=200,
 )
@@ -144,10 +144,225 @@ plotFile = PluginVariable(
 )
 
 
-def _run_extraction_jobs(jobs, cpus, verbose):
+_BASE_CSS = """
+  .eapm-wrap { font-family: sans-serif; margin: 0 auto; padding: 12px 16px; }
+  .eapm-wrap h3 { margin-bottom: 4px; }
+  .eapm-scroll { max-height: 420px; overflow: auto; margin-bottom: 24px; }
+  table.eapm-table { border-collapse: collapse; width: 100%; font-size: 12px; }
+  table.eapm-table th, table.eapm-table td {
+      border: 1px solid #ddd; padding: 4px 8px; text-align: right;
+  }
+  table.eapm-table th { background: #f2f2f2; position: sticky; top: 0; }
+"""
+
+_TABLE_CSS = """
+  .eapm-controls {
+      display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+      margin-bottom: 8px;
+  }
+  .eapm-controls input, .eapm-controls select {
+      font-size: 13px; padding: 4px 6px; border: 1px solid #ccc; border-radius: 4px;
+  }
+  .eapm-controls input { min-width: 220px; }
+  .eapm-count { color: #666; font-size: 12px; }
+  .eapm-pager { display: flex; gap: 6px; align-items: center; margin-top: 8px; }
+  .eapm-pager button {
+      font-size: 13px; padding: 3px 10px; border: 1px solid #ccc;
+      border-radius: 4px; background: #fafafa; cursor: pointer;
+  }
+  .eapm-pager button:disabled { opacity: 0.45; cursor: default; }
+  table.eapm-table th.eapm-sortable { cursor: pointer; user-select: none; }
+  table.eapm-table th.eapm-sortable:hover { background: #e6e6e6; }
+  table.eapm-table tbody tr:nth-child(even) { background: #fafafa; }
+"""
+
+# Rendered client side so the whole dataset stays usable: filter, sort and page
+# through every row without regenerating the page.
+_TABLE_JS = """
+  const rows = PAYLOAD.data;
+  const columns = PAYLOAD.columns;
+
+  let filtered = rows;
+  let sortCol = -1;
+  let sortAsc = true;
+  let page = 0;
+  let pageSize = PAGE_SIZE;
+
+  const search = document.getElementById('eapm-search');
+  const pageSizeSelect = document.getElementById('eapm-page-size');
+  const head = document.getElementById('eapm-head');
+  const body = document.getElementById('eapm-body');
+  const count = document.getElementById('eapm-count');
+  const pageInfo = document.getElementById('eapm-page-info');
+  const prev = document.getElementById('eapm-prev');
+  const next = document.getElementById('eapm-next');
+
+  function renderHead() {
+    const tr = document.createElement('tr');
+    columns.forEach((name, index) => {
+      const th = document.createElement('th');
+      th.className = 'eapm-sortable';
+      th.textContent = name;
+      th.addEventListener('click', () => {
+        if (sortCol === index) {
+          sortAsc = !sortAsc;
+        } else {
+          sortCol = index;
+          sortAsc = true;
+        }
+        applySort();
+        page = 0;
+        render();
+      });
+      tr.appendChild(th);
+    });
+    head.appendChild(tr);
+  }
+
+  function updateHeadLabels() {
+    Array.from(head.querySelectorAll('th')).forEach((th, index) => {
+      const arrow = index === sortCol ? (sortAsc ? ' \\u25b2' : ' \\u25bc') : '';
+      th.textContent = columns[index] + arrow;
+    });
+  }
+
+  function applySort() {
+    if (sortCol < 0) {
+      return;
+    }
+    const direction = sortAsc ? 1 : -1;
+    filtered = filtered.slice().sort((a, b) => {
+      const left = a[sortCol];
+      const right = b[sortCol];
+      if (left === null || left === undefined) return 1;
+      if (right === null || right === undefined) return -1;
+      if (typeof left === 'number' && typeof right === 'number') {
+        return (left - right) * direction;
+      }
+      return String(left).localeCompare(String(right), undefined, {
+        numeric: true
+      }) * direction;
+    });
+  }
+
+  function applyFilter() {
+    const term = search.value.trim().toLowerCase();
+    filtered = !term
+      ? rows
+      : rows.filter((row) =>
+          row.some((cell) => cell !== null && String(cell).toLowerCase().includes(term))
+        );
+    applySort();
+  }
+
+  function render() {
+    const total = filtered.length;
+    const pages = Math.max(1, Math.ceil(total / pageSize));
+    page = Math.min(page, pages - 1);
+
+    const start = page * pageSize;
+    const slice = filtered.slice(start, start + pageSize);
+
+    body.textContent = '';
+    const fragment = document.createDocumentFragment();
+    slice.forEach((row) => {
+      const tr = document.createElement('tr');
+      row.forEach((cell) => {
+        const td = document.createElement('td');
+        td.textContent = cell === null || cell === undefined ? '' : cell;
+        tr.appendChild(td);
+      });
+      fragment.appendChild(tr);
+    });
+    body.appendChild(fragment);
+
+    count.textContent = total === rows.length
+      ? total + ' rows'
+      : total + ' of ' + rows.length + ' rows';
+    pageInfo.textContent = total
+      ? 'Rows ' + (start + 1) + '-' + Math.min(start + pageSize, total) +
+        ' (page ' + (page + 1) + ' of ' + pages + ')'
+      : 'No matching rows';
+    prev.disabled = page === 0;
+    next.disabled = page >= pages - 1;
+    updateHeadLabels();
+  }
+
+  search.addEventListener('input', () => {
+    applyFilter();
+    page = 0;
+    render();
+  });
+
+  pageSizeSelect.addEventListener('change', () => {
+    pageSize = parseInt(pageSizeSelect.value, 10);
+    page = 0;
+    render();
+  });
+
+  prev.addEventListener('click', () => {
+    page = Math.max(0, page - 1);
+    render();
+  });
+
+  next.addEventListener('click', () => {
+    page = page + 1;
+    render();
+  });
+
+  renderHead();
+  render();
+"""
+
+
+def _build_data_table_page(frame, page_size, csv_name):
+    """Build the standalone, client side filterable/sortable table page."""
+    import json
+
+    payload = frame.to_json(orient="split", index=False)
+
+    # '<' can only appear inside JSON strings, so escaping it keeps the payload
+    # from ever closing the script tag early
+    payload = payload.replace("<", "\\u003c")
+
+    sizes = sorted({25, 50, 100, 200, 500, 1000, int(page_size)})
+    options = "".join(
+        f'<option value="{size}"{" selected" if size == int(page_size) else ""}>'
+        f"{size} rows</option>"
+        for size in sizes
+    )
+
+    return (
+        "<style>" + _BASE_CSS + _TABLE_CSS + "</style>"
+        '<div class="eapm-wrap">'
+        "<h3>Relax data</h3>"
+        f"<p>Every pose of the calculation. The same table is written to "
+        f"<code>{csv_name}</code>.</p>"
+        '<div class="eapm-controls">'
+        '<input id="eapm-search" type="search" placeholder="Filter rows..."/>'
+        f'<select id="eapm-page-size">{options}</select>'
+        '<span class="eapm-count" id="eapm-count"></span>'
+        "</div>"
+        '<div class="eapm-scroll" style="max-height:60vh">'
+        '<table class="eapm-table">'
+        '<thead id="eapm-head"></thead><tbody id="eapm-body"></tbody>'
+        "</table></div>"
+        '<div class="eapm-pager">'
+        '<button id="eapm-prev" type="button">Previous</button>'
+        '<button id="eapm-next" type="button">Next</button>'
+        '<span class="eapm-count" id="eapm-page-info"></span>'
+        "</div></div>"
+        "<script>const PAYLOAD = " + payload + ";"
+        "const PAGE_SIZE = " + str(int(page_size)) + ";</script>"
+        "<script>" + _TABLE_JS + "</script>"
+    )
+
+
+def _run_extraction_jobs(jobs, cpus, verbose, interpreter):
     """Generate the parallel scripts and run them to completion."""
     import os
     import re
+    import shlex
     import subprocess
 
     import bsc_calculations
@@ -166,6 +381,19 @@ def _run_extraction_jobs(jobs, cpus, verbose):
     )
     if not numbered:
         raise ValueError("No extraction scripts were generated.")
+
+    # The generated commands call a bare 'python', which is not necessarily on
+    # the PATH of the server process and, when it is, is not necessarily the
+    # environment holding PyRosetta. Point them at the configured interpreter.
+    quoted = shlex.quote(interpreter)
+    for script in numbered:
+        with open(script) as sf:
+            contents = sf.read()
+
+        patched = re.sub(r"^python(?=\s)", quoted, contents, flags=re.MULTILINE)
+
+        with open(script, "w") as sf:
+            sf.write(patched)
 
     print(f"Running {len(jobs)} extraction job(s) across {len(numbered)} script(s)...")
 
@@ -279,6 +507,7 @@ def analyse_rosetta_relax(block: PluginBlock):
     # pylint: disable=import-outside-toplevel
     import json
     import os
+    import sys
 
     import pandas as pd
     import prepare_proteins
@@ -327,7 +556,8 @@ def analyse_rosetta_relax(block: PluginBlock):
     )
 
     if jobs:
-        _run_extraction_jobs(jobs, cpus, verbose)
+        interpreter = block.config.get("pyrosetta_python") or sys.executable
+        _run_extraction_jobs(jobs, cpus, verbose, interpreter)
     else:
         print("No extraction jobs pending; reading existing results.")
 
@@ -397,30 +627,15 @@ def analyse_rosetta_relax(block: PluginBlock):
         f'<img src="data:image/png;base64,{plot_encoded}" style="max-width:100%"/></div>'
     )
 
-    # ---- Results view ----
+    # ---- Results views ----
+    # Two separate pages: the plot plus the per-model summary, and the full
+    # per-pose data as its own interactive table.
     pd.set_option("display.max_colwidth", 200)
 
     summary_html = summary.round(3).to_html(classes="eapm-table", border=0)
-    preview = relax_data.head(max_rows)
-    preview_html = preview.round(3).to_html(classes="eapm-table", border=0)
-    truncated = ""
-    if len(relax_data) > max_rows:
-        truncated = (
-            f"<p><em>Showing the first {max_rows} of {len(relax_data)} rows. "
-            f"The full table is in {relax_data_output}.</em></p>"
-        )
 
-    html = f"""
-    <style>
-      .eapm-wrap {{ font-family: sans-serif; }}
-      .eapm-wrap h3 {{ margin-bottom: 4px; }}
-      .eapm-scroll {{ max-height: 420px; overflow: auto; margin-bottom: 24px; }}
-      table.eapm-table {{ border-collapse: collapse; width: 100%; font-size: 12px; }}
-      table.eapm-table th, table.eapm-table td {{
-          border: 1px solid #ddd; padding: 4px 8px; text-align: right;
-      }}
-      table.eapm-table th {{ background: #f2f2f2; position: sticky; top: 0; }}
-    </style>
+    summary_page = f"""
+    <style>{_BASE_CSS}</style>
     <div class="eapm-wrap">
       <h3>Rosetta relax summary</h3>
       <p>{len(summary)} models &middot; {len(relax_data)} poses &middot;
@@ -429,12 +644,14 @@ def analyse_rosetta_relax(block: PluginBlock):
       {plot_html}
       <h3>Per-model summary</h3>
       <div class="eapm-scroll">{summary_html}</div>
-      <h3>Relax data</h3>
-      {truncated}
-      <div class="eapm-scroll">{preview_html}</div>
     </div>
     """
-    Extensions().loadHTML(html, title="Rosetta relax data")
+    Extensions().loadHTML(summary_page, title="Rosetta relax summary")
+
+    data_page = _build_data_table_page(
+        relax_data.reset_index().round(3), max_rows, relax_data_output
+    )
+    Extensions().loadHTML(data_page, title="Rosetta relax data")
 
     block.setOutput(relaxDataFile.id, relax_data_output)
     block.setOutput(scoreSummaryFile.id, summary_output)
