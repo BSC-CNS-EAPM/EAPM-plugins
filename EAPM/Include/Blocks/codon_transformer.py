@@ -15,6 +15,10 @@ DNA sequence optimised for expression in the requested host.
 CodonTransformer runs in its own conda environment (it pulls in torch and the
 transformer weights), which is why the environment name is a parameter rather
 than a plugin dependency.
+
+The environment is resolved to its ``bin`` directory and prepended to PATH so the
+subprocess picks up the right interpreter. This avoids ``conda activate``, which is
+unavailable on hosts that use micromamba.
 """
 
 from HorusAPI import Extensions, PluginBlock, PluginVariable, VariableTypes
@@ -61,8 +65,10 @@ deviceVariable = PluginVariable(
 )
 condaEnvVariable = PluginVariable(
     id="codon_transformer_conda_env",
-    name="CodonTransformer conda env",
-    description="Name of (or path to) the conda environment holding CodonTransformer.",
+    name="CodonTransformer environment",
+    description="Environment holding CodonTransformer: an env name (looked up in the "
+    "conda/micromamba roots), a path to the environment, or a path to its python. "
+    "Leave empty to use the Horus backend's own interpreter.",
     type=VariableTypes.STRING,
     defaultValue="codontransformer",
 )
@@ -134,6 +140,82 @@ def _read_sequences(sequences_path: str) -> dict:
     return sequences
 
 
+def _resolve_environment_bin(env_value: str):
+    """
+    Resolve the CodonTransformer environment to the ``bin`` directory holding its python.
+
+    Accepts an environment name (searched for in the usual micromamba/conda roots), a
+    path to the environment itself, or a path to its python interpreter. Returns None
+    when no environment is given, meaning the backend's own interpreter is used.
+    """
+    # pylint: disable=import-outside-toplevel
+    import os
+
+    # pylint: enable=import-outside-toplevel
+
+    if not env_value or not env_value.strip():
+        return None
+    env_value = env_value.strip()
+
+    if os.sep in env_value:
+        candidates = [os.path.abspath(os.path.expanduser(env_value))]
+    else:
+        roots = [
+            os.environ.get("MAMBA_ROOT_PREFIX"),
+            os.path.expanduser("~/micromamba"),
+            os.path.expanduser("~/miniforge3"),
+            os.path.expanduser("~/miniconda3"),
+            os.path.expanduser("~/anaconda3"),
+        ]
+        conda_exe = os.environ.get("CONDA_EXE")
+        if conda_exe:
+            roots.append(os.path.dirname(os.path.dirname(conda_exe)))
+        candidates = list(
+            dict.fromkeys(
+                os.path.join(root, "envs", env_value) for root in roots if root
+            )
+        )
+
+    for candidate in candidates:
+        # A path to the interpreter itself.
+        if os.path.isfile(candidate):
+            return os.path.dirname(candidate)
+        # An environment prefix.
+        if os.path.isfile(os.path.join(candidate, "bin", "python")):
+            return os.path.join(candidate, "bin")
+
+    raise ValueError(
+        f"Could not find the CodonTransformer environment '{env_value}'. Give an "
+        "existing environment name, the path to the environment, or the path to its "
+        f"python. Looked in: {', '.join(candidates)}"
+    )
+
+
+def _assert_codon_transformer(env_bin, env_value: str):
+    """Fail early, with a readable message, if CodonTransformer is not importable."""
+    # pylint: disable=import-outside-toplevel
+    import os
+    import subprocess
+    import sys
+
+    # pylint: enable=import-outside-toplevel
+
+    python = os.path.join(env_bin, "python") if env_bin else sys.executable
+    probe = subprocess.run(
+        [python, "-c", "import CodonTransformer"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if probe.returncode != 0:
+        where = f"environment '{env_value}'" if env_value else "the Horus backend"
+        raise ValueError(
+            f"CodonTransformer is not installed in {where} ({python}). Install it there "
+            f"with 'pip install CodonTransformer'. Error: {probe.stderr.strip()}"
+        )
+    return python
+
+
 def compute_codon_sequences(block: PluginBlock):
     """
     Codon-optimise the input protein sequences for the requested host.
@@ -193,11 +275,20 @@ def compute_codon_sequences(block: PluginBlock):
             f"importable in the Horus backend ({error})."
         ) from error
 
+    # bioprospecting activates the environment with 'conda activate', which is missing on
+    # micromamba hosts. Put the environment's bin directory first on PATH instead and let
+    # it run a plain 'python'.
+    env_bin = _resolve_environment_bin(conda_env)
+    python = _assert_codon_transformer(env_bin, conda_env)
+    print(f"Running CodonTransformer with {python}")
+    if env_bin:
+        os.environ["PATH"] = env_bin + os.pathsep + os.environ.get("PATH", "")
+
     codon_sequences = codonTransformer.computeCodonTransformerSequences(
         sequences,
         organism=organism,
         device=device,
-        codon_transformer_conda_env=conda_env,
+        codon_transformer_conda_env=None,
         add_start_methionine=add_start_methionine,
     )
 
