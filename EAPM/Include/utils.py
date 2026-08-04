@@ -20,6 +20,10 @@ def setup_bsc_calculations_based_on_horus_remote(
     program,
     modulePurge,
     cpus_per_task,
+    gpus=None,
+    conda_env=None,
+    modules=None,
+    exports=None,
 ):
     import bsc_calculations
 
@@ -76,6 +80,17 @@ def setup_bsc_calculations_based_on_horus_remote(
     # marenostrum
     elif "glogin" in cluster or "alogin" in cluster:
         print("Generating Marenostrum jobs...")
+        mn5_arguments = {}
+        if gpus is not None:
+            mn5_arguments["gpus"] = gpus
+        # A 'program' shortcut overwrites the environment it knows about, so these
+        # are only honoured when the caller drops the program name.
+        if conda_env:
+            mn5_arguments["conda_env"] = conda_env
+        if modules:
+            mn5_arguments["modules"] = modules
+        if exports:
+            mn5_arguments["exports"] = exports
         bsc_calculations.mn5.jobArrays(
             jobs,
             job_name=job_name,
@@ -85,6 +100,7 @@ def setup_bsc_calculations_based_on_horus_remote(
             ntasks=cpus,
             cpus_per_task=cpus_per_task,
             module_purge=modulePurge,
+            **mn5_arguments,
         )
     # minotauro
     elif cluster == "mt1.bsc.es":
@@ -178,6 +194,9 @@ def launchCalculationAction(
     program: str,
     uploadFolders: typing.Optional[typing.List[str]] = None,
     modulePurge: typing.Optional[bool] = False,
+    condaEnv: typing.Optional[str] = None,
+    modules: typing.Optional[typing.List[str]] = None,
+    exports: typing.Optional[typing.List[str]] = None,
 ):
     if jobs is None:
         raise Exception("No jobs selected")
@@ -185,6 +204,9 @@ def launchCalculationAction(
     partition = block.variables.get("partition")
     cpus = block.variables.get("cpus")
     cpus_per_task = block.variables.get("cpus_per_task")
+    # Only the blocks that expose the GPUs variable request them; the rest keep
+    # the cluster defaults.
+    gpus = block.variables.get("gpus")
     simulationName = block.variables.get("folder_name")
     scriptName = block.variables.get("script_name", "calculation_script.sh")
 
@@ -194,9 +216,23 @@ def launchCalculationAction(
     block.extraData["simulationName"] = simulationName
 
     print(f"Launching BSC calculation with {cpus} CPUs")
+    if gpus is not None:
+        print(f"Requesting {gpus} GPU(s) and {cpus_per_task} CPUs per task")
 
     # The local remote has no host, so only ask for it on real remotes
     remoteHost = "localhost" if block.remote.isLocal else block.remote.host
+
+    # Read the environment variables
+    environmentValues = block.variables.get("environment_list", [])
+    environmentListValues = {}
+    if environmentValues is not None:
+        for env in environmentValues:
+            environmentListValues[env["environment_key"]] = env["environment_value"]
+
+    # The environment variables are written into the script by hand for the local
+    # runs below; on a cluster they have to travel as exports of the job.
+    jobExports = list(exports or [])
+    jobExports += [f"{key}={value}" for key, value in environmentListValues.items()]
 
     cluster = setup_bsc_calculations_based_on_horus_remote(
         block.remote.name.lower(),
@@ -209,14 +245,11 @@ def launchCalculationAction(
         program,
         modulePurge,
         cpus_per_task,
+        gpus,
+        condaEnv,
+        modules,
+        jobExports,
     )
-
-    # Read the environment variables
-    environmentValues = block.variables.get("environment_list", [])
-    environmentListValues = {}
-    if environmentValues is not None:
-        for env in environmentValues:
-            environmentListValues[env["environment_key"]] = env["environment_value"]
 
     # Rewrite the main script to add the environment variables
     # and allow for waiting for the jobs to finish
@@ -451,6 +484,17 @@ cpusPerTaskVariable = PluginVariable(
     name="CPUs per task",
     id="cpus_per_task",
     description="Number of CPUs per task to use.",
+    type=VariableTypes.INTEGER,
+    defaultValue=1,
+    category="Slurm configuration",
+)
+
+gpusVariable = PluginVariable(
+    name="GPUs",
+    id="gpus",
+    description="Number of GPUs to request per job (--gres gpu:N). Only honoured on "
+    "GPU partitions (the 'acc_*' queues on MareNostrum); set the CPUs per task "
+    "variable to choose how many CPUs go with them.",
     type=VariableTypes.INTEGER,
     defaultValue=1,
     category="Slurm configuration",

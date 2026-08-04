@@ -371,6 +371,29 @@ def analyse_bioemu(block: PluginBlock):
     models = prepare_proteins.proteinModels(models_folder, ignore_biopython_warnings=True)
     models_paths = models.models_paths
 
+    # The metrics are computed only for the BioEmu models holding a reference of the
+    # same name, so a naming mismatch silently yields nothing to report.
+    sampled_models = sorted(
+        entry
+        for entry in os.listdir(bioemu_folder)
+        if entry not in {"fastas", "msas"}
+        and os.path.isdir(os.path.join(bioemu_folder, entry))
+    )
+    matched = [model for model in sampled_models if model in models_paths]
+
+    if not matched:
+        raise ValueError(
+            "None of the sampled models have a reference structure with a matching "
+            f"name. Sampled: {sampled_models}. References found in '{models_folder}': "
+            f"{sorted(models_paths)}. Each reference must be named <model>.pdb."
+        )
+
+    if len(matched) < len(sampled_models):
+        print(
+            "Skipping the sampled models without a reference: "
+            f"{[m for m in sampled_models if m not in models_paths]}"
+        )
+
     # ---- RMSD ----
     print("Computing BioEmu RMSD...")
     rmsd_raw = sequences.computeBioEmuRMSD(bioemu_folder, models_paths, plot=False)
